@@ -27,9 +27,8 @@
           </div>
         </div>
         <div class="table-container">
-          <!-- Fixed header for years and months -->
-          <div class="fixed-header">
-            <table class="crew-table header-table">
+          <div class="table-scroll-container">
+            <table class="crew-table">
               <thead>
                 <tr class="year-row">
                   <th class="fixed-column-header"></th>
@@ -46,94 +45,73 @@
                   </th>
                 </tr>
               </thead>
-            </table>
-          </div>
-          
-          <!-- Fixed left column for department names -->
-          <div class="fixed-column">
-            <table class="crew-table column-table">
               <tbody>
-                <tr v-for="(item, index) in sortedItems" :key="`col-${index}`" 
-                    :class="{ 
-                      'phase-row': item.type === 'phase',
-                      'selected-row': item.type === 'department' && selectedDepartmentIndex === item.index
-                    }">
-                  <td :class="{ 
-                        'phase-label': item.type === 'phase', 
-                        'selected': item.type === 'phase' && selectedPhaseIndex === item.index 
-                      }" 
-                      :style="getDepartmentColumnStyle()"
-                      @click="item.type === 'phase' ? editPhase(item.index) : selectDepartment(item.index)">
-                    <span class="drag-handle">:::</span>
-                    {{ item.type === 'phase' ? phases[item.index].name : departments[item.index].name }}
-                  </td>
-                </tr>
+                <!-- All rows (phases and departments mixed) -->
+                <template v-for="(item, index) in sortedItems">
+                  <!-- Phase row -->
+                  <tr v-if="item.type === 'phase'" :key="`item-${index}`" 
+                      class="phase-row" 
+                      draggable="true"
+                      @dragstart="dragStart($event, 'mixed', index)"
+                      @dragover.prevent
+                      @dragenter.prevent
+                      @drop="handleDrop($event, 'mixed', index)">
+                    <td class="fixed-column" :class="{ 
+                          'phase-label': true, 
+                          'selected': selectedPhaseIndex === item.index 
+                        }" 
+                        :style="getDepartmentColumnStyle()"
+                        @click="editPhase(item.index)">
+                      <span class="drag-handle">:::</span>
+                      {{ phases[item.index].name }}
+                    </td>
+                    <td v-for="(month, mIndex) in months" :key="`phase-${item.index}-${mIndex}`" 
+                        :class="{ 'phase-active': isMonthInPhase(phases[item.index], mIndex) }"
+                        :style="getCellStyle()">
+                    </td>
+                  </tr>
+                  
+                  <!-- Department row -->
+                  <tr v-else :key="`item-${index}`" 
+                      :class="{ 'selected-row': selectedDepartmentIndex === item.index }"
+                      draggable="true"
+                      @dragstart="dragStart($event, 'mixed', index)"
+                      @dragover.prevent
+                      @dragenter.prevent
+                      @drop="handleDrop($event, 'mixed', index)">
+                    <td class="fixed-column" :style="getDepartmentColumnStyle()" @click="selectDepartment(item.index)">
+                      <span class="drag-handle">:::</span>
+                      {{ departments[item.index].name }}
+                    </td>
+                    <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`" 
+                        :class="{ active: crewMatrix[item.index][mIndex] > 0 }"
+                        :style="getCellStyle()">
+                      {{ crewMatrix[item.index][mIndex] }}
+                    </td>
+                  </tr>
+                </template>
+                
                 <!-- Cost rows -->
                 <tr class="cost-row non-editable">
-                  <td :style="getDepartmentColumnStyle()"><strong>Monthly Cost</strong></td>
+                  <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Monthly Cost</strong></td>
+                  <td v-for="(cost, index) in monthlyCosts" :key="index" 
+                      :class="{ active: cost > 0 }"
+                      :style="getCellStyle()"
+                      :title="'$' + formatCurrency(cost)">
+                    {{ formatCompactCurrency(cost) }}
+                  </td>
                 </tr>
                 <tr class="total-row non-editable">
-                  <td :style="getDepartmentColumnStyle()"><strong>Cumulative Cost</strong></td>
+                  <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Cumulative Cost</strong></td>
+                  <td v-for="(cost, index) in cumulativeCosts" :key="index" 
+                      :class="{ active: cost > 0 }"
+                      :style="getCellStyle()"
+                      :title="'$' + formatCurrency(cost)">
+                    {{ formatCompactCurrency(cost) }}
+                  </td>
                 </tr>
               </tbody>
             </table>
-          </div>
-          
-          <!-- Scrollable content area -->
-          <div class="table-scroll-container">
-            <table class="crew-table main-table">
-              <tbody>
-              <!-- All rows (phases and departments mixed) -->
-              <template v-for="(item, index) in sortedItems">
-                <!-- Phase row -->
-                <tr v-if="item.type === 'phase'" :key="`item-${index}`" 
-                    class="phase-row" 
-                    draggable="true"
-                    @dragstart="dragStart($event, 'mixed', index)"
-                    @dragover.prevent
-                    @dragenter.prevent
-                    @drop="handleDrop($event, 'mixed', index)">
-                  <td v-for="(month, mIndex) in months" :key="`phase-${item.index}-${mIndex}`" 
-                      :class="{ 'phase-active': isMonthInPhase(phases[item.index], mIndex) }"
-                      :style="getCellStyle()">
-                  </td>
-                </tr>
-                
-                <!-- Department row -->
-                <tr v-else :key="`item-${index}`" 
-                    :class="{ 'selected-row': selectedDepartmentIndex === item.index }"
-                    draggable="true"
-                    @dragstart="dragStart($event, 'mixed', index)"
-                    @dragover.prevent
-                    @dragenter.prevent
-                    @drop="handleDrop($event, 'mixed', index)">
-                  <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`" 
-                      :class="{ active: crewMatrix[item.index][mIndex] > 0 }"
-                      :style="getCellStyle()">
-                    {{ crewMatrix[item.index][mIndex] }}
-                  </td>
-                </tr>
-              </template>
-              
-              <!-- Cost rows -->
-              <tr class="cost-row non-editable">
-                <td v-for="(cost, index) in monthlyCosts" :key="index" 
-                    :class="{ active: cost > 0 }"
-                    :style="getCellStyle()"
-                    :title="'$' + formatCurrency(cost)">
-                  {{ formatCompactCurrency(cost) }}
-                </td>
-              </tr>
-              <tr class="total-row non-editable">
-                <td v-for="(cost, index) in cumulativeCosts" :key="index" 
-                    :class="{ active: cost > 0 }"
-                    :style="getCellStyle()"
-                    :title="'$' + formatCurrency(cost)">
-                  {{ formatCompactCurrency(cost) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
           </div>
         </div>
         <div class="summary">
@@ -1038,7 +1016,6 @@ main {
   width: 100%;
   max-width: 100%;
   height: calc(100vh - 250px);
-  overflow: hidden;
   border: 1px solid #ddd;
   transition: all 0.3s ease;
 }
@@ -1047,11 +1024,7 @@ main {
 .table-scroll-container {
   overflow: auto;
   height: 100%;
-  width: calc(100% - 200px); /* Account for the fixed column width */
-  /* Add padding to account for the fixed header and column */
-  padding-top: var(--header-height);
-  padding-left: 200px;
-  margin-left: 200px; /* Align with the fixed column */
+  width: 100%;
 }
 
 .crew-table {
@@ -1080,15 +1053,21 @@ main {
 }
 
 /* Fixed header styles */
-.fixed-header {
-  position: absolute;
+.crew-table thead th {
+  position: sticky;
   top: 0;
-  left: 0;
-  width: 100%;
   z-index: 20;
   background-color: #4CAF50;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  overflow: hidden;
+}
+
+.crew-table thead tr:first-child th {
+  top: 0;
+  z-index: 21;
+}
+
+.crew-table thead tr:nth-child(2) th {
+  top: var(--cell-height);
+  z-index: 20;
 }
 
 .fixed-column-header {
@@ -1100,8 +1079,7 @@ main {
 
 /* Fixed column styles */
 .fixed-column {
-  position: absolute;
-  top: var(--header-height);
+  position: sticky;
   left: 0;
   z-index: 10;
   background-color: #f9f9f9;
