@@ -44,8 +44,9 @@
         </div>
         <div class="table-container">
           <div class="table-scroll-container">
-            <table class="crew-table">
-              <thead>
+            <div class="table-wrapper">
+              <table class="crew-table">
+                <thead>
                 <tr class="year-row">
                   <th class="fixed-column-header"></th>
                   <th v-for="(year, index) in years" :key="`year-${index}`" :colspan="getMonthsInYear(year)" class="year-header">
@@ -127,7 +128,9 @@
                   </td>
                 </tr>
               </tbody>
-            </table>
+              </table>
+              <div class="bottom-spacer"></div>
+            </div>
           </div>
         </div>
 
@@ -1077,7 +1080,16 @@ main {
   overflow: auto;
   height: 100%;
   width: 100%;
-  padding-bottom: 50px; /* Add extra padding at the bottom */
+}
+
+.table-wrapper {
+  position: relative;
+  padding-bottom: 200px; /* Add significant extra padding at the bottom */
+}
+
+.bottom-spacer {
+  height: 200px; /* Extra space at the bottom */
+  width: 100%;
 }
 
 .crew-table {
@@ -1086,7 +1098,7 @@ main {
   font-size: var(--font-size);
   table-layout: fixed;
   transition: all 0.3s ease;
-  margin-bottom: 50px; /* Add extra space at the bottom for scrolling */
+  margin-bottom: 150px; /* Add significant extra space at the bottom for scrolling */
 }
 
 
