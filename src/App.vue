@@ -23,48 +23,62 @@
         <div class="table-container" :style="{ fontSize: zoomLevel + 'rem' }">
           <table class="crew-table">
             <thead>
+              <tr class="year-row">
+                <th></th>
+                <th v-for="(year, index) in years" :key="`year-${index}`" :colspan="getMonthsInYear(year)" class="year-header">
+                  {{ year }}
+                </th>
+              </tr>
               <tr>
                 <th>Department</th>
-                <th v-for="(month, index) in months" :key="index">{{ month }}</th>
+                <th v-for="(month, index) in months" :key="index" class="month-header">
+                  <span v-if="zoomLevel > 0.8">{{ getMonthName(index) }}</span>
+                  <span v-else-if="zoomLevel > 0.6">{{ getShortMonthName(index) }}</span>
+                  <span v-else>{{ getSingleLetterMonth(index) }}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
-              <!-- Phase labels -->
-              <tr v-for="(phase, pIndex) in phases" :key="`phase-${pIndex}`" 
-                  class="phase-row" 
-                  @click="editPhase(pIndex)"
-                  draggable="true"
-                  @dragstart="dragStart($event, 'phase', pIndex)"
-                  @dragover.prevent
-                  @dragenter.prevent
-                  @drop="handleDrop($event, 'phase', pIndex)">
-                <td class="phase-label" :class="{ 'selected': selectedPhaseIndex === pIndex }">
-                  <span class="drag-handle">:::</span>
-                  {{ phase.name }}
-                </td>
-                <td v-for="(month, mIndex) in months" :key="`phase-${pIndex}-${mIndex}`" 
-                    :class="{ 'phase-active': isMonthInPhase(phase, mIndex) }">
-                </td>
-              </tr>
-              
-              <!-- Department rows -->
-              <tr v-for="(department, dIndex) in departments" :key="`dept-${dIndex}`" 
-                  @click="selectDepartment(dIndex)"
-                  :class="{ 'selected-row': selectedDepartmentIndex === dIndex }"
-                  draggable="true"
-                  @dragstart="dragStart($event, 'department', dIndex)"
-                  @dragover.prevent
-                  @dragenter.prevent
-                  @drop="handleDrop($event, 'department', dIndex)">
-                <td>
-                  <span class="drag-handle">:::</span>
-                  {{ department.name }}
-                </td>
-                <td v-for="(month, mIndex) in months" :key="`dept-${dIndex}-${mIndex}`" 
-                    :class="{ active: crewMatrix[dIndex][mIndex] > 0 }">
-                  {{ crewMatrix[dIndex][mIndex] }}
-                </td>
-              </tr>
+              <!-- All rows (phases and departments mixed) -->
+              <template v-for="(item, index) in sortedItems">
+                <!-- Phase row -->
+                <tr v-if="item.type === 'phase'" :key="`item-${index}`" 
+                    class="phase-row" 
+                    @click="editPhase(item.index)"
+                    draggable="true"
+                    @dragstart="dragStart($event, 'mixed', index)"
+                    @dragover.prevent
+                    @dragenter.prevent
+                    @drop="handleDrop($event, 'mixed', index)">
+                  <td class="phase-label" :class="{ 'selected': selectedPhaseIndex === item.index }">
+                    <span class="drag-handle">:::</span>
+                    {{ phases[item.index].name }}
+                  </td>
+                  <td v-for="(month, mIndex) in months" :key="`phase-${item.index}-${mIndex}`" 
+                      :class="{ 'phase-active': isMonthInPhase(phases[item.index], mIndex) }">
+                  </td>
+                </tr>
+                
+                <!-- Department row -->
+                <tr v-else :key="`item-${index}`" 
+                    @click="selectDepartment(item.index)"
+                    :class="{ 'selected-row': selectedDepartmentIndex === item.index }"
+                    draggable="true"
+                    @dragstart="dragStart($event, 'mixed', index)"
+                    @dragover.prevent
+                    @dragenter.prevent
+                    @drop="handleDrop($event, 'mixed', index)">
+                  <td>
+                    <span class="drag-handle">:::</span>
+                    {{ departments[item.index].name }}
+                  </td>
+                  <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`" 
+                      :class="{ active: crewMatrix[item.index][mIndex] > 0 }"
+                      :style="getCellStyle()">
+                    {{ crewMatrix[item.index][mIndex] }}
+                  </td>
+                </tr>
+              </template>
               
               <!-- Cost rows -->
               <tr class="cost-row">
@@ -251,12 +265,16 @@ export default {
     return {
       years: [2022, 2023, 2024, 2025],
       monthsPerYear: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      shortMonthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      singleLetterMonths: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
       months: [],
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
       zoomLevel: 1,
       editorPosition: 'position-left',
       draggedItem: null,
+      // Track the order of phases and departments
+      itemOrder: [],
       phases: [
         {
           name: 'Concept Stage',
@@ -426,19 +444,101 @@ export default {
     // Initialize crew matrix
     this.initializeCrewMatrix();
     
+    // Initialize item order
+    this.initializeItemOrder();
+    
     // Calculate initial crew distribution and costs
     this.updateAllDepartments();
     this.calculateCosts();
   },
+  
+  computed: {
+    // Get the sorted items (phases and departments) based on itemOrder
+    sortedItems() {
+      return this.itemOrder;
+    }
+  },
   methods: {
+    // Initialize the item order with phases first, then departments
+    initializeItemOrder() {
+      this.itemOrder = [];
+      
+      // Add phases
+      for (let i = 0; i < this.phases.length; i++) {
+        this.itemOrder.push({ type: 'phase', index: i });
+        
+        // Add departments that belong to this phase
+        for (let j = 0; j < this.departments.length; j++) {
+          // Simple heuristic: if department's start month is within phase's timeframe
+          const dept = this.departments[j];
+          const phase = this.phases[i];
+          
+          if (dept.startMonth >= phase.startMonth && dept.startMonth <= phase.endMonth) {
+            // Check if this department is already added
+            const alreadyAdded = this.itemOrder.some(item => 
+              item.type === 'department' && item.index === j
+            );
+            
+            if (!alreadyAdded) {
+              this.itemOrder.push({ type: 'department', index: j });
+            }
+          }
+        }
+      }
+      
+      // Add any remaining departments
+      for (let j = 0; j < this.departments.length; j++) {
+        const alreadyAdded = this.itemOrder.some(item => 
+          item.type === 'department' && item.index === j
+        );
+        
+        if (!alreadyAdded) {
+          this.itemOrder.push({ type: 'department', index: j });
+        }
+      }
+    },
+    
     initializeCrewMatrix() {
       this.crewMatrix = [];
       for (let i = 0; i < this.departments.length; i++) {
         this.crewMatrix.push(new Array(this.months.length).fill(0));
       }
     },
+    
+    // Get the full month name with year
     getMonthName(index) {
       return this.months[index] || '';
+    },
+    
+    // Get just the month name for the header
+    getMonthNameOnly(index) {
+      const monthIndex = index % 12;
+      return this.monthsPerYear[monthIndex];
+    },
+    
+    // Get the short month name (3 letters)
+    getShortMonthName(index) {
+      const monthIndex = index % 12;
+      return this.shortMonthNames[monthIndex];
+    },
+    
+    // Get single letter month name
+    getSingleLetterMonth(index) {
+      const monthIndex = index % 12;
+      return this.singleLetterMonths[monthIndex];
+    },
+    
+    // Get the number of months in a year (for colspan)
+    getMonthsInYear(year) {
+      return this.months.filter(month => month.endsWith(year.toString())).length;
+    },
+    
+    // Get cell style based on zoom level
+    getCellStyle() {
+      return {
+        padding: this.zoomLevel < 0.8 ? '2px' : '8px',
+        minWidth: this.zoomLevel < 0.6 ? '20px' : (this.zoomLevel < 0.8 ? '30px' : '40px')
+      };
     },
     updateDepartmentCrew(department) {
       const dIndex = this.departments.indexOf(department);
@@ -618,12 +718,14 @@ export default {
     // Zoom controls
     zoomIn() {
       if (this.zoomLevel < 2) {
-        this.zoomLevel += 0.1;
+        this.zoomLevel = Math.min(2, this.zoomLevel + 0.1);
+        this.zoomLevel = Math.round(this.zoomLevel * 10) / 10; // Round to 1 decimal place
       }
     },
     zoomOut() {
-      if (this.zoomLevel > 0.5) {
-        this.zoomLevel -= 0.1;
+      if (this.zoomLevel > 0.4) {
+        this.zoomLevel = Math.max(0.4, this.zoomLevel - 0.1);
+        this.zoomLevel = Math.round(this.zoomLevel * 10) / 10; // Round to 1 decimal place
       }
     },
     resetZoom() {
@@ -643,13 +745,16 @@ export default {
       
       const { type: sourceType, index: sourceIndex } = this.draggedItem;
       
-      // Only allow reordering within the same type (phases or departments)
-      if (sourceType !== type) return;
-      
       if (sourceIndex === targetIndex) return;
       
-      if (type === 'department') {
-        // Reorder departments
+      if (type === 'mixed') {
+        // Reorder in the mixed itemOrder array
+        const item = this.itemOrder.splice(sourceIndex, 1)[0];
+        this.itemOrder.splice(targetIndex, 0, item);
+        
+        // No need to update the actual arrays, just their display order
+      } else if (type === 'department') {
+        // Legacy code for direct department reordering
         const item = this.departments.splice(sourceIndex, 1)[0];
         this.departments.splice(targetIndex, 0, item);
         
@@ -671,8 +776,11 @@ export default {
         ) {
           this.selectedDepartmentIndex++;
         }
+        
+        // Reinitialize item order
+        this.initializeItemOrder();
       } else if (type === 'phase') {
-        // Reorder phases
+        // Legacy code for direct phase reordering
         const item = this.phases.splice(sourceIndex, 1)[0];
         this.phases.splice(targetIndex, 0, item);
         
@@ -690,6 +798,9 @@ export default {
         ) {
           this.selectedPhaseIndex++;
         }
+        
+        // Reinitialize item order
+        this.initializeItemOrder();
       }
       
       this.draggedItem = null;
@@ -850,6 +961,7 @@ main {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
+  transition: padding 0.3s ease, min-width 0.3s ease;
 }
 
 .crew-table th {
@@ -858,6 +970,26 @@ main {
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+.year-row th {
+  background-color: #388E3C;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.year-header {
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 2px solid #2E7D32;
+}
+
+.month-header {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.3s ease;
 }
 
 .crew-table tr:nth-child(even) {
