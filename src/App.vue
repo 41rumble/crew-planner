@@ -31,7 +31,7 @@
               </tr>
               <tr>
                 <th>Department</th>
-                <th v-for="(month, index) in months" :key="index" class="month-header">
+                <th v-for="(month, index) in months" :key="index" class="month-header" :style="getCellStyle()">
                   <span v-if="zoomLevel > 0.8">{{ getMonthName(index) }}</span>
                   <span v-else-if="zoomLevel > 0.6">{{ getShortMonthName(index) }}</span>
                   <span v-else>{{ getSingleLetterMonth(index) }}</span>
@@ -55,7 +55,8 @@
                     {{ phases[item.index].name }}
                   </td>
                   <td v-for="(month, mIndex) in months" :key="`phase-${item.index}-${mIndex}`" 
-                      :class="{ 'phase-active': isMonthInPhase(phases[item.index], mIndex) }">
+                      :class="{ 'phase-active': isMonthInPhase(phases[item.index], mIndex) }"
+                      :style="getCellStyle()">
                   </td>
                 </tr>
                 
@@ -537,7 +538,8 @@ export default {
     getCellStyle() {
       return {
         padding: this.zoomLevel < 0.8 ? '2px' : '8px',
-        minWidth: this.zoomLevel < 0.6 ? '20px' : (this.zoomLevel < 0.8 ? '30px' : '40px')
+        minWidth: this.zoomLevel < 0.6 ? '20px' : (this.zoomLevel < 0.8 ? '30px' : '40px'),
+        maxWidth: this.zoomLevel < 0.6 ? '30px' : (this.zoomLevel < 0.8 ? '40px' : '60px')
       };
     },
     updateDepartmentCrew(department) {
@@ -955,6 +957,7 @@ main {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  table-layout: fixed;
 }
 
 .crew-table th, .crew-table td {
@@ -990,6 +993,8 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   transition: all 0.3s ease;
+  width: auto;
+  max-width: 60px;
 }
 
 .crew-table tr:nth-child(even) {
