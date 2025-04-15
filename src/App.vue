@@ -8,6 +8,20 @@
   }">
     <header>
       <h1>Crew Planning Tool</h1>
+      <div class="summary-header">
+        <div class="summary-stat">
+          <div class="stat-label">Total Project Cost</div>
+          <div class="stat-value">${{ formatCurrency(totalProjectCost) }}</div>
+        </div>
+        <div class="summary-stat">
+          <div class="stat-label">Peak Monthly Cost</div>
+          <div class="stat-value">${{ formatCurrency(peakMonthlyCost) }}</div>
+        </div>
+        <div class="summary-stat">
+          <div class="stat-label">Peak Crew Size</div>
+          <div class="stat-value">{{ peakCrewSize }} crew members</div>
+        </div>
+      </div>
     </header>
     <main>
       <div class="visualization">
@@ -114,23 +128,7 @@
             </table>
           </div>
         </div>
-        <div class="summary">
-          <h3>Project Summary</h3>
-          <div class="summary-stats">
-            <div class="summary-stat">
-              <div class="stat-label">Total Project Cost</div>
-              <div class="stat-value">${{ formatCurrency(totalProjectCost) }}</div>
-            </div>
-            <div class="summary-stat">
-              <div class="stat-label">Peak Monthly Cost</div>
-              <div class="stat-value">${{ formatCurrency(peakMonthlyCost) }}</div>
-            </div>
-            <div class="summary-stat">
-              <div class="stat-label">Peak Crew Size</div>
-              <div class="stat-value">{{ peakCrewSize }} crew members</div>
-            </div>
-          </div>
-        </div>
+
       </div>
       
       <!-- Floating Editor Panel -->
@@ -948,6 +946,23 @@ body, html {
 header {
   text-align: center;
   margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 10px;
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 800px;
 }
 
 main {
@@ -1037,7 +1052,7 @@ main {
   margin-bottom: 20px;
   width: 100%;
   max-width: 100%;
-  height: calc(100% - 200px); /* Adjust to fit within the visualization container and leave room for summary */
+  height: calc(100% - 100px); /* Adjust to fit within the visualization container */
   border: 1px solid #ddd;
   transition: all 0.3s ease;
 }
