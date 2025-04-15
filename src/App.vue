@@ -30,7 +30,7 @@
                 </th>
               </tr>
               <tr>
-                <th>Department</th>
+                <th :style="getDepartmentColumnStyle()">Department</th>
                 <th v-for="(month, index) in months" :key="index" class="month-header" :style="getCellStyle()">
                   <span v-if="zoomLevel > 0.8">{{ getMonthName(index) }}</span>
                   <span v-else-if="zoomLevel > 0.6">{{ getShortMonthName(index) }}</span>
@@ -50,7 +50,7 @@
                     @dragover.prevent
                     @dragenter.prevent
                     @drop="handleDrop($event, 'mixed', index)">
-                  <td class="phase-label" :class="{ 'selected': selectedPhaseIndex === item.index }">
+                  <td class="phase-label" :class="{ 'selected': selectedPhaseIndex === item.index }" :style="getDepartmentColumnStyle()">
                     <span class="drag-handle">:::</span>
                     {{ phases[item.index].name }}
                   </td>
@@ -69,7 +69,7 @@
                     @dragover.prevent
                     @dragenter.prevent
                     @drop="handleDrop($event, 'mixed', index)">
-                  <td>
+                  <td :style="getDepartmentColumnStyle()">
                     <span class="drag-handle">:::</span>
                     {{ departments[item.index].name }}
                   </td>
@@ -82,18 +82,22 @@
               </template>
               
               <!-- Cost rows -->
-              <tr class="cost-row">
-                <td><strong>Monthly Cost ($)</strong></td>
+              <tr class="cost-row non-editable">
+                <td :style="getDepartmentColumnStyle()"><strong>Monthly Cost</strong></td>
                 <td v-for="(cost, index) in monthlyCosts" :key="index" 
-                    :class="{ active: cost > 0 }">
-                  {{ formatCurrency(cost) }}
+                    :class="{ active: cost > 0 }"
+                    :style="getCellStyle()"
+                    :title="'$' + formatCurrency(cost)">
+                  {{ formatCompactCurrency(cost) }}
                 </td>
               </tr>
-              <tr class="total-row">
-                <td><strong>Cumulative Cost ($)</strong></td>
+              <tr class="total-row non-editable">
+                <td :style="getDepartmentColumnStyle()"><strong>Cumulative Cost</strong></td>
                 <td v-for="(cost, index) in cumulativeCosts" :key="index" 
-                    :class="{ active: cost > 0 }">
-                  {{ formatCurrency(cost) }}
+                    :class="{ active: cost > 0 }"
+                    :style="getCellStyle()"
+                    :title="'$' + formatCurrency(cost)">
+                  {{ formatCompactCurrency(cost) }}
                 </td>
               </tr>
             </tbody>
@@ -101,9 +105,9 @@
         </div>
         <div class="summary">
           <h3>Project Summary</h3>
-          <p><strong>Total Project Cost:</strong> {{ formatCurrency(totalProjectCost) }}</p>
-          <p><strong>Peak Monthly Cost:</strong> {{ formatCurrency(peakMonthlyCost) }}</p>
-          <p><strong>Peak Crew Size:</strong> {{ peakCrewSize }}</p>
+          <p><strong>Total Project Cost:</strong> ${{ formatCurrency(totalProjectCost) }}</p>
+          <p><strong>Peak Monthly Cost:</strong> ${{ formatCurrency(peakMonthlyCost) }}</p>
+          <p><strong>Peak Crew Size:</strong> {{ peakCrewSize }} crew members</p>
         </div>
       </div>
       
@@ -539,7 +543,21 @@ export default {
       return {
         padding: this.zoomLevel < 0.8 ? '2px' : '8px',
         minWidth: this.zoomLevel < 0.6 ? '20px' : (this.zoomLevel < 0.8 ? '30px' : '40px'),
-        maxWidth: this.zoomLevel < 0.6 ? '30px' : (this.zoomLevel < 0.8 ? '40px' : '60px')
+        maxWidth: this.zoomLevel < 0.6 ? '30px' : (this.zoomLevel < 0.8 ? '40px' : '60px'),
+        width: this.zoomLevel < 0.6 ? '20px' : (this.zoomLevel < 0.8 ? '30px' : '40px'),
+        fontSize: this.zoomLevel < 0.7 ? '0.8em' : '1em'
+      };
+    },
+    
+    // Get style for the department column (not affected by horizontal zoom)
+    getDepartmentColumnStyle() {
+      return {
+        minWidth: '150px',
+        width: 'auto',
+        maxWidth: '300px',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
       };
     },
     updateDepartmentCrew(department) {
@@ -652,6 +670,32 @@ export default {
         style: 'decimal',
         maximumFractionDigits: 0
       }).format(value);
+    },
+    
+    // Format currency in a compact way based on zoom level
+    formatCompactCurrency(value) {
+      if (this.zoomLevel < 0.7) {
+        // Very compact format for small zoom levels
+        if (value >= 1000000) {
+          return '$' + (value / 1000000).toFixed(1) + 'M';
+        } else if (value >= 1000) {
+          return '$' + (value / 1000).toFixed(0) + 'k';
+        } else {
+          return '$' + value;
+        }
+      } else if (this.zoomLevel < 0.9) {
+        // Somewhat compact format for medium zoom levels
+        if (value >= 1000000) {
+          return '$' + (value / 1000000).toFixed(1) + ' mil';
+        } else if (value >= 1000) {
+          return '$' + (value / 1000).toFixed(0) + 'k';
+        } else {
+          return '$' + value;
+        }
+      } else {
+        // Full format for normal zoom
+        return '$' + this.formatCurrency(value);
+      }
     },
     // Department selection and editing
     selectDepartment(index) {
@@ -1011,6 +1055,16 @@ main {
 
 .total-row {
   background-color: #fff8e1 !important;
+}
+
+.non-editable {
+  cursor: default !important;
+  pointer-events: none;
+}
+
+.non-editable td {
+  cursor: help;
+  pointer-events: auto;
 }
 
 .summary {
