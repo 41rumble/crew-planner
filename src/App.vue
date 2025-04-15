@@ -116,9 +116,20 @@
         </div>
         <div class="summary">
           <h3>Project Summary</h3>
-          <p><strong>Total Project Cost:</strong> ${{ formatCurrency(totalProjectCost) }}</p>
-          <p><strong>Peak Monthly Cost:</strong> ${{ formatCurrency(peakMonthlyCost) }}</p>
-          <p><strong>Peak Crew Size:</strong> {{ peakCrewSize }} crew members</p>
+          <div class="summary-stats">
+            <div class="summary-stat">
+              <div class="stat-label">Total Project Cost</div>
+              <div class="stat-value">${{ formatCurrency(totalProjectCost) }}</div>
+            </div>
+            <div class="summary-stat">
+              <div class="stat-label">Peak Monthly Cost</div>
+              <div class="stat-value">${{ formatCurrency(peakMonthlyCost) }}</div>
+            </div>
+            <div class="summary-stat">
+              <div class="stat-label">Peak Crew Size</div>
+              <div class="stat-value">{{ peakCrewSize }} crew members</div>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -1026,7 +1037,7 @@ main {
   margin-bottom: 20px;
   width: 100%;
   max-width: 100%;
-  height: calc(100% - 150px); /* Adjust to fit within the visualization container */
+  height: calc(100% - 200px); /* Adjust to fit within the visualization container and leave room for summary */
   border: 1px solid #ddd;
   transition: all 0.3s ease;
 }
@@ -1162,6 +1173,38 @@ main {
   padding: 15px;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 20px;
+  min-height: 120px;
+}
+
+.summary h3 {
+  text-align: center;
+  margin-top: 0;
+  color: #2E7D32;
+}
+
+.summary-stats {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.summary-stat {
+  text-align: center;
+  padding: 10px;
+  min-width: 200px;
+}
+
+.stat-label {
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 1.2em;
+  color: #2196F3;
+  font-weight: bold;
 }
 
 /* Phase styling */
