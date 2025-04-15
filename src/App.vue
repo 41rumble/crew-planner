@@ -1066,7 +1066,8 @@ main {
   margin-bottom: 20px;
   width: 100%;
   max-width: 100%;
-  height: calc(100% - 100px); /* Adjust to fit within the visualization container */
+  height: calc(100% - 80px); /* Adjust to fit within the visualization container */
+  min-height: 500px; /* Ensure minimum height */
   border: 1px solid #ddd;
   transition: all 0.3s ease;
 }
@@ -1076,6 +1077,7 @@ main {
   overflow: auto;
   height: 100%;
   width: 100%;
+  padding-bottom: 50px; /* Add extra padding at the bottom */
 }
 
 .crew-table {
@@ -1084,6 +1086,7 @@ main {
   font-size: var(--font-size);
   table-layout: fixed;
   transition: all 0.3s ease;
+  margin-bottom: 50px; /* Add extra space at the bottom for scrolling */
 }
 
 
