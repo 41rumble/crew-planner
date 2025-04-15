@@ -993,6 +993,7 @@ main {
   flex: 1;
   background-color: #f5f5f5;
   padding: 20px;
+  padding-right: 30px; /* Extra padding on the right */
   border-radius: 8px;
   width: 100%;
   max-width: 100%;
@@ -1084,11 +1085,12 @@ main {
 
 .table-wrapper {
   position: relative;
-  padding-bottom: 200px; /* Add significant extra padding at the bottom */
+  padding-bottom: 100px; /* Reduced padding at the bottom */
+  padding-right: 50px; /* Add padding on the right side */
 }
 
 .bottom-spacer {
-  height: 200px; /* Extra space at the bottom */
+  height: 100px; /* Reduced extra space at the bottom */
   width: 100%;
 }
 
@@ -1098,7 +1100,7 @@ main {
   font-size: var(--font-size);
   table-layout: fixed;
   transition: all 0.3s ease;
-  margin-bottom: 150px; /* Add significant extra space at the bottom for scrolling */
+  margin-bottom: 50px; /* Reduced extra space at the bottom for scrolling */
 }
 
 
