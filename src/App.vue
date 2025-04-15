@@ -939,10 +939,12 @@ export default {
 <style>
 .app-container {
   font-family: Arial, sans-serif;
-  max-width: 1800px;
+  width: 100%;
+  max-width: 100vw;
   margin: 0 auto;
   padding: 20px;
   position: relative;
+  overflow-x: hidden; /* Prevent horizontal scrolling at the page level */
 }
 
 header {
@@ -960,6 +962,9 @@ main {
   background-color: #f5f5f5;
   padding: 20px;
   border-radius: 8px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .actions {
@@ -1031,6 +1036,7 @@ main {
   position: relative;
   margin-bottom: 20px;
   width: 100%;
+  max-width: 100vw;
   height: calc(100vh - 250px);
   overflow: hidden;
   border: 1px solid #ddd;
@@ -1053,6 +1059,11 @@ main {
   font-size: var(--font-size);
   table-layout: fixed;
   transition: all 0.3s ease;
+}
+
+.main-table {
+  width: max-content;
+  max-width: calc(100vw - 200px); /* Account for the fixed column width */
 }
 
 .crew-table th, .crew-table td {
