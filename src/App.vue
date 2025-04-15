@@ -134,6 +134,7 @@
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
         <div class="summary">
           <h3>Project Summary</h3>
