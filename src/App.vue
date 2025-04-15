@@ -275,7 +275,7 @@ export default {
       months: [],
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
-      zoomLevel: 1,
+      zoomLevel: 1.0, // Start at 100% zoom
       editorPosition: 'position-left',
       draggedItem: null,
       // Track the order of phases and departments
@@ -540,13 +540,39 @@ export default {
     
     // Get cell style based on zoom level
     getCellStyle() {
-      return {
-        padding: this.zoomLevel < 0.8 ? '2px' : '8px',
-        minWidth: this.zoomLevel < 0.6 ? '20px' : (this.zoomLevel < 0.8 ? '30px' : '40px'),
-        maxWidth: this.zoomLevel < 0.6 ? '30px' : (this.zoomLevel < 0.8 ? '40px' : '60px'),
-        width: this.zoomLevel < 0.6 ? '20px' : (this.zoomLevel < 0.8 ? '30px' : '40px'),
-        fontSize: this.zoomLevel < 0.7 ? '0.8em' : '1em'
-      };
+      // At 100% zoom (zoomLevel = 1), use the default styling
+      if (this.zoomLevel >= 1) {
+        return {
+          padding: '8px',
+          minWidth: '60px',
+          width: '60px',
+          fontSize: '1em'
+        };
+      } else if (this.zoomLevel >= 0.8) {
+        // Slightly reduced at 80-99% zoom
+        return {
+          padding: '6px',
+          minWidth: '50px',
+          width: '50px',
+          fontSize: '0.95em'
+        };
+      } else if (this.zoomLevel >= 0.6) {
+        // More compact at 60-79% zoom
+        return {
+          padding: '4px',
+          minWidth: '40px',
+          width: '40px',
+          fontSize: '0.9em'
+        };
+      } else {
+        // Very compact at <60% zoom
+        return {
+          padding: '2px',
+          minWidth: '30px',
+          width: '30px',
+          fontSize: '0.8em'
+        };
+      }
     },
     
     // Get style for the department column (not affected by horizontal zoom)
@@ -674,6 +700,11 @@ export default {
     
     // Format currency in a compact way based on zoom level
     formatCompactCurrency(value) {
+      // Handle zero values
+      if (value === 0) {
+        return '$0';
+      }
+      
       if (this.zoomLevel < 0.7) {
         // Very compact format for small zoom levels
         if (value >= 1000000) {
@@ -1002,6 +1033,7 @@ main {
   border-collapse: collapse;
   font-size: 14px;
   table-layout: fixed;
+  transition: all 0.3s ease;
 }
 
 .crew-table th, .crew-table td {
@@ -1037,8 +1069,8 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   transition: all 0.3s ease;
-  width: auto;
-  max-width: 60px;
+  width: 60px;
+  min-width: 60px;
 }
 
 .crew-table tr:nth-child(even) {
