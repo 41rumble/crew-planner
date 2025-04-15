@@ -50,7 +50,7 @@
                 <tr class="year-row">
                   <th class="fixed-column-header"></th>
                   <th v-for="(year, index) in years" :key="`year-${index}`" :colspan="getMonthsInYear(year)" class="year-header">
-                    {{ year }}
+                    <span @click="editYear(index)" class="editable-year">{{ year }}</span>
                   </th>
                 </tr>
                 <tr>
@@ -137,11 +137,15 @@
       </div>
       
       <!-- Floating Editor Panel -->
-      <div v-if="selectedDepartmentIndex !== null" class="floating-editor department-editor" :class="editorPosition">
+      <div v-if="selectedDepartmentIndex !== null" class="floating-editor department-editor" 
+           :class="editorPosition"
+           :style="editorStyle"
+           ref="departmentEditor"
+           @mousedown="startDrag($event, 'department')">
         <div class="editor-header">
           <h2>Department Editor</h2>
           <div class="editor-controls">
-            <button @click="moveEditorPosition" class="move-button" title="Move Editor">↕</button>
+            <button @click="resetEditorPosition" class="reset-button" title="Reset Position">⟲</button>
             <button @click="closeDepartmentEditor" class="close-button">X</button>
           </div>
         </div>
@@ -235,11 +239,15 @@
       </div>
       
       <!-- Phase Editor Panel -->
-      <div v-if="selectedPhaseIndex !== null" class="floating-editor phase-editor" :class="editorPosition">
+      <div v-if="selectedPhaseIndex !== null" class="floating-editor phase-editor" 
+           :class="editorPosition"
+           :style="editorStyle"
+           ref="phaseEditor"
+           @mousedown="startDrag($event, 'phase')">
         <div class="editor-header">
           <h2>Phase Editor</h2>
           <div class="editor-controls">
-            <button @click="moveEditorPosition" class="move-button" title="Move Editor">↕</button>
+            <button @click="resetEditorPosition" class="reset-button" title="Reset Position">⟲</button>
             <button @click="closePhaseEditor" class="close-button">X</button>
           </div>
         </div>
@@ -303,6 +311,10 @@ export default {
       zoomLevel: 1.0, // Start at 100% zoom
       editorPosition: 'position-left',
       draggedItem: null,
+      editorStyle: { top: '150px', left: '20px' },
+      isDragging: false,
+      dragOffset: { x: 0, y: 0 },
+      activeEditor: null,
       // Track the order of phases and departments
       itemOrder: [],
       phases: [
@@ -789,6 +801,21 @@ export default {
         }
       }
     },
+    // Edit year
+    editYear(index) {
+      const currentYear = this.years[index];
+      const newYear = prompt(`Edit year (currently ${currentYear}):`, currentYear);
+      
+      if (newYear && !isNaN(newYear) && newYear.trim() !== '') {
+        // Update the year
+        const yearValue = parseInt(newYear.trim());
+        this.$set(this.years, index, yearValue);
+        
+        // Regenerate months
+        this.generateMonths();
+      }
+    },
+    
     // Zoom controls
     zoomIn() {
       if (this.zoomLevel < 2) {
@@ -805,9 +832,56 @@ export default {
     resetZoom() {
       this.zoomLevel = 1;
     },
-    // Editor position
-    moveEditorPosition() {
+    // Editor position and dragging
+    resetEditorPosition() {
       this.editorPosition = this.editorPosition === 'position-left' ? 'position-right' : 'position-left';
+      this.editorStyle = { top: '150px', left: '20px' };
+    },
+    
+    startDrag(event, editorType) {
+      // Only start drag if clicking on the header
+      if (event.target.closest('.editor-header') && !event.target.closest('button')) {
+        this.isDragging = true;
+        this.activeEditor = editorType;
+        
+        const editor = this.$refs[editorType + 'Editor'];
+        const rect = editor.getBoundingClientRect();
+        
+        this.dragOffset = {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top
+        };
+        
+        // Add event listeners for drag and drop
+        document.addEventListener('mousemove', this.onDrag);
+        document.addEventListener('mouseup', this.stopDrag);
+        
+        // Prevent text selection during drag
+        event.preventDefault();
+      }
+    },
+    
+    onDrag(event) {
+      if (this.isDragging) {
+        // Calculate new position
+        const left = event.clientX - this.dragOffset.x;
+        const top = event.clientY - this.dragOffset.y;
+        
+        // Update editor position
+        this.editorStyle = {
+          left: left + 'px',
+          top: top + 'px'
+        };
+      }
+    },
+    
+    stopDrag() {
+      this.isDragging = false;
+      this.activeEditor = null;
+      
+      // Remove event listeners
+      document.removeEventListener('mousemove', this.onDrag);
+      document.removeEventListener('mouseup', this.stopDrag);
     },
     // Drag and drop functionality
     dragStart(event, type, index) {
@@ -942,6 +1016,7 @@ body, html {
   height: 100vh;
   margin: 0 auto;
   padding: 20px;
+  padding-bottom: 40px; /* Extra padding at the bottom */
   position: relative;
   overflow: hidden; /* Prevent scrolling at the page level */
   display: flex;
@@ -1165,6 +1240,16 @@ main {
   border-bottom: 2px solid #2E7D32;
 }
 
+.editable-year {
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.editable-year:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
 .month-header {
   white-space: nowrap;
   overflow: hidden;
@@ -1311,10 +1396,10 @@ main {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   position: fixed;
-  top: 100px;
   z-index: 100;
   max-height: 80vh;
   overflow-y: auto;
+  cursor: move;
 }
 
 .position-left {
@@ -1337,6 +1422,7 @@ main {
   border-bottom: 1px solid #eee;
   background-color: #f8f8f8;
   border-radius: 8px 8px 0 0;
+  cursor: grab;
 }
 
 .editor-controls {
@@ -1349,7 +1435,7 @@ main {
   font-size: 18px;
 }
 
-.close-button, .move-button {
+.close-button, .reset-button {
   background: none;
   border: none;
   font-size: 16px;
@@ -1360,7 +1446,7 @@ main {
   border-radius: 4px;
 }
 
-.close-button:hover, .move-button:hover {
+.close-button:hover, .reset-button:hover {
   background-color: #eee;
 }
 
