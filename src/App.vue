@@ -1035,8 +1035,8 @@ body, html {
   max-width: 100vw;
   height: 100vh;
   margin: 0 auto;
-  padding: 20px;
-  padding-bottom: 40px; /* Extra padding at the bottom */
+  padding: 10px;
+  padding-bottom: 20px; /* Extra padding at the bottom */
   position: relative;
   overflow: hidden; /* Prevent scrolling at the page level */
   display: flex;
@@ -1045,23 +1045,29 @@ body, html {
 
 header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  margin: 10px 0;
 }
 
 .visualization-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
 }
 
 .visualization-header h2 {
   margin: 0;
   flex-shrink: 0;
+  font-size: 1.2rem;
 }
 
 .summary-header {
@@ -1087,8 +1093,8 @@ main {
 .visualization {
   flex: 1;
   background-color: #f5f5f5;
-  padding: 20px;
-  padding-right: 30px; /* Extra padding on the right */
+  padding: 10px;
+  padding-right: 20px; /* Extra padding on the right */
   border-radius: 8px;
   width: 100%;
   max-width: 100%;
@@ -1103,7 +1109,7 @@ main {
 }
 
 .action-button {
-  padding: 8px 15px;
+  padding: 5px 10px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -1111,6 +1117,7 @@ main {
   display: flex;
   align-items: center;
   gap: 5px;
+  font-size: 0.85rem;
 }
 
 .add-button {
@@ -1141,23 +1148,25 @@ main {
 .zoom-controls {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 3px;
   margin-left: auto;
 }
 
 .zoom-button {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   border: 1px solid #ccc;
   background-color: #fff;
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 0.8rem;
 }
 
 .zoom-button.reset {
   width: auto;
-  padding: 0 10px;
+  padding: 0 6px;
+  font-size: 0.75rem;
 }
 
 .table-container {
