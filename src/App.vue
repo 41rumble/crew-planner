@@ -806,17 +806,33 @@ export default {
       // Add month headers
       csvContent += this.months.join(",") + ",Rate\n";
       
-      // Add department data
-      this.departments.forEach((dept, index) => {
-        csvContent += dept.name + ",";
-        
-        // Add crew counts for each month
-        for (let i = 0; i < this.months.length; i++) {
-          csvContent += this.crewMatrix[index][i] + ",";
+      // Add data in the same order as displayed in the UI
+      this.sortedItems.forEach(item => {
+        if (item.type === 'phase') {
+          // Add phase row
+          const phase = this.phases[item.index];
+          csvContent += phase.name + " (Phase),";
+          
+          // Add phase indicators for each month
+          for (let i = 0; i < this.months.length; i++) {
+            csvContent += this.isMonthInPhase(phase, i) ? "X," : ",";
+          }
+          
+          // No rate for phases
+          csvContent += "\n";
+        } else {
+          // Add department row
+          const dept = this.departments[item.index];
+          csvContent += dept.name + ",";
+          
+          // Add crew counts for each month
+          for (let i = 0; i < this.months.length; i++) {
+            csvContent += this.crewMatrix[item.index][i] + ",";
+          }
+          
+          // Add rate
+          csvContent += dept.rate + "\n";
         }
-        
-        // Add rate
-        csvContent += dept.rate + "\n";
       });
       
       // Add empty row
