@@ -1036,7 +1036,7 @@ main {
   position: relative;
   margin-bottom: 20px;
   width: 100%;
-  max-width: 100vw;
+  max-width: 100%;
   height: calc(100vh - 250px);
   overflow: hidden;
   border: 1px solid #ddd;
@@ -1047,10 +1047,11 @@ main {
 .table-scroll-container {
   overflow: auto;
   height: 100%;
-  width: 100%;
+  width: calc(100% - 200px); /* Account for the fixed column width */
   /* Add padding to account for the fixed header and column */
   padding-top: var(--header-height);
   padding-left: 200px;
+  margin-left: 200px; /* Align with the fixed column */
 }
 
 .crew-table {
@@ -1061,10 +1062,7 @@ main {
   transition: all 0.3s ease;
 }
 
-.main-table {
-  width: max-content;
-  max-width: calc(100vw - 200px); /* Account for the fixed column width */
-}
+
 
 .crew-table th, .crew-table td {
   border: 1px solid #ddd;
@@ -1090,6 +1088,7 @@ main {
   z-index: 20;
   background-color: #4CAF50;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
 }
 
 .fixed-column-header {
@@ -1134,8 +1133,13 @@ main {
   border-spacing: 0;
 }
 
+.header-table {
+  width: max-content; /* Match the main table width */
+}
+
 .main-table {
   margin-top: 0;
+  width: max-content; /* Allow the table to be as wide as needed */
 }
 
 .crew-table tr:nth-child(even) {
