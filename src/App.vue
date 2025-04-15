@@ -8,24 +8,26 @@
   }">
     <header>
       <h1>Crew Planning Tool</h1>
-      <div class="summary-header">
-        <div class="summary-stat">
-          <div class="stat-label">Total Project Cost</div>
-          <div class="stat-value">${{ formatCurrency(totalProjectCost) }}</div>
-        </div>
-        <div class="summary-stat">
-          <div class="stat-label">Peak Monthly Cost</div>
-          <div class="stat-value">${{ formatCurrency(peakMonthlyCost) }}</div>
-        </div>
-        <div class="summary-stat">
-          <div class="stat-label">Peak Crew Size</div>
-          <div class="stat-value">{{ peakCrewSize }} crew members</div>
-        </div>
-      </div>
     </header>
     <main>
       <div class="visualization">
-        <h2>Crew Planning Visualization</h2>
+        <div class="visualization-header">
+          <h2>Crew Planning Visualization</h2>
+          <div class="summary-header">
+            <div class="summary-stat">
+              <div class="stat-label">Total Project Cost</div>
+              <div class="stat-value">${{ formatCurrency(totalProjectCost) }}</div>
+            </div>
+            <div class="summary-stat">
+              <div class="stat-label">Peak Monthly Cost</div>
+              <div class="stat-value">${{ formatCurrency(peakMonthlyCost) }}</div>
+            </div>
+            <div class="summary-stat">
+              <div class="stat-label">Peak Crew Size</div>
+              <div class="stat-value">{{ peakCrewSize }} crew members</div>
+            </div>
+          </div>
+        </div>
         <div class="actions">
           <button @click="addNewDepartment" class="action-button add-button">
             <span class="icon">+</span> Add Department
@@ -951,18 +953,30 @@ header {
   align-items: center;
 }
 
+.visualization-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.visualization-header h2 {
+  margin: 0;
+  flex-shrink: 0;
+}
+
 .summary-header {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 20px;
-  margin-top: 10px;
   background-color: #f5f5f5;
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 800px;
+  flex: 1;
+  margin-left: 20px;
 }
 
 main {
@@ -1206,18 +1220,19 @@ main {
 
 .summary-stat {
   text-align: center;
-  padding: 10px;
-  min-width: 200px;
+  padding: 5px 10px;
+  min-width: 150px;
 }
 
 .stat-label {
   font-weight: bold;
   color: #555;
-  margin-bottom: 5px;
+  margin-bottom: 3px;
+  font-size: 0.85em;
 }
 
 .stat-value {
-  font-size: 1.2em;
+  font-size: 1.1em;
   color: #2196F3;
   font-weight: bold;
 }
