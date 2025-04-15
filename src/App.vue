@@ -40,6 +40,7 @@
             <span>{{ Math.round(zoomLevel * 100) }}%</span>
             <button @click="zoomIn" class="zoom-button" title="Zoom In">+</button>
             <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
+            <button @click="exportCSV" class="export-button" title="Export to CSV">Export CSV</button>
           </div>
         </div>
         <div class="table-container">
@@ -797,6 +798,61 @@ export default {
         }
       }
     },
+    // Export data to CSV
+    exportCSV() {
+      // Create CSV header row
+      let csvContent = "Department,";
+      
+      // Add month headers
+      csvContent += this.months.join(",") + ",Rate\n";
+      
+      // Add department data
+      this.departments.forEach((dept, index) => {
+        csvContent += dept.name + ",";
+        
+        // Add crew counts for each month
+        for (let i = 0; i < this.months.length; i++) {
+          csvContent += this.crewMatrix[index][i] + ",";
+        }
+        
+        // Add rate
+        csvContent += dept.rate + "\n";
+      });
+      
+      // Add empty row
+      csvContent += "\n";
+      
+      // Add monthly costs
+      csvContent += "Monthly Cost,";
+      for (let i = 0; i < this.monthlyCosts.length; i++) {
+        csvContent += this.monthlyCosts[i] + ",";
+      }
+      csvContent += "\n";
+      
+      // Add cumulative costs
+      csvContent += "Cumulative Cost,";
+      for (let i = 0; i < this.cumulativeCosts.length; i++) {
+        csvContent += this.cumulativeCosts[i] + ",";
+      }
+      csvContent += "\n";
+      
+      // Add summary stats
+      csvContent += "\nTotal Project Cost," + this.totalProjectCost + "\n";
+      csvContent += "Peak Monthly Cost," + this.peakMonthlyCost + "\n";
+      csvContent += "Peak Crew Size," + this.peakCrewSize + "\n";
+      
+      // Create a blob and download link
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "crew_planning_data.csv");
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    
     // Generate months based on years
     generateMonths() {
       // Clear existing months
@@ -1169,6 +1225,21 @@ main {
   font-size: 0.75rem;
 }
 
+.export-button {
+  margin-left: 10px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.export-button:hover {
+  background-color: #0b7dda;
+}
+
 .table-container {
   position: relative;
   margin-bottom: 20px;
@@ -1256,6 +1327,8 @@ main {
   z-index: 10;
   background-color: #f9f9f9;
   box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+  text-align: left;
+  padding-left: 10px;
 }
 
 .year-row th {
