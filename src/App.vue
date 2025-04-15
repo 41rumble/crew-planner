@@ -3,7 +3,8 @@
     '--cell-width': 60 * zoomLevel + 'px',
     '--cell-height': 40 * zoomLevel + 'px',
     '--cell-padding': 8 * zoomLevel + 'px',
-    '--font-size': 14 * zoomLevel + 'px'
+    '--font-size': 14 * zoomLevel + 'px',
+    '--header-height': 80 * zoomLevel + 'px'
   }">
     <header>
       <h1>Crew Planning Tool</h1>
@@ -26,39 +27,72 @@
           </div>
         </div>
         <div class="table-container">
-          <table class="crew-table">
-            <thead>
-              <tr class="year-row">
-                <th></th>
-                <th v-for="(year, index) in years" :key="`year-${index}`" :colspan="getMonthsInYear(year)" class="year-header">
-                  {{ year }}
-                </th>
-              </tr>
-              <tr>
-                <th :style="getDepartmentColumnStyle()">Department</th>
-                <th v-for="(month, index) in months" :key="index" class="month-header" :style="getCellStyle()">
-                  <span v-if="zoomLevel > 0.8">{{ getMonthName(index) }}</span>
-                  <span v-else-if="zoomLevel > 0.6">{{ getShortMonthName(index) }}</span>
-                  <span v-else>{{ getSingleLetterMonth(index) }}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+          <!-- Fixed header for years and months -->
+          <div class="fixed-header">
+            <table class="crew-table header-table">
+              <thead>
+                <tr class="year-row">
+                  <th class="fixed-column-header"></th>
+                  <th v-for="(year, index) in years" :key="`year-${index}`" :colspan="getMonthsInYear(year)" class="year-header">
+                    {{ year }}
+                  </th>
+                </tr>
+                <tr>
+                  <th class="fixed-column-header" :style="getDepartmentColumnStyle()">Department</th>
+                  <th v-for="(month, index) in months" :key="index" class="month-header" :style="getCellStyle()">
+                    <span v-if="zoomLevel > 0.8">{{ getMonthName(index) }}</span>
+                    <span v-else-if="zoomLevel > 0.6">{{ getShortMonthName(index) }}</span>
+                    <span v-else>{{ getSingleLetterMonth(index) }}</span>
+                  </th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+          
+          <!-- Fixed left column for department names -->
+          <div class="fixed-column">
+            <table class="crew-table column-table">
+              <tbody>
+                <tr v-for="(item, index) in sortedItems" :key="`col-${index}`" 
+                    :class="{ 
+                      'phase-row': item.type === 'phase',
+                      'selected-row': item.type === 'department' && selectedDepartmentIndex === item.index
+                    }">
+                  <td :class="{ 
+                        'phase-label': item.type === 'phase', 
+                        'selected': item.type === 'phase' && selectedPhaseIndex === item.index 
+                      }" 
+                      :style="getDepartmentColumnStyle()"
+                      @click="item.type === 'phase' ? editPhase(item.index) : selectDepartment(item.index)">
+                    <span class="drag-handle">:::</span>
+                    {{ item.type === 'phase' ? phases[item.index].name : departments[item.index].name }}
+                  </td>
+                </tr>
+                <!-- Cost rows -->
+                <tr class="cost-row non-editable">
+                  <td :style="getDepartmentColumnStyle()"><strong>Monthly Cost</strong></td>
+                </tr>
+                <tr class="total-row non-editable">
+                  <td :style="getDepartmentColumnStyle()"><strong>Cumulative Cost</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Scrollable content area -->
+          <div class="table-scroll-container">
+            <table class="crew-table main-table">
+              <tbody>
               <!-- All rows (phases and departments mixed) -->
               <template v-for="(item, index) in sortedItems">
                 <!-- Phase row -->
                 <tr v-if="item.type === 'phase'" :key="`item-${index}`" 
                     class="phase-row" 
-                    @click="editPhase(item.index)"
                     draggable="true"
                     @dragstart="dragStart($event, 'mixed', index)"
                     @dragover.prevent
                     @dragenter.prevent
                     @drop="handleDrop($event, 'mixed', index)">
-                  <td class="phase-label" :class="{ 'selected': selectedPhaseIndex === item.index }" :style="getDepartmentColumnStyle()">
-                    <span class="drag-handle">:::</span>
-                    {{ phases[item.index].name }}
-                  </td>
                   <td v-for="(month, mIndex) in months" :key="`phase-${item.index}-${mIndex}`" 
                       :class="{ 'phase-active': isMonthInPhase(phases[item.index], mIndex) }"
                       :style="getCellStyle()">
@@ -67,17 +101,12 @@
                 
                 <!-- Department row -->
                 <tr v-else :key="`item-${index}`" 
-                    @click="selectDepartment(item.index)"
                     :class="{ 'selected-row': selectedDepartmentIndex === item.index }"
                     draggable="true"
                     @dragstart="dragStart($event, 'mixed', index)"
                     @dragover.prevent
                     @dragenter.prevent
                     @drop="handleDrop($event, 'mixed', index)">
-                  <td :style="getDepartmentColumnStyle()">
-                    <span class="drag-handle">:::</span>
-                    {{ departments[item.index].name }}
-                  </td>
                   <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`" 
                       :class="{ active: crewMatrix[item.index][mIndex] > 0 }"
                       :style="getCellStyle()">
@@ -88,7 +117,6 @@
               
               <!-- Cost rows -->
               <tr class="cost-row non-editable">
-                <td :style="getDepartmentColumnStyle()"><strong>Monthly Cost</strong></td>
                 <td v-for="(cost, index) in monthlyCosts" :key="index" 
                     :class="{ active: cost > 0 }"
                     :style="getCellStyle()"
@@ -97,7 +125,6 @@
                 </td>
               </tr>
               <tr class="total-row non-editable">
-                <td :style="getDepartmentColumnStyle()"><strong>Cumulative Cost</strong></td>
                 <td v-for="(cost, index) in cumulativeCosts" :key="index" 
                     :class="{ active: cost > 0 }"
                     :style="getCellStyle()"
@@ -1000,11 +1027,23 @@ main {
 }
 
 .table-container {
-  overflow: auto;
+  position: relative;
   margin-bottom: 20px;
   width: 100%;
   height: calc(100vh - 250px);
+  overflow: hidden;
+  border: 1px solid #ddd;
   transition: all 0.3s ease;
+}
+
+/* Container for the scrollable part of the table */
+.table-scroll-container {
+  overflow: auto;
+  height: 100%;
+  width: 100%;
+  /* Add padding to account for the fixed header and column */
+  padding-top: var(--header-height);
+  padding-left: 200px;
 }
 
 .crew-table {
@@ -1027,15 +1066,39 @@ main {
 .crew-table th {
   background-color: #4CAF50;
   color: white;
-  position: sticky;
-  top: 0;
   z-index: 1;
+}
+
+/* Fixed header styles */
+.fixed-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 20;
+  background-color: #4CAF50;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fixed-column-header {
+  position: sticky;
+  left: 0;
+  z-index: 30;
+  background-color: #388E3C !important;
+}
+
+/* Fixed column styles */
+.fixed-column {
+  position: absolute;
+  top: var(--header-height);
+  left: 0;
+  z-index: 10;
+  background-color: #f9f9f9;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.1);
 }
 
 .year-row th {
   background-color: #388E3C;
-  position: sticky;
-  top: 0;
   z-index: 2;
 }
 
@@ -1050,8 +1113,17 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   transition: all 0.3s ease;
-  width: 60px;
-  min-width: 60px;
+}
+
+/* Table styles */
+.header-table, .column-table, .main-table {
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.main-table {
+  margin-top: 0;
 }
 
 .crew-table tr:nth-child(even) {
