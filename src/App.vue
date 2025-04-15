@@ -477,11 +477,7 @@ export default {
   },
   created() {
     // Generate all months across years
-    this.years.forEach(year => {
-      this.monthsPerYear.forEach(month => {
-        this.months.push(`${month} ${year}`);
-      });
-    });
+    this.generateMonths();
     
     // Initialize crew matrix
     this.initializeCrewMatrix();
@@ -801,6 +797,33 @@ export default {
         }
       }
     },
+    // Generate months based on years
+    generateMonths() {
+      // Clear existing months
+      this.months = [];
+      
+      // Generate all months across years
+      this.years.forEach(year => {
+        this.monthsPerYear.forEach(month => {
+          this.months.push(`${month} ${year}`);
+        });
+      });
+      
+      // Update crew matrix size if needed
+      this.updateCrewMatrixSize();
+    },
+    
+    // Update crew matrix size when months change
+    updateCrewMatrixSize() {
+      // Ensure crew matrix has enough columns for all months
+      this.departments.forEach((dept, index) => {
+        // Extend crew matrix if needed
+        while (this.crewMatrix[index].length < this.months.length) {
+          this.crewMatrix[index].push(0);
+        }
+      });
+    },
+    
     // Edit year
     editYear(index) {
       const currentYear = this.years[index];
@@ -809,10 +832,18 @@ export default {
       if (newYear && !isNaN(newYear) && newYear.trim() !== '') {
         // Update the year
         const yearValue = parseInt(newYear.trim());
-        this.$set(this.years, index, yearValue);
+        
+        // Create a new array with the updated year
+        const updatedYears = [...this.years];
+        updatedYears[index] = yearValue;
+        this.years = updatedYears;
         
         // Regenerate months
         this.generateMonths();
+        
+        // Recalculate costs
+        this.updateAllDepartments();
+        this.calculateCosts();
       }
     },
     
@@ -1244,10 +1275,13 @@ main {
   cursor: pointer;
   padding: 2px 5px;
   border-radius: 4px;
+  border: 1px dashed transparent;
+  transition: all 0.2s ease;
 }
 
 .editable-year:hover {
   background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.7);
 }
 
 .month-header {
