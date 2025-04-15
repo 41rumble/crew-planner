@@ -103,7 +103,7 @@
                     <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`" 
                         :class="{ active: crewMatrix[item.index][mIndex] > 0 }"
                         :style="getCellStyle()">
-                      {{ crewMatrix[item.index][mIndex] }}
+                      {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
                     </td>
                   </tr>
                 </template>
@@ -115,7 +115,7 @@
                       :class="{ active: cost > 0 }"
                       :style="getCellStyle()"
                       :title="'$' + formatCurrency(cost)">
-                    {{ formatCompactCurrency(cost) }}
+                    {{ cost > 0 ? formatCompactCurrency(cost) : '' }}
                   </td>
                 </tr>
                 <tr class="total-row non-editable">
@@ -124,7 +124,7 @@
                       :class="{ active: cost > 0 }"
                       :style="getCellStyle()"
                       :title="'$' + formatCurrency(cost)">
-                    {{ formatCompactCurrency(cost) }}
+                    {{ cost > 0 ? formatCompactCurrency(cost) : '' }}
                   </td>
                 </tr>
               </tbody>
@@ -1256,19 +1256,20 @@ main {
 
 /* Phase styling */
 .phase-row {
-  background-color: #f9f9f9;
+  background-color: #f0f7ff; /* Light blue background */
   cursor: pointer;
 }
 
 .phase-label {
   font-weight: bold;
-  color: #555;
+  color: #0d47a1;
   font-style: italic;
-  background-color: #f0f0f0;
+  background-color: #e1f0ff; /* Slightly darker blue for the phase label */
+  border-left: 3px solid #2196F3;
 }
 
 .phase-active {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: rgba(33, 150, 243, 0.3); /* More visible blue for active phases */
 }
 
 /* Selected row styling */
