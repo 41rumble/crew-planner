@@ -477,11 +477,7 @@ export default {
   },
   created() {
     // Generate all months across years
-    this.years.forEach(year => {
-      this.monthsPerYear.forEach(month => {
-        this.months.push(`${month} ${year}`);
-      });
-    });
+    this.generateMonths();
     
     // Initialize crew matrix
     this.initializeCrewMatrix();
@@ -801,6 +797,19 @@ export default {
         }
       }
     },
+    // Generate months based on years
+    generateMonths() {
+      // Clear existing months
+      this.months = [];
+      
+      // Generate all months across years
+      this.years.forEach(year => {
+        this.monthsPerYear.forEach(month => {
+          this.months.push(`${month} ${year}`);
+        });
+      });
+    },
+    
     // Edit year
     editYear(index) {
       const currentYear = this.years[index];
@@ -809,10 +818,21 @@ export default {
       if (newYear && !isNaN(newYear) && newYear.trim() !== '') {
         // Update the year
         const yearValue = parseInt(newYear.trim());
-        this.$set(this.years, index, yearValue);
+        
+        // Create a new array with the updated year
+        const updatedYears = [...this.years];
+        updatedYears[index] = yearValue;
+        this.years = updatedYears;
         
         // Regenerate months
         this.generateMonths();
+        
+        // Reinitialize crew matrix
+        this.initializeCrewMatrix();
+        
+        // Recalculate
+        this.updateAllDepartments();
+        this.calculateCosts();
       }
     },
     
