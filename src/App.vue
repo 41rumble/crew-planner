@@ -1,5 +1,10 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" :style="{
+    '--cell-width': 60 * zoomLevel + 'px',
+    '--cell-height': 40 * zoomLevel + 'px',
+    '--cell-padding': 8 * zoomLevel + 'px',
+    '--font-size': 14 * zoomLevel + 'px'
+  }">
     <header>
       <h1>Crew Planning Tool</h1>
     </header>
@@ -20,7 +25,7 @@
             <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
           </div>
         </div>
-        <div class="table-container" :style="{ fontSize: zoomLevel + 'rem' }">
+        <div class="table-container">
           <table class="crew-table">
             <thead>
               <tr class="year-row">
@@ -540,47 +545,19 @@ export default {
     
     // Get cell style based on zoom level
     getCellStyle() {
-      // At 100% zoom (zoomLevel = 1), use the default styling
-      if (this.zoomLevel >= 1) {
-        return {
-          padding: '8px',
-          minWidth: '60px',
-          width: '60px',
-          fontSize: '1em'
-        };
-      } else if (this.zoomLevel >= 0.8) {
-        // Slightly reduced at 80-99% zoom
-        return {
-          padding: '6px',
-          minWidth: '50px',
-          width: '50px',
-          fontSize: '0.95em'
-        };
-      } else if (this.zoomLevel >= 0.6) {
-        // More compact at 60-79% zoom
-        return {
-          padding: '4px',
-          minWidth: '40px',
-          width: '40px',
-          fontSize: '0.9em'
-        };
-      } else {
-        // Very compact at <60% zoom
-        return {
-          padding: '2px',
-          minWidth: '30px',
-          width: '30px',
-          fontSize: '0.8em'
-        };
-      }
+      // Using CSS variables for sizing
+      return {
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      };
     },
     
-    // Get style for the department column (not affected by horizontal zoom)
+    // Get style for the department column (fixed width)
     getDepartmentColumnStyle() {
       return {
-        minWidth: '150px',
-        width: 'auto',
-        maxWidth: '300px',
+        minWidth: '200px',
+        width: '200px',
+        maxWidth: '200px',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis'
@@ -1023,24 +1000,28 @@ main {
 }
 
 .table-container {
-  overflow-x: auto;
+  overflow: auto;
   margin-bottom: 20px;
-  transition: font-size 0.3s ease;
+  width: 100%;
+  height: calc(100vh - 250px);
+  transition: all 0.3s ease;
 }
 
 .crew-table {
-  width: 100%;
+  width: auto;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--font-size);
   table-layout: fixed;
   transition: all 0.3s ease;
 }
 
 .crew-table th, .crew-table td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: var(--cell-padding);
   text-align: center;
-  transition: padding 0.3s ease, min-width 0.3s ease;
+  width: var(--cell-width);
+  height: var(--cell-height);
+  transition: all 0.3s ease;
 }
 
 .crew-table th {
