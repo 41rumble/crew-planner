@@ -915,14 +915,23 @@ export default {
 </script>
 
 <style>
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
 .app-container {
   font-family: Arial, sans-serif;
   width: 100%;
   max-width: 100vw;
+  height: 100vh;
   margin: 0 auto;
   padding: 20px;
   position: relative;
-  overflow-x: hidden; /* Prevent horizontal scrolling at the page level */
+  overflow: hidden; /* Prevent scrolling at the page level */
+  display: flex;
+  flex-direction: column;
 }
 
 header {
@@ -933,6 +942,8 @@ header {
 main {
   display: flex;
   position: relative;
+  flex: 1;
+  overflow: hidden;
 }
 
 .visualization {
@@ -1015,7 +1026,7 @@ main {
   margin-bottom: 20px;
   width: 100%;
   max-width: 100%;
-  height: calc(100vh - 250px);
+  height: calc(100% - 150px); /* Adjust to fit within the visualization container */
   border: 1px solid #ddd;
   transition: all 0.3s ease;
 }
@@ -1174,6 +1185,19 @@ main {
 .selected-row {
   background-color: #e3f2fd !important;
   cursor: pointer;
+}
+
+.selected-row td {
+  border-top: 2px solid #2196F3;
+  border-bottom: 2px solid #2196F3;
+}
+
+.selected-row td.fixed-column {
+  background-color: #bbdefb !important;
+  font-weight: bold;
+  color: #0d47a1;
+  box-shadow: 2px 0 5px rgba(33, 150, 243, 0.4);
+  border-left: 3px solid #2196F3;
 }
 
 .selected {
