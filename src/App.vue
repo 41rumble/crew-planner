@@ -630,7 +630,6 @@ export default {
     updateDepartmentCrew(department) {
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
-      this.calculateCosts();
     },
     updateDepartmentTimeframe(department) {
       // Ensure end month is after start month
@@ -652,12 +651,10 @@ export default {
       
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
-      this.calculateCosts();
     },
     updateDepartmentRamp(department) {
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
-      this.calculateCosts();
     },
     updateAllDepartments() {
       this.initializeCrewMatrix();
@@ -695,6 +692,11 @@ export default {
         const crewSize = Math.round(maxCrew * (rampDownDuration - i - 1) / rampDownDuration);
         this.crewMatrix[dIndex][month] = crewSize;
       }
+      
+      // Recalculate costs after updating the crew matrix
+      this.$nextTick(() => {
+        this.calculateCosts();
+      });
     },
     calculateCosts() {
       // Reset cost arrays
@@ -802,9 +804,6 @@ export default {
       
       // Update the department distribution
       this.updateDepartmentDistribution(this.departments.length - 1);
-      
-      // Recalculate costs
-      this.calculateCosts();
       
       // Select the new department for editing
       this.selectDepartment(this.departments.length - 1);
@@ -988,8 +987,8 @@ export default {
         // Re-initialize the item order
         this.initializeItemOrder();
         
-        // Recalculate costs
-        this.calculateCosts();
+        // Update all departments to ensure crew matrix is properly initialized
+        this.updateAllDepartments();
         
         // Show success message
         alert('CSV file loaded successfully!');
@@ -1034,7 +1033,6 @@ export default {
         
         // Recalculate
         this.updateAllDepartments();
-        this.calculateCosts();
       }
     },
     
