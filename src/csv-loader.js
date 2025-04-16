@@ -50,21 +50,21 @@ export function parseCSV(csvString) {
     const monthCells = monthLine.split(',');
     const months = [];
     
-    // Map of month abbreviations to full names
+    // Map of month abbreviations to standardized abbreviations
     const monthMap = {
-      'Jan': 'January',
-      'Fed': 'February', // Handle typo in your CSV
-      'Feb': 'February',
-      'Mar': 'March',
-      'Apr': 'April',
+      'Jan': 'Jan',
+      'Fed': 'Feb', // Correct typo in your CSV
+      'Feb': 'Feb',
+      'Mar': 'Mar',
+      'Apr': 'Apr',
       'May': 'May',
-      'Jun': 'June',
-      'Jul': 'July',
-      'Aug': 'August',
-      'Sep': 'September',
-      'Oct': 'October',
-      'Nov': 'November',
-      'Dec': 'December'
+      'Jun': 'Jun',
+      'Jul': 'Jul',
+      'Aug': 'Aug',
+      'Sep': 'Sep',
+      'Oct': 'Oct',
+      'Nov': 'Nov',
+      'Dec': 'Dec'
     };
     
     // If there are no valid month names in the header, create default months
@@ -78,8 +78,8 @@ export function parseCSV(csvString) {
     
     if (!hasValidMonths) {
       console.log('No valid months found in header, using default months');
-      // Create default months for all years
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      // Create default months for all years (using standardized month names)
+      const monthNames = Object.values(monthMap).filter((value, index, self) => self.indexOf(value) === index);
       years.forEach(year => {
         monthNames.forEach(month => {
           months.push(`${month} ${year}`);
@@ -104,8 +104,9 @@ export function parseCSV(csvString) {
             monthsInCurrentYear = 0;
           }
           
-          // Create the month string
-          months.push(`${monthName} ${currentYear}`);
+          // Create the month string with standardized month name
+          const standardizedMonth = monthMap[monthName] || monthName;
+          months.push(`${standardizedMonth} ${currentYear}`);
           monthsInCurrentYear++;
         }
       }

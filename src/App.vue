@@ -913,8 +913,19 @@ export default {
       // Create CSV header row
       let csvContent = "Department,";
       
+      // Generate standardized month headers
+      const standardizedMonths = [];
+      this.years.forEach(year => {
+        this.monthsPerYear.forEach(month => {
+          standardizedMonths.push(`${month} ${year}`);
+        });
+      });
+      
       // Add month headers
-      csvContent += this.months.join(",") + ",Rate\n";
+      csvContent += standardizedMonths.join(",") + ",Rate\n";
+      
+      // Make sure we have the right number of months
+      const numMonths = Math.min(standardizedMonths.length, this.months.length);
       
       // Add data in the same order as displayed in the UI
       this.sortedItems.forEach(item => {
@@ -924,7 +935,7 @@ export default {
           csvContent += phase.name + " (Phase),";
           
           // Add phase indicators for each month
-          for (let i = 0; i < this.months.length; i++) {
+          for (let i = 0; i < numMonths; i++) {
             csvContent += this.isMonthInPhase(phase, i) ? "X," : ",";
           }
           
@@ -936,7 +947,7 @@ export default {
           csvContent += dept.name + ",";
           
           // Add crew counts for each month
-          for (let i = 0; i < this.months.length; i++) {
+          for (let i = 0; i < numMonths; i++) {
             csvContent += this.crewMatrix[item.index][i] + ",";
           }
           
@@ -950,14 +961,14 @@ export default {
       
       // Add monthly costs
       csvContent += "Monthly Cost,";
-      for (let i = 0; i < this.monthlyCosts.length; i++) {
+      for (let i = 0; i < numMonths; i++) {
         csvContent += this.monthlyCosts[i] + ",";
       }
       csvContent += "\n";
       
       // Add cumulative costs
       csvContent += "Cumulative Cost,";
-      for (let i = 0; i < this.cumulativeCosts.length; i++) {
+      for (let i = 0; i < numMonths; i++) {
         csvContent += this.cumulativeCosts[i] + ",";
       }
       csvContent += "\n";
