@@ -3,12 +3,12 @@
  */
 
 export const simpleData = {
-  years: [2022, 2023, 2024, 2025],
+  years: [1, 2, 3, 4],
   months: [
-    'Jan 2022', 'Feb 2022', 'Mar 2022', 'Apr 2022', 'May 2022', 'Jun 2022', 'Jul 2022', 'Aug 2022', 'Sep 2022', 'Oct 2022', 'Nov 2022', 'Dec 2022',
-    'Jan 2023', 'Feb 2023', 'Mar 2023', 'Apr 2023', 'May 2023', 'Jun 2023', 'Jul 2023', 'Aug 2023', 'Sep 2023', 'Oct 2023', 'Nov 2023', 'Dec 2023',
-    'Jan 2024', 'Feb 2024', 'Mar 2024', 'Apr 2024', 'May 2024', 'Jun 2024', 'Jul 2024', 'Aug 2024', 'Sep 2024', 'Oct 2024', 'Nov 2024', 'Dec 2024',
-    'Jan 2025', 'Feb 2025', 'Mar 2025', 'Apr 2025', 'May 2025', 'Jun 2025', 'Jul 2025', 'Aug 2025', 'Sep 2025', 'Oct 2025', 'Nov 2025', 'Dec 2025'
+    'Jan Y1', 'Feb Y1', 'Mar Y1', 'Apr Y1', 'May Y1', 'Jun Y1', 'Jul Y1', 'Aug Y1', 'Sep Y1', 'Oct Y1', 'Nov Y1', 'Dec Y1',
+    'Jan Y2', 'Feb Y2', 'Mar Y2', 'Apr Y2', 'May Y2', 'Jun Y2', 'Jul Y2', 'Aug Y2', 'Sep Y2', 'Oct Y2', 'Nov Y2', 'Dec Y2',
+    'Jan Y3', 'Feb Y3', 'Mar Y3', 'Apr Y3', 'May Y3', 'Jun Y3', 'Jul Y3', 'Aug Y3', 'Sep Y3', 'Oct Y3', 'Nov Y3', 'Dec Y3',
+    'Jan Y4', 'Feb Y4', 'Mar Y4', 'Apr Y4', 'May Y4', 'Jun Y4', 'Jul Y4', 'Aug Y4', 'Sep Y4', 'Oct Y4', 'Nov Y4', 'Dec Y4'
   ],
   phases: [
     {

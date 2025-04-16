@@ -40,6 +40,15 @@
             <span>{{ Math.round(zoomLevel * 100) }}%</span>
             <button @click="zoomIn" class="zoom-button" title="Zoom In">+</button>
             <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
+            <div class="time-scale-control">
+              <label>Time Scale:</label>
+              <select v-model="timeScale" @change="updateTimeScale">
+                <option value="1">1 month</option>
+                <option value="2">2 months</option>
+                <option value="3">3 months</option>
+                <option value="6">6 months</option>
+              </select>
+            </div>
             <button @click="exportCSV" class="export-button" title="Export to CSV">Export CSV</button>
             <FileUploader @file-loaded="loadCSV" />
             <a href="/sample_crew_plan.csv" download class="sample-link">Download Sample</a>
@@ -53,7 +62,7 @@
                 <tr class="year-row">
                   <th class="fixed-column-header"></th>
                   <th v-for="(year, index) in years" :key="`year-${index}`" :colspan="getMonthsInYear(year)" class="year-header">
-                    <span @click="editYear(index)" class="editable-year">{{ year }}</span>
+                    <span @click="editYear(index)" class="editable-year">Year {{ year }}</span>
                   </th>
                 </tr>
                 <tr>
@@ -344,6 +353,7 @@ export default {
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
       zoomLevel: 1.0, // Start at 100% zoom
+      timeScale: 1, // Default time scale (1 month)
       // For timeline drag handles
       isDraggingTimelineHandle: false,
       draggedDepartmentIndex: null,
@@ -516,6 +526,9 @@ export default {
   },
   created() {
     console.log("App created, using simple data");
+    
+    // Generate months with the current time scale
+    this.generateMonthsWithTimeScale();
     
     // Make sure crewMatrix is initialized
     if (!this.crewMatrix || this.crewMatrix.length === 0) {
@@ -1308,7 +1321,7 @@ export default {
       // Generate all months across years
       this.years.forEach(year => {
         this.monthsPerYear.forEach(month => {
-          this.months.push(`${month} ${year}`);
+          this.months.push(`${month} Y${year}`);
         });
       });
     },
@@ -1316,11 +1329,23 @@ export default {
     // Edit year
     editYear(index) {
       const currentYear = this.years[index];
-      const newYear = prompt(`Edit year (currently ${currentYear}):`, currentYear);
+      const newYear = prompt(`Edit year number (currently Year ${currentYear}):`, currentYear);
       
       if (newYear && !isNaN(newYear) && newYear.trim() !== '') {
         // Update the year
         const yearValue = parseInt(newYear.trim());
+        
+        // Ensure year is positive
+        if (yearValue <= 0) {
+          alert('Year number must be positive.');
+          return;
+        }
+        
+        // Check if this year already exists
+        if (this.years.includes(yearValue) && this.years[index] !== yearValue) {
+          alert('This year already exists in the timeline.');
+          return;
+        }
         
         // Create a new array with the updated year
         const updatedYears = [...this.years];
@@ -1353,6 +1378,56 @@ export default {
     },
     resetZoom() {
       this.zoomLevel = 1;
+    },
+    
+    // Time scale controls
+    updateTimeScale() {
+      // Convert timeScale to number
+      this.timeScale = parseInt(this.timeScale);
+      console.log(`Updating time scale to ${this.timeScale} months`);
+      
+      // Regenerate months with the new time scale
+      this.generateMonthsWithTimeScale();
+    },
+    
+    // Generate months based on years and time scale
+    generateMonthsWithTimeScale() {
+      // Clear existing months
+      this.months = [];
+      
+      // Generate months based on time scale
+      this.years.forEach(year => {
+        // Calculate how many periods we need for this year
+        const periodsPerYear = 12 / this.timeScale;
+        
+        for (let i = 0; i < periodsPerYear; i++) {
+          // Calculate the start and end month for this period
+          const startMonth = i * this.timeScale;
+          const endMonth = startMonth + this.timeScale - 1;
+          
+          // Get the month names
+          const startMonthName = this.monthsPerYear[startMonth];
+          const endMonthName = this.monthsPerYear[endMonth];
+          
+          // Create the period name
+          let periodName;
+          if (this.timeScale === 1) {
+            // For 1 month, just use the month name
+            periodName = `${startMonthName} Y${year}`;
+          } else {
+            // For multiple months, use a range
+            periodName = `${startMonthName}-${endMonthName} Y${year}`;
+          }
+          
+          this.months.push(periodName);
+        }
+      });
+      
+      // Reinitialize crew matrix
+      this.initializeCrewMatrix();
+      
+      // Recalculate
+      this.updateAllDepartments();
     },
     // Editor position and dragging
     resetEditorPosition() {
@@ -1652,6 +1727,23 @@ main {
   align-items: center;
   gap: 3px;
   margin-left: auto;
+}
+
+.time-scale-control {
+  display: flex;
+  align-items: center;
+  margin: 0 10px;
+}
+
+.time-scale-control label {
+  margin-right: 5px;
+  font-size: 14px;
+}
+
+.time-scale-control select {
+  padding: 3px 5px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
 }
 
 .zoom-button {
