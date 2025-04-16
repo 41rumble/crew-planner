@@ -910,71 +910,99 @@ export default {
     },
     // Export data to CSV
     exportCSV() {
-      // Create CSV header row
-      let csvContent = "Department,";
+      // Create a CSV that matches the original format exactly
       
-      // Generate standardized month headers
-      const standardizedMonths = [];
+      // First, create the year header row
+      let csvContent = ",";
       this.years.forEach(year => {
+        // Add the year followed by empty cells for each month
+        csvContent += year + "," + ",".repeat(11) + ",";
+      });
+      csvContent += "\n";
+      
+      // Create the month header row
+      csvContent += ",";
+      this.years.forEach(year => {
+        // Add all months for this year
         this.monthsPerYear.forEach(month => {
-          standardizedMonths.push(`${month} ${year}`);
+          csvContent += month + ",";
         });
       });
+      csvContent += "\n";
       
-      // Add month headers
-      csvContent += standardizedMonths.join(",") + ",Rate\n";
+      // Add an empty row
+      csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
       
-      // Make sure we have the right number of months
-      const numMonths = Math.min(standardizedMonths.length, this.months.length);
+      // Group departments by their section/category
+      const sections = {};
+      let currentSection = "Departments";
       
-      // Add data in the same order as displayed in the UI
+      // First pass: identify all sections and their departments
       this.sortedItems.forEach(item => {
         if (item.type === 'phase') {
-          // Add phase row
-          const phase = this.phases[item.index];
-          csvContent += phase.name + " (Phase),";
-          
-          // Add phase indicators for each month
-          for (let i = 0; i < numMonths; i++) {
-            csvContent += this.isMonthInPhase(phase, i) ? "X," : ",";
+          // This is a section header
+          currentSection = this.phases[item.index].name;
+          sections[currentSection] = [];
+        } else if (item.type === 'department') {
+          // Add this department to the current section
+          if (!sections[currentSection]) {
+            sections[currentSection] = [];
           }
-          
-          // No rate for phases
-          csvContent += "\n";
-        } else {
-          // Add department row
-          const dept = this.departments[item.index];
-          csvContent += dept.name + ",";
-          
-          // Add crew counts for each month
-          for (let i = 0; i < numMonths; i++) {
-            csvContent += this.crewMatrix[item.index][i] + ",";
-          }
-          
-          // Add rate
-          csvContent += dept.rate + "\n";
+          sections[currentSection].push({
+            index: item.index,
+            dept: this.departments[item.index]
+          });
         }
       });
       
-      // Add empty row
-      csvContent += "\n";
+      // Second pass: output each section with its departments
+      Object.keys(sections).forEach(sectionName => {
+        // Add section header
+        csvContent += sectionName + ":,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+        
+        // Add departments in this section
+        sections[sectionName].forEach(deptInfo => {
+          // Add department name
+          csvContent += deptInfo.dept.name + ",";
+          
+          // Add crew counts for each month
+          for (let i = 0; i < this.months.length; i++) {
+            csvContent += this.crewMatrix[deptInfo.index][i] + ",";
+          }
+          
+          // Add rate at the end (not visible in the original format, but useful for import)
+          csvContent += deptInfo.dept.rate + "\n";
+          
+          // Add an empty row after each department
+          csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+        });
+        
+        // Add an empty row after each section
+        csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+      });
+      
+      // Add an empty row before the stats
+      csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
       
       // Add monthly costs
       csvContent += "Monthly Cost,";
-      for (let i = 0; i < numMonths; i++) {
+      for (let i = 0; i < this.months.length; i++) {
         csvContent += this.monthlyCosts[i] + ",";
       }
       csvContent += "\n";
       
       // Add cumulative costs
       csvContent += "Cumulative Cost,";
-      for (let i = 0; i < numMonths; i++) {
+      for (let i = 0; i < this.months.length; i++) {
         csvContent += this.cumulativeCosts[i] + ",";
       }
       csvContent += "\n";
       
+      // Add an empty row
+      csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+      
       // Add summary stats
-      csvContent += "\nTotal Project Cost," + this.totalProjectCost + "\n";
+      csvContent += "Total Project Cost," + this.totalProjectCost + "\n";
       csvContent += "Peak Monthly Cost," + this.peakMonthlyCost + "\n";
       csvContent += "Peak Crew Size," + this.peakCrewSize + "\n";
       
