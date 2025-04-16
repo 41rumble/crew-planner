@@ -1282,8 +1282,14 @@ export default {
         this.departments = parsedData.departments;
         this.phases = parsedData.phases;
         
-        // Re-initialize the item order
-        this.initializeItemOrder();
+        // Use the item order from the parsed data if available, otherwise initialize it
+        if (parsedData.itemOrder) {
+          console.log('Using item order from parsed data:', parsedData.itemOrder);
+          this.itemOrder = parsedData.itemOrder;
+        } else {
+          console.log('No item order in parsed data, initializing...');
+          this.initializeItemOrder();
+        }
         
         // Initialize the crew matrix
         console.log('Setting crew matrix from parsed data:', parsedData.crewMatrix);

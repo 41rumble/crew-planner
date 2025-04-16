@@ -117,7 +117,7 @@ export function parseCSV(csvString) {
     // Parse departments and phases
     const departments = [];
     const phases = [];
-    const phaseOrder = []; // Track the order of phases as they appear in the CSV
+    const itemOrder = []; // Track the exact order of phases and departments as they appear in the CSV
     let currentPhase = null;
     
     for (let i = 2; i < lines.length; i++) {
@@ -157,14 +157,14 @@ export function parseCSV(csvString) {
           name: phaseName,
           startMonth,
           endMonth,
-          originalIndex: phaseOrder.length // Store the original order
+          originalIndex: phases.length // Store the index in the phases array
         });
         
-        // Track the order of phases
-        phaseOrder.push(phaseName);
+        // Track this phase in the item order
+        itemOrder.push({ type: 'phase', index: phases.length - 1 });
         
         currentPhase = phases.length - 1;
-        console.log(`Added phase ${phaseName} at index ${currentPhase}, original index ${phaseOrder.length - 1}`);
+        console.log(`Added phase ${phaseName} at index ${currentPhase}, item order position ${itemOrder.length - 1}`);
       } else {
         // This is a department row
         console.log('Processing department:', name);
@@ -275,6 +275,7 @@ export function parseCSV(csvString) {
           }
         }
         
+        // Add the department to the departments array
         departments.push({
           name,
           maxCrew,
@@ -283,10 +284,14 @@ export function parseCSV(csvString) {
           rampUpDuration,
           rampDownDuration,
           rate,
-          phase: currentPhase
+          phase: currentPhase,
+          originalIndex: departments.length // Store the index in the departments array
         });
         
-        console.log('Added department:', name, 'with maxCrew:', maxCrew, 'rate:', rate);
+        // Track this department in the item order
+        itemOrder.push({ type: 'department', index: departments.length - 1 });
+        
+        console.log('Added department:', name, 'with maxCrew:', maxCrew, 'rate:', rate, 'item order position:', itemOrder.length - 1);
       }
     }
     
@@ -448,7 +453,8 @@ export function parseCSV(csvString) {
       months,
       departments,
       phases,
-      crewMatrix
+      crewMatrix,
+      itemOrder // Include the exact order of items as they appear in the CSV
     };
   } catch (error) {
     console.error('Error parsing CSV:', error);
