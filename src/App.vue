@@ -673,8 +673,39 @@ export default {
       console.log('Final crew matrix after updates:', this.crewMatrix);
     },
     updateDepartmentDistribution(dIndex) {
+      console.log(`Updating department distribution for index ${dIndex}`);
+      
+      // Validate department index
+      if (dIndex < 0 || dIndex >= this.departments.length) {
+        console.error(`Invalid department index: ${dIndex}`);
+        return;
+      }
+      
       const department = this.departments[dIndex];
+      console.log(`Department: ${department.name}`);
+      
+      // Validate department properties
+      if (!department) {
+        console.error(`Department at index ${dIndex} is undefined`);
+        return;
+      }
+      
+      // Ensure maxCrew is reasonable
+      if (isNaN(department.maxCrew) || department.maxCrew < 0 || department.maxCrew > 1000) {
+        console.error(`Invalid maxCrew for ${department.name}: ${department.maxCrew}`);
+        department.maxCrew = Math.min(Math.max(0, department.maxCrew || 0), 1000);
+        console.log(`Adjusted maxCrew to ${department.maxCrew}`);
+      }
+      
+      // Extract department properties
       const { startMonth, endMonth, maxCrew, rampUpDuration, rampDownDuration } = department;
+      console.log(`Parameters: startMonth=${startMonth}, endMonth=${endMonth}, maxCrew=${maxCrew}, rampUp=${rampUpDuration}, rampDown=${rampDownDuration}`);
+      
+      // Validate crew matrix
+      if (!this.crewMatrix[dIndex]) {
+        console.error(`Crew matrix row for department ${dIndex} is undefined`);
+        this.crewMatrix[dIndex] = new Array(this.months.length).fill(0);
+      }
       
       // Clear previous values
       this.crewMatrix[dIndex].fill(0);
@@ -683,24 +714,39 @@ export default {
       const totalDuration = endMonth - startMonth + 1;
       const plateauStart = startMonth + rampUpDuration;
       const plateauEnd = endMonth - rampDownDuration;
+      console.log(`Plateau: start=${plateauStart}, end=${plateauEnd}`);
       
       // Apply ramp up
       for (let i = 0; i < rampUpDuration; i++) {
         const month = startMonth + i;
-        const crewSize = Math.round((i + 1) * maxCrew / rampUpDuration);
-        this.crewMatrix[dIndex][month] = crewSize;
+        if (month >= 0 && month < this.months.length) {
+          const crewSize = Math.round((i + 1) * maxCrew / rampUpDuration);
+          this.crewMatrix[dIndex][month] = crewSize;
+        }
       }
       
       // Apply plateau (full crew)
       for (let month = plateauStart; month <= plateauEnd; month++) {
-        this.crewMatrix[dIndex][month] = maxCrew;
+        if (month >= 0 && month < this.months.length) {
+          this.crewMatrix[dIndex][month] = maxCrew;
+        }
       }
       
       // Apply ramp down
       for (let i = 0; i < rampDownDuration; i++) {
         const month = plateauEnd + 1 + i;
-        const crewSize = Math.round(maxCrew * (rampDownDuration - i - 1) / rampDownDuration);
-        this.crewMatrix[dIndex][month] = crewSize;
+        if (month >= 0 && month < this.months.length) {
+          const crewSize = Math.round(maxCrew * (rampDownDuration - i - 1) / rampDownDuration);
+          this.crewMatrix[dIndex][month] = crewSize;
+        }
+      }
+      
+      // Validate the crew matrix values
+      for (let i = 0; i < this.crewMatrix[dIndex].length; i++) {
+        if (isNaN(this.crewMatrix[dIndex][i]) || this.crewMatrix[dIndex][i] < 0 || this.crewMatrix[dIndex][i] > 1000) {
+          console.error(`Invalid crew size at [${dIndex}][${i}]: ${this.crewMatrix[dIndex][i]}`);
+          this.crewMatrix[dIndex][i] = 0;
+        }
       }
       
       // Recalculate costs after updating the crew matrix
@@ -759,15 +805,40 @@ export default {
       // Calculate monthly costs
       for (let m = 0; m < this.months.length; m++) {
         for (let d = 0; d < this.departments.length; d++) {
-          const crewSize = this.crewMatrix[d][m];
-          const rate = this.departments[d].rate;
+          // Skip if department or crew matrix is invalid
+          if (!this.departments[d] || !this.crewMatrix[d]) {
+            console.error(`Invalid department or crew matrix at index ${d}`);
+            continue;
+          }
+          
+          // Get crew size and rate
+          let crewSize = this.crewMatrix[d][m];
+          let rate = this.departments[d].rate;
+          
+          // Validate crew size
+          if (isNaN(crewSize) || crewSize < 0 || crewSize > 1000) {
+            console.error(`Invalid crew size at [${d}][${m}]: ${crewSize}`);
+            crewSize = 0;
+            this.crewMatrix[d][m] = 0; // Fix the value in the matrix
+          }
+          
+          // Validate rate
+          if (isNaN(rate) || rate < 1000 || rate > 50000) {
+            console.error(`Invalid rate for ${this.departments[d].name}: ${rate}`);
+            rate = 8000; // Use a default rate
+            this.departments[d].rate = 8000; // Fix the rate in the department
+          }
+          
+          // Calculate cost for this department and month
+          const cost = crewSize * rate;
           
           // Debug the calculation for the first month
           if (m === 0) {
-            console.log(`Month 0, Dept ${d} (${this.departments[d].name}): ${crewSize} crew * $${rate} = $${crewSize * rate}`);
+            console.log(`Month 0, Dept ${d} (${this.departments[d].name}): ${crewSize} crew * $${rate} = $${cost}`);
           }
           
-          this.monthlyCosts[m] += crewSize * rate;
+          // Add to monthly cost
+          this.monthlyCosts[m] += cost;
         }
         
         // Debug the monthly cost
