@@ -998,15 +998,15 @@ export default {
         this.departments = parsedData.departments;
         this.phases = parsedData.phases;
         
+        // Re-initialize the item order
+        this.initializeItemOrder();
+        
         // Initialize the crew matrix
         console.log('Setting crew matrix from parsed data:', parsedData.crewMatrix);
         this.crewMatrix = JSON.parse(JSON.stringify(parsedData.crewMatrix)); // Deep copy
         
-        // Re-initialize the item order
-        this.initializeItemOrder();
-        
-        // Update all departments to ensure crew matrix is properly initialized
-        this.updateAllDepartments();
+        // Calculate costs based on the loaded crew matrix
+        this.calculateCosts();
         
         // Show success message
         alert('CSV file loaded successfully!');
