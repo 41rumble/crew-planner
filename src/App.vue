@@ -770,18 +770,56 @@ export default {
         rate: 8000
       };
       
+      // Add the new department to the departments array
       this.departments.push(newDepartment);
+      
+      // Add a new row to the crew matrix
       this.crewMatrix.push(new Array(this.months.length).fill(0));
+      
+      // Add the new department to the itemOrder array
+      this.itemOrder.push({
+        type: 'department',
+        index: this.departments.length - 1
+      });
+      
+      // Update the department distribution
       this.updateDepartmentDistribution(this.departments.length - 1);
+      
+      // Recalculate costs
       this.calculateCosts();
+      
+      // Select the new department for editing
       this.selectDepartment(this.departments.length - 1);
     },
     removeDepartment() {
       if (this.selectedDepartmentIndex !== null) {
         if (confirm(`Are you sure you want to remove "${this.departments[this.selectedDepartmentIndex].name}"?`)) {
+          // Remove the department from the departments array
           this.departments.splice(this.selectedDepartmentIndex, 1);
+          
+          // Remove the corresponding row from the crew matrix
           this.crewMatrix.splice(this.selectedDepartmentIndex, 1);
+          
+          // Update the itemOrder array to remove references to the deleted department
+          // and adjust indices for departments that come after the deleted one
+          this.itemOrder = this.itemOrder.filter(item => {
+            // Remove the item if it's the department we're deleting
+            if (item.type === 'department' && item.index === this.selectedDepartmentIndex) {
+              return false;
+            }
+            
+            // Adjust indices for departments that come after the deleted one
+            if (item.type === 'department' && item.index > this.selectedDepartmentIndex) {
+              item.index--;
+            }
+            
+            return true;
+          });
+          
+          // Recalculate costs
           this.calculateCosts();
+          
+          // Clear the selection
           this.selectedDepartmentIndex = null;
         }
       }
@@ -804,13 +842,41 @@ export default {
         endMonth: 12
       };
       
+      // Add the new phase to the phases array
       this.phases.push(newPhase);
+      
+      // Add the new phase to the itemOrder array
+      this.itemOrder.push({
+        type: 'phase',
+        index: this.phases.length - 1
+      });
+      
+      // Select the new phase for editing
       this.selectedPhaseIndex = this.phases.length - 1;
     },
     removePhase() {
       if (this.selectedPhaseIndex !== null) {
         if (confirm(`Are you sure you want to remove "${this.phases[this.selectedPhaseIndex].name}"?`)) {
+          // Remove the phase from the phases array
           this.phases.splice(this.selectedPhaseIndex, 1);
+          
+          // Update the itemOrder array to remove references to the deleted phase
+          // and adjust indices for phases that come after the deleted one
+          this.itemOrder = this.itemOrder.filter(item => {
+            // Remove the item if it's the phase we're deleting
+            if (item.type === 'phase' && item.index === this.selectedPhaseIndex) {
+              return false;
+            }
+            
+            // Adjust indices for phases that come after the deleted one
+            if (item.type === 'phase' && item.index > this.selectedPhaseIndex) {
+              item.index--;
+            }
+            
+            return true;
+          });
+          
+          // Clear the selection
           this.selectedPhaseIndex = null;
         }
       }
