@@ -20,52 +20,70 @@ export function parseCSV(csvString) {
     const yearLine = lines[0];
     const monthLine = lines[1];
     
+    console.log('Year line:', yearLine);
+    console.log('Month line:', monthLine);
+    
     // Parse years from the header
     const yearCells = yearLine.split(',');
     const years = [];
-    let currentYear = null;
-    let yearColspan = 0;
     
-    // Extract years and their column spans
+    // Extract years directly from the header
     for (let i = 1; i < yearCells.length; i++) {
       const cell = yearCells[i].trim();
       if (cell && !isNaN(parseInt(cell))) {
-        if (currentYear !== null) {
-          years.push({ year: currentYear, colspan: yearColspan });
+        const year = parseInt(cell);
+        if (!years.includes(year)) {
+          years.push(year);
         }
-        currentYear = parseInt(cell);
-        yearColspan = 1;
-      } else if (currentYear !== null) {
-        yearColspan++;
       }
     }
     
-    // Add the last year
-    if (currentYear !== null) {
-      years.push({ year: currentYear, colspan: yearColspan });
-    }
+    console.log('Extracted years:', years);
     
     // Extract months from the header
     const monthCells = monthLine.split(',');
     const months = [];
     
+    // Map of month abbreviations to full names
+    const monthMap = {
+      'Jan': 'January',
+      'Fed': 'February', // Handle typo in your CSV
+      'Feb': 'February',
+      'Mar': 'March',
+      'Apr': 'April',
+      'May': 'May',
+      'Jun': 'June',
+      'Jul': 'July',
+      'Aug': 'August',
+      'Sep': 'September',
+      'Oct': 'October',
+      'Nov': 'November',
+      'Dec': 'December'
+    };
+    
+    // Extract months and years
+    let currentYearIndex = 0;
+    let currentYear = years[currentYearIndex];
+    
     for (let i = 1; i < monthCells.length; i++) {
       const monthName = monthCells[i].trim();
+      
       if (monthName) {
-        // Determine which year this month belongs to
-        let yearIndex = 0;
-        let columnCount = 0;
-        
-        for (const yearInfo of years) {
-          if (i - 1 >= columnCount && i - 1 < columnCount + yearInfo.colspan) {
-            months.push(`${monthName} ${yearInfo.year}`);
-            break;
+        // Check if we need to move to the next year
+        if (monthName === 'Jan' && i > 1 && monthCells[i-1] && monthCells[i-1].trim() === 'Dec') {
+          currentYearIndex++;
+          if (currentYearIndex < years.length) {
+            currentYear = years[currentYearIndex];
           }
-          columnCount += yearInfo.colspan;
-          yearIndex++;
         }
+        
+        // Create the month string
+        const fullMonthName = monthMap[monthName] || monthName;
+        months.push(`${monthName} ${currentYear}`);
       }
     }
+    
+    console.log('Extracted months:', months);
     
     // Parse departments and phases
     const departments = [];
@@ -73,8 +91,8 @@ export function parseCSV(csvString) {
     let currentPhase = null;
     
     for (let i = 2; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
+      const line = lines[i];
+      if (!line || line.trim() === '') continue;
       
       const cells = line.split(',');
       const name = cells[0].trim();
@@ -82,9 +100,10 @@ export function parseCSV(csvString) {
       // Skip empty rows
       if (!name) continue;
       
-      // Check if this is a phase header (ends with a colon or contains "Phase")
-      if (name.endsWith(':') || name.includes('Phase')) {
-        const phaseName = name.endsWith(':') ? name.substring(0, name.length - 1) : name.replace(' (Phase)', '');
+      // Check if this is a phase header (ends with a colon or contains "Phase" or "Stage")
+      if (name.endsWith(':') || name.includes('Phase') || name.includes('Stage')) {
+        console.log('Found phase:', name);
+        const phaseName = name.endsWith(':') ? name.substring(0, name.length - 1) : name;
         
         // Find the start and end months for this phase
         let startMonth = -1;
@@ -112,18 +131,37 @@ export function parseCSV(csvString) {
         currentPhase = phases.length - 1;
       } else {
         // This is a department row
+        console.log('Processing department:', name);
+        
+        // Skip rows that are just separators (like "Supervision:" with no crew counts)
+        let hasCrewCounts = false;
+        for (let j = 1; j < cells.length; j++) {
+          if (cells[j] && cells[j].trim() !== '' && !isNaN(parseInt(cells[j]))) {
+            hasCrewCounts = true;
+            break;
+          }
+        }
+        
+        if (!hasCrewCounts) {
+          console.log('Skipping row with no crew counts:', name);
+          continue;
+        }
+        
         const crewCounts = [];
         let rate = 8000; // Default rate
         
+        // Process crew counts and rate
         for (let j = 1; j < cells.length; j++) {
           // Check if this is the rate column (last column)
           if (j === cells.length - 1 && !isNaN(parseInt(cells[j]))) {
             rate = parseInt(cells[j]);
           } else {
-            const value = cells[j] ? parseInt(cells[j]) : 0;
+            const value = cells[j] && cells[j].trim() !== '' ? parseInt(cells[j]) : 0;
             crewCounts.push(isNaN(value) ? 0 : value);
           }
         }
+        
+        console.log('Crew counts for', name, ':', crewCounts.slice(0, 5), '...', 'length:', crewCounts.length);
         
         // Find the start and end months
         let startMonth = 0;
@@ -145,8 +183,20 @@ export function parseCSV(csvString) {
           }
         }
         
+        // If no non-zero values were found, skip this department
+        if (startMonth === 0 && endMonth === crewCounts.length - 1 && crewCounts[startMonth] === 0) {
+          console.log('Skipping department with all zeros:', name);
+          continue;
+        }
+        
         // Find max crew size
         const maxCrew = Math.max(...crewCounts);
+        if (maxCrew === 0) {
+          console.log('Skipping department with max crew 0:', name);
+          continue;
+        }
+        
+        console.log('Department', name, 'has max crew:', maxCrew, 'start:', startMonth, 'end:', endMonth);
         
         // Calculate ramp up and down durations
         let rampUpDuration = 0;
@@ -178,6 +228,8 @@ export function parseCSV(csvString) {
           rate,
           phase: currentPhase
         });
+        
+        console.log('Added department:', name, 'with maxCrew:', maxCrew, 'rate:', rate);
       }
     }
     
@@ -190,41 +242,109 @@ export function parseCSV(csvString) {
     console.log('Parsed departments:', departments);
     console.log('Parsed phases:', phases);
     
-    // Generate crew matrix
-    const crewMatrix = departments.map(dept => {
-        const crewArray = new Array(months.length).fill(0);
-        
-        // Calculate the plateau duration (full crew period)
-        const plateauStart = dept.startMonth + dept.rampUpDuration;
-        const plateauEnd = dept.endMonth - dept.rampDownDuration;
-        
-        // Apply ramp up
-        for (let i = 0; i < dept.rampUpDuration; i++) {
-          const month = dept.startMonth + i;
-          if (month < months.length) {
-            const crewSize = Math.round((i + 1) * dept.maxCrew / dept.rampUpDuration);
-            crewArray[month] = crewSize;
-          }
+    // Store the original crew counts from the CSV
+    const originalCrewCounts = [];
+    
+    // Re-parse the CSV to extract the actual crew counts for each department
+    let currentDeptIndex = -1;
+    
+    for (let i = 2; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line || line.trim() === '') continue;
+      
+      const cells = line.split(',');
+      const name = cells[0].trim();
+      
+      // Skip empty rows
+      if (!name) continue;
+      
+      // Skip phase headers
+      if (name.endsWith(':') || name.includes('Phase') || name.includes('Stage')) {
+        continue;
+      }
+      
+      // Check if this is a department row with crew counts
+      let hasCrewCounts = false;
+      for (let j = 1; j < cells.length; j++) {
+        if (cells[j] && cells[j].trim() !== '' && !isNaN(parseInt(cells[j]))) {
+          hasCrewCounts = true;
+          break;
         }
-        
-        // Apply plateau (full crew)
-        for (let month = plateauStart; month <= plateauEnd; month++) {
-          if (month < months.length) {
-            crewArray[month] = dept.maxCrew;
-          }
+      }
+      
+      if (!hasCrewCounts) continue;
+      
+      // This is a department with crew counts
+      currentDeptIndex++;
+      
+      // Skip if we've already processed all departments
+      if (currentDeptIndex >= departments.length) continue;
+      
+      // Extract crew counts
+      const crewCounts = [];
+      for (let j = 1; j < cells.length - 1; j++) { // Skip the last column (rate)
+        const value = cells[j] && cells[j].trim() !== '' ? parseInt(cells[j]) : 0;
+        crewCounts.push(isNaN(value) ? 0 : value);
+      }
+      
+      // Trim or pad the crew counts to match the number of months
+      if (crewCounts.length > months.length) {
+        crewCounts.length = months.length;
+      } else if (crewCounts.length < months.length) {
+        while (crewCounts.length < months.length) {
+          crewCounts.push(0);
         }
-        
-        // Apply ramp down
-        for (let i = 0; i < dept.rampDownDuration; i++) {
-          const month = plateauEnd + 1 + i;
-          if (month < months.length) {
-            const crewSize = Math.round(dept.maxCrew * (dept.rampDownDuration - i - 1) / dept.rampDownDuration);
-            crewArray[month] = crewSize;
-          }
+      }
+      
+      originalCrewCounts.push(crewCounts);
+    }
+    
+    console.log('Original crew counts:', originalCrewCounts.length);
+    console.log('Departments:', departments.length);
+    
+    // Generate crew matrix using the original crew counts
+    const crewMatrix = departments.map((dept, index) => {
+      // If we have original crew counts for this department, use them
+      if (index < originalCrewCounts.length) {
+        console.log('Using original crew counts for', dept.name);
+        return originalCrewCounts[index];
+      }
+      
+      // Otherwise, generate crew counts based on the department parameters
+      console.log('Generating crew counts for', dept.name);
+      const crewArray = new Array(months.length).fill(0);
+      
+      // Calculate the plateau duration (full crew period)
+      const plateauStart = dept.startMonth + dept.rampUpDuration;
+      const plateauEnd = dept.endMonth - dept.rampDownDuration;
+      
+      // Apply ramp up
+      for (let i = 0; i < dept.rampUpDuration; i++) {
+        const month = dept.startMonth + i;
+        if (month < months.length) {
+          const crewSize = Math.round((i + 1) * dept.maxCrew / dept.rampUpDuration);
+          crewArray[month] = crewSize;
         }
-        
-        return crewArray;
-      });
+      }
+      
+      // Apply plateau (full crew)
+      for (let month = plateauStart; month <= plateauEnd; month++) {
+        if (month < months.length) {
+          crewArray[month] = dept.maxCrew;
+        }
+      }
+      
+      // Apply ramp down
+      for (let i = 0; i < dept.rampDownDuration; i++) {
+        const month = plateauEnd + 1 + i;
+        if (month < months.length) {
+          const crewSize = Math.round(dept.maxCrew * (dept.rampDownDuration - i - 1) / dept.rampDownDuration);
+          crewArray[month] = crewSize;
+        }
+      }
+      
+      return crewArray;
+    });
     
     console.log('Generated crew matrix:', crewMatrix);
     
