@@ -104,9 +104,19 @@
                       {{ departments[item.index].name }}
                     </td>
                     <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`" 
-                        :class="{ active: crewMatrix[item.index][mIndex] > 0 }"
-                        :style="getCellStyle()">
-                      {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
+                        :class="{ 
+                          active: crewMatrix[item.index][mIndex] > 0,
+                          'start-handle': mIndex === departments[item.index].startMonth,
+                          'end-handle': mIndex === departments[item.index].endMonth,
+                          'dept-cell': true
+                        }"
+                        :style="getCellStyle()"
+                        @mousedown="handleCellMouseDown($event, item.index, mIndex)">
+                      <div class="cell-content">
+                        {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
+                        <div v-if="mIndex === departments[item.index].startMonth" class="start-drag-handle" title="Drag to adjust start month"></div>
+                        <div v-if="mIndex === departments[item.index].endMonth" class="end-drag-handle" title="Drag to adjust end month"></div>
+                      </div>
                     </td>
                   </tr>
                 </template>
@@ -303,6 +313,7 @@
 <script>
 import { simpleData } from './simple-data.js';
 import { parseCSV, generateCSV } from './csv-loader.js';
+import { timelineDragHandlers } from './timeline-drag-handlers.js';
 import FileUploader from './components/FileUploader.vue';
 
 export default {
@@ -322,6 +333,10 @@ export default {
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
       zoomLevel: 1.0, // Start at 100% zoom
+      // For timeline drag handles
+      isDraggingTimelineHandle: false,
+      draggedDepartmentIndex: null,
+      dragHandleType: null, // 'start' or 'end'
       editorPosition: 'position-left',
       draggedItem: null,
       editorStyle: { top: '150px', left: '20px' },
@@ -515,6 +530,8 @@ export default {
     }
   },
   methods: {
+    // Timeline drag handlers
+    ...timelineDragHandlers,
     // Initialize the item order with phases first, then departments
     initializeItemOrder() {
       this.itemOrder = [];
@@ -1383,6 +1400,54 @@ main {
 
 .sample-link:hover {
   background-color: #e68a00;
+}
+
+/* Drag handle styles */
+.dept-cell {
+  position: relative;
+}
+
+.cell-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.start-handle {
+  border-left: 3px solid var(--primary-color);
+}
+
+.end-handle {
+  border-right: 3px solid var(--primary-color);
+}
+
+.start-drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: w-resize;
+  background: linear-gradient(90deg, var(--primary-color) 0%, transparent 100%);
+  opacity: 0.5;
+}
+
+.end-drag-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: e-resize;
+  background: linear-gradient(90deg, transparent 0%, var(--primary-color) 100%);
+  opacity: 0.5;
+}
+
+.start-drag-handle:hover, .end-drag-handle:hover {
+  opacity: 0.8;
 }
 
 .table-container {
