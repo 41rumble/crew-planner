@@ -562,15 +562,10 @@ export default {
     initializeItemOrder() {
       this.itemOrder = [];
       
-      // First, sort phases by their startMonth
-      const sortedPhases = [...this.phases].map((phase, index) => ({ phase, index }))
-        .sort((a, b) => a.phase.startMonth - b.phase.startMonth);
-      
-      console.log('Sorted phases:', sortedPhases.map(p => p.phase.name));
-      
-      // Add phases in order
-      for (const { index: i } of sortedPhases) {
+      // Add phases in their original order
+      for (let i = 0; i < this.phases.length; i++) {
         this.itemOrder.push({ type: 'phase', index: i });
+        console.log(`Added phase: ${this.phases[i].name}`);
         
         // Add departments that belong to this phase
         const departmentsInPhase = [];
@@ -597,6 +592,7 @@ export default {
         // Add sorted departments to the item order
         for (const { index } of departmentsInPhase) {
           this.itemOrder.push({ type: 'department', index });
+          console.log(`  Added department: ${this.departments[index].name}`);
         }
       }
       
@@ -608,6 +604,7 @@ export default {
         
         if (!alreadyAdded) {
           this.itemOrder.push({ type: 'department', index: j });
+          console.log(`Added unassigned department: ${this.departments[j].name}`);
         }
       }
       
