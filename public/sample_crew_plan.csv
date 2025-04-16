@@ -1,0 +1,23 @@
+Department,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec,Jan,Feb,Mar,Apr,Rate
+Concept Stage (Phase),X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+Digital Supervision,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,15000
+Character Supervision,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,14000
+Modeling Supervision,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,13000
+Concept Artists (Character),1,2,3,4,4,4,4,4,4,4,4,4,4,4,1,1,8000
+Concept Artists (Environment),1,2,4,4,4,4,4,4,4,4,4,4,4,4,1,1,8000
+
+Previs Stage (Phase),,,,,,X,X,X,X,X,X,X,X,X,X,X,
+Character Modeller,1,2,4,6,6,6,6,6,6,6,4,4,,,,,7500
+Character Rigger,1,1,4,4,6,6,6,6,6,6,6,6,4,2,1,1,8000
+Character Surfacing,1,2,2,4,4,6,6,6,6,6,6,6,6,6,4,2,7500
+Environment Modelling,2,2,4,4,6,6,6,6,6,6,6,6,6,6,6,2,7500
+Environment Surfacing,2,2,4,6,6,6,6,6,6,6,6,6,6,6,4,2,7500
+Previs Scene Setup,1,1,1,2,2,4,4,4,4,4,4,4,4,4,2,1,8000
+Previs Camera Operator,2,2,4,6,8,8,8,8,8,8,8,8,8,8,4,2,8000
+
+Monthly Cost,122000,147000,202000,247000,267000,287000,287000,287000,287000,287000,267000,267000,247000,227000,147000,107000,
+Cumulative Cost,122000,269000,471000,718000,985000,1272000,1559000,1846000,2133000,2420000,2687000,2954000,3201000,3428000,3575000,3682000,
+
+Total Project Cost,3682000
+Peak Monthly Cost,287000
+Peak Crew Size,47

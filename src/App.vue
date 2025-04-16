@@ -41,6 +41,8 @@
             <button @click="zoomIn" class="zoom-button" title="Zoom In">+</button>
             <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
             <button @click="exportCSV" class="export-button" title="Export to CSV">Export CSV</button>
+            <FileUploader @file-loaded="loadCSV" />
+            <a href="/sample_crew_plan.csv" download class="sample-link">Download Sample</a>
           </div>
         </div>
         <div class="table-container">
@@ -300,8 +302,13 @@
 
 <script>
 import { simpleData } from './simple-data.js';
+import { parseCSV, generateCSV } from './csv-loader.js';
+import FileUploader from './components/FileUploader.vue';
 
 export default {
+  components: {
+    FileUploader
+  },
   data() {
     return {
       years: simpleData.years,
@@ -879,6 +886,35 @@ export default {
       document.body.removeChild(link);
     },
     
+    loadCSV(csvContent) {
+      try {
+        // Parse the CSV content
+        const parsedData = parseCSV(csvContent);
+        console.log('Parsed CSV data:', parsedData);
+        
+        // Update the application state with the parsed data
+        this.years = parsedData.years;
+        this.months = parsedData.months;
+        this.departments = parsedData.departments;
+        this.phases = parsedData.phases;
+        
+        // Initialize the crew matrix
+        this.crewMatrix = parsedData.crewMatrix;
+        
+        // Re-initialize the item order
+        this.initializeItemOrder();
+        
+        // Recalculate costs
+        this.calculateCosts();
+        
+        // Show success message
+        alert('CSV file loaded successfully!');
+      } catch (error) {
+        console.error('Error loading CSV:', error);
+        alert('Error loading CSV file. Please check the format and try again.');
+      }
+    },
+    
     // Generate months based on years
     generateMonths() {
       // Clear existing months
@@ -1264,6 +1300,23 @@ main {
 
 .export-button:hover {
   background-color: #0b7dda;
+}
+
+.sample-link {
+  display: inline-flex;
+  align-items: center;
+  background-color: #ff9800;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+  margin-left: 8px;
+  transition: background-color 0.3s;
+}
+
+.sample-link:hover {
+  background-color: #e68a00;
 }
 
 .table-container {
