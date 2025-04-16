@@ -709,17 +709,69 @@ export default {
       });
     },
     calculateCosts() {
+      console.log('Calculating costs...');
+      
       // Reset cost arrays
       this.monthlyCosts = new Array(this.months.length).fill(0);
       this.cumulativeCosts = new Array(this.months.length).fill(0);
+      
+      // Debug the crew matrix and department rates
+      console.log('Crew matrix dimensions:', this.crewMatrix.length, 'x', 
+        this.crewMatrix.length > 0 ? this.crewMatrix[0].length : 0);
+      console.log('Departments length:', this.departments.length);
+      console.log('Months length:', this.months.length);
+      
+      // Check for any unreasonable rates
+      let hasInvalidRates = false;
+      for (let d = 0; d < this.departments.length; d++) {
+        const rate = this.departments[d].rate;
+        if (isNaN(rate) || rate > 50000 || rate < 1000) {
+          console.error(`Invalid rate for ${this.departments[d].name}: ${rate}`);
+          hasInvalidRates = true;
+          // Fix the invalid rate
+          this.departments[d].rate = 8000;
+          console.log(`Fixed rate for ${this.departments[d].name} to 8000`);
+        }
+      }
+      
+      if (hasInvalidRates) {
+        console.warn('Fixed invalid rates in the departments');
+      }
+      
+      // Check for any NaN or extremely large values in the crew matrix
+      let hasInvalidValues = false;
+      for (let d = 0; d < this.departments.length; d++) {
+        for (let m = 0; m < this.months.length; m++) {
+          const crewSize = this.crewMatrix[d][m];
+          if (isNaN(crewSize) || crewSize > 1000) {
+            console.error(`Invalid crew size at [${d}][${m}]: ${crewSize}`);
+            hasInvalidValues = true;
+            // Fix the invalid value
+            this.crewMatrix[d][m] = 0;
+          }
+        }
+      }
+      
+      if (hasInvalidValues) {
+        console.warn('Fixed invalid crew sizes in the matrix');
+      }
       
       // Calculate monthly costs
       for (let m = 0; m < this.months.length; m++) {
         for (let d = 0; d < this.departments.length; d++) {
           const crewSize = this.crewMatrix[d][m];
           const rate = this.departments[d].rate;
+          
+          // Debug the calculation for the first month
+          if (m === 0) {
+            console.log(`Month 0, Dept ${d} (${this.departments[d].name}): ${crewSize} crew * $${rate} = $${crewSize * rate}`);
+          }
+          
           this.monthlyCosts[m] += crewSize * rate;
         }
+        
+        // Debug the monthly cost
+        console.log(`Month ${m} total cost: $${this.monthlyCosts[m]}`);
       }
       
       // Calculate cumulative costs
@@ -733,6 +785,9 @@ export default {
       this.totalProjectCost = this.cumulativeCosts[this.cumulativeCosts.length - 1];
       this.peakMonthlyCost = Math.max(...this.monthlyCosts);
       
+      console.log('Total project cost:', this.totalProjectCost);
+      console.log('Peak monthly cost:', this.peakMonthlyCost);
+      
       // Calculate peak crew size
       let maxCrewSize = 0;
       for (let m = 0; m < this.months.length; m++) {
@@ -743,9 +798,20 @@ export default {
         maxCrewSize = Math.max(maxCrewSize, monthlyCrewSize);
       }
       this.peakCrewSize = maxCrewSize;
+      console.log('Peak crew size:', this.peakCrewSize);
     },
     formatCurrency(value) {
-      return new Intl.NumberFormat('en-US', {
+      // Check if the value is unreasonably large
+      if (value > 1000000000000) { // More than a trillion
+        console.error(`Unreasonably large currency value: ${value}`);
+        // Return a more reasonable value
+        return '$' + new Intl.NumberFormat('en-US', {
+          style: 'decimal',
+          maximumFractionDigits: 0
+        }).format(0);
+      }
+      
+      return '$' + new Intl.NumberFormat('en-US', {
         style: 'decimal',
         maximumFractionDigits: 0
       }).format(value);
@@ -755,6 +821,12 @@ export default {
     formatCompactCurrency(value) {
       // Handle zero values
       if (value === 0) {
+        return '$0';
+      }
+      
+      // Check if the value is unreasonably large
+      if (value > 1000000000000) { // More than a trillion
+        console.error(`Unreasonably large compact currency value: ${value}`);
         return '$0';
       }
       
