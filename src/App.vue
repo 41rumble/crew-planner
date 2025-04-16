@@ -16,11 +16,11 @@
           <div class="summary-header">
             <div class="summary-stat">
               <div class="stat-label">Total Project Cost</div>
-              <div class="stat-value">${{ formatCurrency(totalProjectCost) }}</div>
+              <div class="stat-value">${{ formatCurrency(totalProjectCost).replace('$', '') }}</div>
             </div>
             <div class="summary-stat">
               <div class="stat-label">Peak Monthly Cost</div>
-              <div class="stat-value">${{ formatCurrency(peakMonthlyCost) }}</div>
+              <div class="stat-value">${{ formatCurrency(peakMonthlyCost).replace('$', '') }}</div>
             </div>
             <div class="summary-stat">
               <div class="stat-label">Peak Crew Size</div>
@@ -805,13 +805,13 @@ export default {
       if (value > 1000000000000) { // More than a trillion
         console.error(`Unreasonably large currency value: ${value}`);
         // Return a more reasonable value
-        return '$' + new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('en-US', {
           style: 'decimal',
           maximumFractionDigits: 0
         }).format(0);
       }
       
-      return '$' + new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat('en-US', {
         style: 'decimal',
         maximumFractionDigits: 0
       }).format(value);
@@ -850,7 +850,10 @@ export default {
         }
       } else {
         // Full format for normal zoom
-        return '$' + this.formatCurrency(value);
+        return '$' + new Intl.NumberFormat('en-US', {
+          style: 'decimal',
+          maximumFractionDigits: 0
+        }).format(value);
       }
     },
     // Department selection and editing
