@@ -910,7 +910,7 @@ export default {
     },
     // Export data to CSV
     exportCSV() {
-      // Create a CSV that matches the original format exactly
+      // Create a CSV that exactly matches the original format
       
       // First, create the year header row
       let csvContent = ",";
@@ -931,7 +931,7 @@ export default {
       csvContent += "\n";
       
       // Add an empty row
-      csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+      csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
       
       // Group departments by their section/category
       const sections = {};
@@ -958,7 +958,7 @@ export default {
       // Second pass: output each section with its departments
       Object.keys(sections).forEach(sectionName => {
         // Add section header
-        csvContent += sectionName + ":,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+        csvContent += sectionName + ":,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
         
         // Add departments in this section
         sections[sectionName].forEach(deptInfo => {
@@ -970,19 +970,19 @@ export default {
             csvContent += this.crewMatrix[deptInfo.index][i] + ",";
           }
           
-          // Add rate at the end (not visible in the original format, but useful for import)
-          csvContent += deptInfo.dept.rate + "\n";
+          // Do NOT add rate at the end - this causes issues with the import
+          csvContent += "\n";
           
-          // Add an empty row after each department
-          csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+          // Add an empty row after each department (only if not the last department in the section)
+          if (sections[sectionName].indexOf(deptInfo) < sections[sectionName].length - 1) {
+            csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+          }
         });
         
         // Add an empty row after each section
-        csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+        csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+        csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
       });
-      
-      // Add an empty row before the stats
-      csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
       
       // Add monthly costs
       csvContent += "Monthly Cost,";
@@ -998,11 +998,8 @@ export default {
       }
       csvContent += "\n";
       
-      // Add an empty row
-      csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
-      
       // Add summary stats
-      csvContent += "Total Project Cost," + this.totalProjectCost + "\n";
+      csvContent += "\nTotal Project Cost," + this.totalProjectCost + "\n";
       csvContent += "Peak Monthly Cost," + this.peakMonthlyCost + "\n";
       csvContent += "Peak Crew Size," + this.peakCrewSize + "\n";
       

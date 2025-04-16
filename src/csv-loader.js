@@ -179,18 +179,19 @@ export function parseCSV(csvString) {
         const crewCounts = [];
         let rate = 8000; // Default rate
         
-        // Process crew counts and rate
+        // Process crew counts - don't look for rate in the CSV
         for (let j = 1; j < cells.length; j++) {
-          // Check if this is the rate column (last column)
-          if (j === cells.length - 1 && cells[j] && !isNaN(parseInt(cells[j]))) {
-            rate = parseInt(cells[j]);
-            // Ensure rate is reasonable (between 1000 and 50000)
-            if (rate < 1000) rate = 1000;
-            if (rate > 50000) rate = 8000; // Default to 8000 if unreasonably high
-          } else {
-            const value = cells[j] && cells[j].trim() !== '' ? parseInt(cells[j]) : 0;
-            crewCounts.push(isNaN(value) ? 0 : value);
-          }
+          const value = cells[j] && cells[j].trim() !== '' ? parseInt(cells[j]) : 0;
+          crewCounts.push(isNaN(value) ? 0 : value);
+        }
+        
+        // Use a default rate based on the department name
+        if (name.includes('Sup') || name.includes('Director') || name.includes('Lead')) {
+          rate = 12000; // Higher rate for supervisors, directors, and leads
+        } else if (name.includes('Technical') || name.includes('Developer')) {
+          rate = 10000; // Higher rate for technical roles
+        } else {
+          rate = 8000; // Default rate for other roles
         }
         
         console.log('Crew counts for', name, ':', crewCounts.slice(0, 5), '...', 'length:', crewCounts.length);
@@ -316,13 +317,8 @@ export function parseCSV(csvString) {
       const crewCounts = [];
       let hasRate = false;
       
-      // Check if the last column is a rate
-      if (cells.length > 1 && cells[cells.length - 1] && !isNaN(parseInt(cells[cells.length - 1]))) {
-        hasRate = true;
-      }
-      
-      // Process all columns except the last one if it's a rate
-      const lastColumnIndex = hasRate ? cells.length - 1 : cells.length;
+      // Process all columns - don't look for rate
+      const lastColumnIndex = cells.length;
       for (let j = 1; j < lastColumnIndex; j++) {
         const value = cells[j] && cells[j].trim() !== '' ? parseInt(cells[j]) : 0;
         crewCounts.push(isNaN(value) ? 0 : value);
