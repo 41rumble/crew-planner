@@ -117,6 +117,7 @@ export function parseCSV(csvString) {
     // Parse departments and phases
     const departments = [];
     const phases = [];
+    const phaseOrder = []; // Track the order of phases as they appear in the CSV
     let currentPhase = null;
     
     for (let i = 2; i < lines.length; i++) {
@@ -151,13 +152,19 @@ export function parseCSV(csvString) {
           endMonth = months.length - 1;
         }
         
+        // Add the phase to the phases array
         phases.push({
           name: phaseName,
           startMonth,
-          endMonth
+          endMonth,
+          originalIndex: phaseOrder.length // Store the original order
         });
         
+        // Track the order of phases
+        phaseOrder.push(phaseName);
+        
         currentPhase = phases.length - 1;
+        console.log(`Added phase ${phaseName} at index ${currentPhase}, original index ${phaseOrder.length - 1}`);
       } else {
         // This is a department row
         console.log('Processing department:', name);

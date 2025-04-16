@@ -562,8 +562,21 @@ export default {
     initializeItemOrder() {
       this.itemOrder = [];
       
+      // Sort phases by their original index if available
+      const sortedPhases = [...this.phases].map((phase, index) => ({ phase, index }))
+        .sort((a, b) => {
+          // If both phases have originalIndex, use that
+          if (a.phase.originalIndex !== undefined && b.phase.originalIndex !== undefined) {
+            return a.phase.originalIndex - b.phase.originalIndex;
+          }
+          // Otherwise, use the current index
+          return a.index - b.index;
+        });
+      
+      console.log('Phases sorted by original index:', sortedPhases.map(p => `${p.phase.name} (${p.phase.originalIndex !== undefined ? p.phase.originalIndex : 'undefined'})`));
+      
       // Add phases in their original order
-      for (let i = 0; i < this.phases.length; i++) {
+      for (const { index: i } of sortedPhases) {
         this.itemOrder.push({ type: 'phase', index: i });
         console.log(`Added phase: ${this.phases[i].name}`);
         
