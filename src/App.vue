@@ -108,7 +108,8 @@
                           active: crewMatrix[item.index][mIndex] > 0,
                           'start-handle': mIndex === departments[item.index].startMonth,
                           'end-handle': mIndex === departments[item.index].endMonth,
-                          'dept-cell': true
+                          'dept-cell': true,
+                          'in-range': mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
                         }"
                         :style="getCellStyle()"
                         @mousedown="handleCellMouseDown($event, item.index, mIndex)">
@@ -1418,36 +1419,45 @@ main {
 
 .start-handle {
   border-left: 3px solid var(--primary-color);
+  background-color: rgba(76, 175, 80, 0.1);
 }
 
 .end-handle {
   border-right: 3px solid var(--primary-color);
+  background-color: rgba(76, 175, 80, 0.1);
 }
 
 .start-drag-handle {
   position: absolute;
   left: 0;
   top: 0;
-  width: 8px;
+  width: 10px;
   height: 100%;
   cursor: w-resize;
   background: linear-gradient(90deg, var(--primary-color) 0%, transparent 100%);
-  opacity: 0.5;
+  opacity: 0.7;
+  z-index: 5;
 }
 
 .end-drag-handle {
   position: absolute;
   right: 0;
   top: 0;
-  width: 8px;
+  width: 10px;
   height: 100%;
   cursor: e-resize;
   background: linear-gradient(90deg, transparent 0%, var(--primary-color) 100%);
-  opacity: 0.5;
+  opacity: 0.7;
+  z-index: 5;
 }
 
 .start-drag-handle:hover, .end-drag-handle:hover {
-  opacity: 0.8;
+  opacity: 1;
+  width: 12px;
+}
+
+.in-range {
+  background-color: rgba(76, 175, 80, 0.05);
 }
 
 .table-container {
