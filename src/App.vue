@@ -41,12 +41,14 @@
             <button @click="zoomIn" class="zoom-button" title="Zoom In">+</button>
             <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
             <div class="time-scale-control">
-              <label>Time Scale:</label>
-              <select v-model="timeScale" @change="updateTimeScale">
-                <option value="1">1 month</option>
-                <option value="2">2 months</option>
-                <option value="3">3 months</option>
-                <option value="6">6 months</option>
+              <label>Number of Years:</label>
+              <select v-model="numberOfYears" @change="updateTimeScale">
+                <option value="1">1 year</option>
+                <option value="2">2 years</option>
+                <option value="3">3 years</option>
+                <option value="4">4 years</option>
+                <option value="5">5 years</option>
+                <option value="6">6 years</option>
               </select>
             </div>
             <button @click="exportCSV" class="export-button" title="Export to CSV">Export CSV</button>
@@ -353,7 +355,7 @@ export default {
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
       zoomLevel: 1.0, // Start at 100% zoom
-      timeScale: 1, // Default time scale (1 month)
+      numberOfYears: 4, // Default number of years
       // For timeline drag handles
       isDraggingTimelineHandle: false,
       draggedDepartmentIndex: null,
@@ -560,30 +562,45 @@ export default {
     initializeItemOrder() {
       this.itemOrder = [];
       
-      // Add phases
-      for (let i = 0; i < this.phases.length; i++) {
+      // First, sort phases by their startMonth
+      const sortedPhases = [...this.phases].map((phase, index) => ({ phase, index }))
+        .sort((a, b) => a.phase.startMonth - b.phase.startMonth);
+      
+      console.log('Sorted phases:', sortedPhases.map(p => p.phase.name));
+      
+      // Add phases in order
+      for (const { index: i } of sortedPhases) {
         this.itemOrder.push({ type: 'phase', index: i });
         
         // Add departments that belong to this phase
+        const departmentsInPhase = [];
         for (let j = 0; j < this.departments.length; j++) {
           // Simple heuristic: if department's start month is within phase's timeframe
           const dept = this.departments[j];
           const phase = this.phases[i];
           
-          if (dept.startMonth >= phase.startMonth && dept.startMonth <= phase.endMonth) {
+          if (dept.phase === i || (dept.startMonth >= phase.startMonth && dept.startMonth <= phase.endMonth)) {
             // Check if this department is already added
             const alreadyAdded = this.itemOrder.some(item => 
               item.type === 'department' && item.index === j
             );
             
             if (!alreadyAdded) {
-              this.itemOrder.push({ type: 'department', index: j });
+              departmentsInPhase.push({ index: j, startMonth: dept.startMonth });
             }
           }
         }
+        
+        // Sort departments within this phase by start month
+        departmentsInPhase.sort((a, b) => a.startMonth - b.startMonth);
+        
+        // Add sorted departments to the item order
+        for (const { index } of departmentsInPhase) {
+          this.itemOrder.push({ type: 'department', index });
+        }
       }
       
-      // Add any remaining departments
+      // Add any remaining departments that weren't assigned to a phase
       for (let j = 0; j < this.departments.length; j++) {
         const alreadyAdded = this.itemOrder.some(item => 
           item.type === 'department' && item.index === j
@@ -593,6 +610,8 @@ export default {
           this.itemOrder.push({ type: 'department', index: j });
         }
       }
+      
+      console.log('Initialized item order with', this.itemOrder.length, 'items');
     },
     
     initializeCrewMatrix() {
@@ -1382,46 +1401,31 @@ export default {
     
     // Time scale controls
     updateTimeScale() {
-      // Convert timeScale to number
-      this.timeScale = parseInt(this.timeScale);
-      console.log(`Updating time scale to ${this.timeScale} months`);
+      // Convert numberOfYears to number
+      this.numberOfYears = parseInt(this.numberOfYears);
+      console.log(`Updating number of years to ${this.numberOfYears}`);
       
-      // Regenerate months with the new time scale
+      // Generate years array based on the number of years
+      this.years = Array.from({ length: this.numberOfYears }, (_, i) => i + 1);
+      console.log('Updated years array:', this.years);
+      
+      // Regenerate months with the new years
       this.generateMonthsWithTimeScale();
     },
     
-    // Generate months based on years and time scale
+    // Generate months based on years
     generateMonthsWithTimeScale() {
       // Clear existing months
       this.months = [];
       
-      // Generate months based on time scale
+      // Generate all months for each year
       this.years.forEach(year => {
-        // Calculate how many periods we need for this year
-        const periodsPerYear = 12 / this.timeScale;
-        
-        for (let i = 0; i < periodsPerYear; i++) {
-          // Calculate the start and end month for this period
-          const startMonth = i * this.timeScale;
-          const endMonth = startMonth + this.timeScale - 1;
-          
-          // Get the month names
-          const startMonthName = this.monthsPerYear[startMonth];
-          const endMonthName = this.monthsPerYear[endMonth];
-          
-          // Create the period name
-          let periodName;
-          if (this.timeScale === 1) {
-            // For 1 month, just use the month name
-            periodName = `${startMonthName} Y${year}`;
-          } else {
-            // For multiple months, use a range
-            periodName = `${startMonthName}-${endMonthName} Y${year}`;
-          }
-          
-          this.months.push(periodName);
-        }
+        this.monthsPerYear.forEach(month => {
+          this.months.push(`${month} Y${year}`);
+        });
       });
+      
+      console.log(`Generated ${this.months.length} months for ${this.years.length} years`);
       
       // Reinitialize crew matrix
       this.initializeCrewMatrix();
