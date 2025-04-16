@@ -299,14 +299,19 @@
 </template>
 
 <script>
+import { simpleData } from './simple-data.js';
+
 export default {
   data() {
     return {
-      years: [2022, 2023, 2024, 2025],
+      years: simpleData.years,
       monthsPerYear: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       shortMonthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       singleLetterMonths: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
-      months: [],
+      months: simpleData.months,
+      departments: simpleData.departments,
+      phases: simpleData.phases,
+      crewMatrix: simpleData.crewMatrix,
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
       zoomLevel: 1.0, // Start at 100% zoom
@@ -477,17 +482,12 @@ export default {
     };
   },
   created() {
-    // Generate all months across years
-    this.generateMonths();
-    
-    // Initialize crew matrix
-    this.initializeCrewMatrix();
+    console.log("App created, using simple data");
     
     // Initialize item order
     this.initializeItemOrder();
     
-    // Calculate initial crew distribution and costs
-    this.updateAllDepartments();
+    // Calculate costs
     this.calculateCosts();
   },
   
