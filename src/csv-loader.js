@@ -190,9 +190,26 @@ export function parseCSV(csvString) {
           rate = 12000; // Higher rate for supervisors, directors, and leads
         } else if (name.includes('Technical') || name.includes('Developer')) {
           rate = 10000; // Higher rate for technical roles
+        } else if (name.includes('Animator') || name.includes('Animation')) {
+          rate = 7000; // Rate for animators
+        } else if (name.includes('Lighter') || name.includes('Lighting')) {
+          rate = 7500; // Rate for lighters
+        } else if (name.includes('VFX') || name.includes('Effect')) {
+          rate = 8000; // Rate for VFX artists
+        } else if (name.includes('Composite') || name.includes('Comp')) {
+          rate = 7800; // Rate for compositors
+        } else if (name.includes('Modeller') || name.includes('Modeling')) {
+          rate = 7500; // Rate for modelers
+        } else if (name.includes('Rigger') || name.includes('Rigging')) {
+          rate = 8500; // Rate for riggers
+        } else if (name.includes('Surfacing') || name.includes('Surface')) {
+          rate = 7500; // Rate for surfacing artists
         } else {
           rate = 8000; // Default rate for other roles
         }
+        
+        // Log the assigned rate
+        console.log(`Assigned rate for ${name}: ${rate}`);
         
         console.log('Crew counts for', name, ':', crewCounts.slice(0, 5), '...', 'length:', crewCounts.length);
         

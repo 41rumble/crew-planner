@@ -1028,6 +1028,12 @@ export default {
           parsedData.crewMatrix.length, 
           parsedData.crewMatrix.length > 0 ? parsedData.crewMatrix[0].length : 0);
         
+        // Debug department rates
+        console.log('Department rates:');
+        parsedData.departments.forEach(dept => {
+          console.log(`${dept.name}: ${dept.rate}`);
+        });
+        
         // Update the application state with the parsed data
         this.years = parsedData.years;
         this.months = parsedData.months;
@@ -1040,6 +1046,48 @@ export default {
         // Initialize the crew matrix
         console.log('Setting crew matrix from parsed data:', parsedData.crewMatrix);
         this.crewMatrix = JSON.parse(JSON.stringify(parsedData.crewMatrix)); // Deep copy
+        
+        // Ensure the crew matrix has the correct dimensions
+        if (this.crewMatrix.length !== this.departments.length) {
+          console.warn(`Crew matrix length (${this.crewMatrix.length}) doesn't match departments length (${this.departments.length})`);
+          // Reinitialize the crew matrix
+          this.initializeCrewMatrix();
+          
+          // Copy data from the original matrix where possible
+          for (let i = 0; i < Math.min(parsedData.crewMatrix.length, this.departments.length); i++) {
+            for (let j = 0; j < Math.min(parsedData.crewMatrix[i].length, this.months.length); j++) {
+              this.crewMatrix[i][j] = parsedData.crewMatrix[i][j];
+            }
+          }
+        }
+        
+        // Ensure each row in the crew matrix has the correct length
+        for (let i = 0; i < this.crewMatrix.length; i++) {
+          if (this.crewMatrix[i].length !== this.months.length) {
+            console.warn(`Crew matrix row ${i} length (${this.crewMatrix[i].length}) doesn't match months length (${this.months.length})`);
+            // Reinitialize this row
+            const newRow = new Array(this.months.length).fill(0);
+            // Copy data where possible
+            for (let j = 0; j < Math.min(this.crewMatrix[i].length, this.months.length); j++) {
+              newRow[j] = this.crewMatrix[i][j];
+            }
+            this.crewMatrix[i] = newRow;
+          }
+        }
+        
+        // Ensure all departments have reasonable rates
+        this.departments.forEach(dept => {
+          // If rate is unreasonably high, reset it
+          if (dept.rate > 50000) {
+            console.warn(`Resetting unreasonable rate for ${dept.name}: ${dept.rate} -> 8000`);
+            dept.rate = 8000;
+          }
+          // If rate is too low, set a minimum
+          else if (dept.rate < 1000) {
+            console.warn(`Increasing too low rate for ${dept.name}: ${dept.rate} -> 1000`);
+            dept.rate = 1000;
+          }
+        });
         
         // Calculate costs based on the loaded crew matrix
         this.calculateCosts();
