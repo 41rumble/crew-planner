@@ -311,7 +311,7 @@ export default {
       months: simpleData.months,
       departments: simpleData.departments,
       phases: simpleData.phases,
-      crewMatrix: simpleData.crewMatrix,
+      crewMatrix: [],
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
       zoomLevel: 1.0, // Start at 100% zoom
@@ -483,6 +483,16 @@ export default {
   },
   created() {
     console.log("App created, using simple data");
+    
+    // Make sure crewMatrix is initialized
+    if (!this.crewMatrix || this.crewMatrix.length === 0) {
+      this.initializeCrewMatrix();
+      
+      // Update crew distribution for all departments
+      for (let i = 0; i < this.departments.length; i++) {
+        this.updateDepartmentDistribution(i);
+      }
+    }
     
     // Initialize item order
     this.initializeItemOrder();
