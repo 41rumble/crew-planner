@@ -38,6 +38,12 @@ export function parseCSV(csvString) {
       }
     }
     
+    // If no years were found, use default years
+    if (years.length === 0) {
+      years.push(2022, 2023, 2024, 2025);
+      console.log('No years found in header, using default years:', years);
+    }
+    
     console.log('Extracted years:', years);
     
     // Extract months from the header
@@ -61,25 +67,47 @@ export function parseCSV(csvString) {
       'Dec': 'December'
     };
     
-    // Extract months and years
-    let currentYearIndex = 0;
-    let currentYear = years[currentYearIndex];
-    
+    // If there are no valid month names in the header, create default months
+    let hasValidMonths = false;
     for (let i = 1; i < monthCells.length; i++) {
-      const monthName = monthCells[i].trim();
+      if (monthCells[i] && monthCells[i].trim() && monthMap[monthCells[i].trim()]) {
+        hasValidMonths = true;
+        break;
+      }
+    }
+    
+    if (!hasValidMonths) {
+      console.log('No valid months found in header, using default months');
+      // Create default months for all years
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      years.forEach(year => {
+        monthNames.forEach(month => {
+          months.push(`${month} ${year}`);
+        });
+      });
+    } else {
+      // Extract months and years from the header
+      let currentYearIndex = 0;
+      let currentYear = years[currentYearIndex];
+      let monthsInCurrentYear = 0;
       
-      if (monthName) {
-        // Check if we need to move to the next year
-        if (monthName === 'Jan' && i > 1 && monthCells[i-1] && monthCells[i-1].trim() === 'Dec') {
-          currentYearIndex++;
-          if (currentYearIndex < years.length) {
-            currentYear = years[currentYearIndex];
-          }
-        }
+      for (let i = 1; i < monthCells.length; i++) {
+        const monthName = monthCells[i].trim();
         
-        // Create the month string
-        const fullMonthName = monthMap[monthName] || monthName;
-        months.push(`${monthName} ${currentYear}`);
+        if (monthName) {
+          // Check if we need to move to the next year
+          if ((monthName === 'Jan' || monthName === 'January') && 
+              monthsInCurrentYear > 0 && 
+              currentYearIndex < years.length - 1) {
+            currentYearIndex++;
+            currentYear = years[currentYearIndex];
+            monthsInCurrentYear = 0;
+          }
+          
+          // Create the month string
+          months.push(`${monthName} ${currentYear}`);
+          monthsInCurrentYear++;
+        }
       }
     }
     
@@ -153,8 +181,11 @@ export function parseCSV(csvString) {
         // Process crew counts and rate
         for (let j = 1; j < cells.length; j++) {
           // Check if this is the rate column (last column)
-          if (j === cells.length - 1 && !isNaN(parseInt(cells[j]))) {
+          if (j === cells.length - 1 && cells[j] && !isNaN(parseInt(cells[j]))) {
             rate = parseInt(cells[j]);
+            // Ensure rate is reasonable (between 1000 and 50000)
+            if (rate < 1000) rate = 1000;
+            if (rate > 50000) rate = 8000; // Default to 8000 if unreasonably high
           } else {
             const value = cells[j] && cells[j].trim() !== '' ? parseInt(cells[j]) : 0;
             crewCounts.push(isNaN(value) ? 0 : value);
@@ -282,7 +313,16 @@ export function parseCSV(csvString) {
       
       // Extract crew counts
       const crewCounts = [];
-      for (let j = 1; j < cells.length - 1; j++) { // Skip the last column (rate)
+      let hasRate = false;
+      
+      // Check if the last column is a rate
+      if (cells.length > 1 && cells[cells.length - 1] && !isNaN(parseInt(cells[cells.length - 1]))) {
+        hasRate = true;
+      }
+      
+      // Process all columns except the last one if it's a rate
+      const lastColumnIndex = hasRate ? cells.length - 1 : cells.length;
+      for (let j = 1; j < lastColumnIndex; j++) {
         const value = cells[j] && cells[j].trim() !== '' ? parseInt(cells[j]) : 0;
         crewCounts.push(isNaN(value) ? 0 : value);
       }
@@ -347,6 +387,40 @@ export function parseCSV(csvString) {
     });
     
     console.log('Generated crew matrix:', crewMatrix);
+    
+    // Ensure the crew matrix has the correct dimensions
+    if (crewMatrix.length !== departments.length) {
+      console.error('Crew matrix length does not match departments length!');
+      // Reinitialize the crew matrix
+      const newCrewMatrix = [];
+      for (let i = 0; i < departments.length; i++) {
+        newCrewMatrix.push(new Array(months.length).fill(0));
+      }
+      console.log('Reinitialized crew matrix with correct dimensions');
+      
+      // Copy data from the original matrix where possible
+      for (let i = 0; i < Math.min(crewMatrix.length, departments.length); i++) {
+        for (let j = 0; j < Math.min(crewMatrix[i].length, months.length); j++) {
+          newCrewMatrix[i][j] = crewMatrix[i][j];
+        }
+      }
+      
+      crewMatrix = newCrewMatrix;
+    }
+    
+    // Ensure each row in the crew matrix has the correct length
+    for (let i = 0; i < crewMatrix.length; i++) {
+      if (crewMatrix[i].length !== months.length) {
+        console.error(`Crew matrix row ${i} has incorrect length: ${crewMatrix[i].length} instead of ${months.length}`);
+        // Reinitialize this row
+        const newRow = new Array(months.length).fill(0);
+        // Copy data where possible
+        for (let j = 0; j < Math.min(crewMatrix[i].length, months.length); j++) {
+          newRow[j] = crewMatrix[i][j];
+        }
+        crewMatrix[i] = newRow;
+      }
+    }
     
     return {
       years: uniqueYears,
