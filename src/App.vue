@@ -173,15 +173,25 @@
             >
           </div>
           <div class="slider-container">
-            <label>Max Crew Size: {{ departments[selectedDepartmentIndex].maxCrew }}</label>
-            <input 
-              type="range" 
-              v-model="departments[selectedDepartmentIndex].maxCrew" 
-              min="0" 
-              max="100" 
-              class="slider"
-              @input="updateDepartmentCrew(departments[selectedDepartmentIndex])"
-            >
+            <label>Max Crew Size:</label>
+            <div class="input-with-number">
+              <input 
+                type="range" 
+                v-model.number="departments[selectedDepartmentIndex].maxCrew" 
+                min="0" 
+                max="100" 
+                class="slider"
+                @input="updateDepartmentCrew(departments[selectedDepartmentIndex])"
+              >
+              <input 
+                type="number" 
+                v-model.number="departments[selectedDepartmentIndex].maxCrew" 
+                min="0" 
+                max="1000" 
+                class="number-input"
+                @input="updateDepartmentCrew(departments[selectedDepartmentIndex])"
+              >
+            </div>
           </div>
           <div class="slider-container">
             <label>Start Month: {{ getMonthName(departments[selectedDepartmentIndex].startMonth) }}</label>
@@ -631,6 +641,15 @@ export default {
       };
     },
     updateDepartmentCrew(department) {
+      console.log(`Updating crew for department: ${department.name}, maxCrew: ${department.maxCrew}`);
+      
+      // Validate maxCrew
+      if (isNaN(department.maxCrew) || department.maxCrew < 0 || department.maxCrew > 1000) {
+        console.error(`Invalid maxCrew for ${department.name}: ${department.maxCrew}`);
+        department.maxCrew = Math.min(Math.max(0, department.maxCrew || 0), 1000);
+        console.log(`Adjusted maxCrew to ${department.maxCrew}`);
+      }
+      
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
     },
@@ -864,10 +883,45 @@ export default {
       for (let m = 0; m < this.months.length; m++) {
         let monthlyCrewSize = 0;
         for (let d = 0; d < this.departments.length; d++) {
-          monthlyCrewSize += this.crewMatrix[d][m];
+          // Skip if department or crew matrix is invalid
+          if (!this.departments[d] || !this.crewMatrix[d]) {
+            console.error(`Invalid department or crew matrix at index ${d}`);
+            continue;
+          }
+          
+          // Get crew size
+          let crewSize = this.crewMatrix[d][m];
+          
+          // Validate crew size
+          if (isNaN(crewSize) || crewSize < 0 || crewSize > 1000) {
+            console.error(`Invalid crew size at [${d}][${m}]: ${crewSize}`);
+            crewSize = 0;
+            this.crewMatrix[d][m] = 0; // Fix the value in the matrix
+          }
+          
+          // Add to monthly crew size
+          monthlyCrewSize += crewSize;
         }
+        
+        // Validate monthly crew size
+        if (isNaN(monthlyCrewSize) || monthlyCrewSize < 0 || monthlyCrewSize > 10000) {
+          console.error(`Invalid monthly crew size for month ${m}: ${monthlyCrewSize}`);
+          monthlyCrewSize = 0;
+        }
+        
+        // Update max crew size
         maxCrewSize = Math.max(maxCrewSize, monthlyCrewSize);
+        
+        // Debug monthly crew size
+        console.log(`Month ${m} crew size: ${monthlyCrewSize}`);
       }
+      
+      // Validate max crew size
+      if (isNaN(maxCrewSize) || maxCrewSize < 0 || maxCrewSize > 10000) {
+        console.error(`Invalid max crew size: ${maxCrewSize}`);
+        maxCrewSize = 0;
+      }
+      
       this.peakCrewSize = maxCrewSize;
       console.log('Peak crew size:', this.peakCrewSize);
     },
@@ -2041,6 +2095,21 @@ main {
 .slider {
   width: 100%;
   margin-top: 5px;
+}
+
+.input-with-number {
+  display: flex;
+  align-items: center;
+}
+
+.input-with-number .slider {
+  flex: 1;
+}
+
+.input-with-number .number-input {
+  width: 60px;
+  margin-left: 10px;
+  text-align: center;
 }
 
 .rate-input {
