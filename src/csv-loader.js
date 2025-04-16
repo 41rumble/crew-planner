@@ -10,8 +10,11 @@
  */
 export function parseCSV(csvString) {
   try {
-    // Split the CSV into lines
-    const lines = csvString.trim().split('\n');
+    console.log('Parsing CSV string:', csvString.substring(0, 100) + '...');
+    
+    // Split the CSV into lines (handle different line endings)
+    const lines = csvString.trim().split(/\r?\n/);
+    console.log('Number of lines:', lines.length);
     
     // Extract header information (years and months)
     const yearLine = lines[0];
@@ -181,12 +184,14 @@ export function parseCSV(csvString) {
     // Extract unique years from months
     const uniqueYears = [...new Set(months.map(month => parseInt(month.split(' ')[1])))];
     
-    return {
-      years: uniqueYears,
-      months,
-      departments,
-      phases,
-      crewMatrix: departments.map(dept => {
+    // Debug the parsed data
+    console.log('Parsed years:', uniqueYears);
+    console.log('Parsed months:', months);
+    console.log('Parsed departments:', departments);
+    console.log('Parsed phases:', phases);
+    
+    // Generate crew matrix
+    const crewMatrix = departments.map(dept => {
         const crewArray = new Array(months.length).fill(0);
         
         // Calculate the plateau duration (full crew period)
@@ -219,7 +224,16 @@ export function parseCSV(csvString) {
         }
         
         return crewArray;
-      })
+      });
+    
+    console.log('Generated crew matrix:', crewMatrix);
+    
+    return {
+      years: uniqueYears,
+      months,
+      departments,
+      phases,
+      crewMatrix
     };
   } catch (error) {
     console.error('Error parsing CSV:', error);

@@ -573,10 +573,13 @@ export default {
     },
     
     initializeCrewMatrix() {
+      console.log('Initializing crew matrix for departments:', this.departments.length, 'months:', this.months.length);
       this.crewMatrix = [];
       for (let i = 0; i < this.departments.length; i++) {
         this.crewMatrix.push(new Array(this.months.length).fill(0));
       }
+      console.log('Crew matrix initialized with dimensions:', this.crewMatrix.length, 
+        this.crewMatrix.length > 0 ? this.crewMatrix[0].length : 0);
     },
     
     // Get the full month name with year
@@ -657,10 +660,17 @@ export default {
       this.updateDepartmentDistribution(dIndex);
     },
     updateAllDepartments() {
+      console.log('Updating all departments, count:', this.departments.length);
       this.initializeCrewMatrix();
+      console.log('Initialized crew matrix:', this.crewMatrix.length, 
+        this.crewMatrix.length > 0 ? this.crewMatrix[0].length : 0);
+      
       for (let i = 0; i < this.departments.length; i++) {
+        console.log('Updating department distribution for:', this.departments[i].name);
         this.updateDepartmentDistribution(i);
       }
+      
+      console.log('Final crew matrix after updates:', this.crewMatrix);
     },
     updateDepartmentDistribution(dIndex) {
       const department = this.departments[dIndex];
@@ -971,9 +981,16 @@ export default {
     
     loadCSV(csvContent) {
       try {
+        console.log('CSV content length:', csvContent.length);
+        
         // Parse the CSV content
         const parsedData = parseCSV(csvContent);
         console.log('Parsed CSV data:', parsedData);
+        
+        // Debug the crew matrix
+        console.log('Crew matrix dimensions:', 
+          parsedData.crewMatrix.length, 
+          parsedData.crewMatrix.length > 0 ? parsedData.crewMatrix[0].length : 0);
         
         // Update the application state with the parsed data
         this.years = parsedData.years;
@@ -982,7 +999,8 @@ export default {
         this.phases = parsedData.phases;
         
         // Initialize the crew matrix
-        this.crewMatrix = parsedData.crewMatrix;
+        console.log('Setting crew matrix from parsed data:', parsedData.crewMatrix);
+        this.crewMatrix = JSON.parse(JSON.stringify(parsedData.crewMatrix)); // Deep copy
         
         // Re-initialize the item order
         this.initializeItemOrder();
