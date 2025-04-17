@@ -41,13 +41,15 @@ export default {
 }
 
 .upload-button {
-  background-color: #4CAF50;
-  color: white;
+  background-color: #f0f9ff;
+  color: #0369a1;
+  border-color: #bae6fd;
   cursor: pointer;
 }
 
 .upload-button:hover {
-  background-color: #45a049;
+  background-color: #e0f2fe;
+  border-color: #7dd3fc;
 }
 
 .icon {

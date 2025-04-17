@@ -204,11 +204,28 @@ export function initializeDepartmentAssignments(workstationData, departments) {
   return workstationData.departmentAssignments;
 }
 
-// Helper function to calculate monthly workstation costs based on crew size
+// Helper function to calculate monthly workstation costs based on peak crew size
 export function calculateMonthlyWorkstationCosts(workstationData, crewMatrix, departments) {
   const monthlyCosts = new Array(crewMatrix[0]?.length || 0).fill(0);
+  const totalWorkstationCost = calculateTotalWorkstationCost(workstationData, crewMatrix, departments);
   
-  // For each department and month, calculate workstation costs
+  // Distribute the total workstation cost evenly across the project duration
+  // This represents the depreciation of the workstations over the project
+  const monthlyDepreciationCost = totalWorkstationCost / monthlyCosts.length;
+  
+  // Apply the monthly depreciation cost to all months
+  for (let m = 0; m < monthlyCosts.length; m++) {
+    monthlyCosts[m] = monthlyDepreciationCost;
+  }
+  
+  return monthlyCosts;
+}
+
+// Helper function to calculate the total workstation cost based on peak crew size per department
+export function calculateTotalWorkstationCost(workstationData, crewMatrix, departments) {
+  let totalCost = 0;
+  
+  // For each department, find the peak crew size and calculate workstation cost
   for (let d = 0; d < departments.length; d++) {
     // Find the workstation assignment for this department
     const deptId = departments[d].name.toLowerCase().replace(/\s+/g, '-');
@@ -222,26 +239,26 @@ export function calculateMonthlyWorkstationCosts(workstationData, crewMatrix, de
         // Calculate cost per workstation
         const costPerWorkstation = bundle.cost;
         
-        // For each month, calculate cost based on crew size
+        // Find peak crew size for this department
+        let peakCrewSize = 0;
         for (let m = 0; m < crewMatrix[d].length; m++) {
-          const crewSize = crewMatrix[d][m];
+          peakCrewSize = Math.max(peakCrewSize, crewMatrix[d][m]);
+        }
+        
+        // Calculate workstation cost for this department based on peak crew size
+        if (peakCrewSize > 0) {
+          // Use the minimum of peak crew size and assigned quantity
+          const workstationCount = Math.min(peakCrewSize, assignment.quantity);
           
-          // Calculate workstation cost for this department and month
-          // We assume workstations are assigned at the start of the project and kept throughout
-          if (crewSize > 0) {
-            // Use the minimum of crew size and assigned quantity
-            const workstationCount = Math.min(crewSize, assignment.quantity);
-            
-            // Calculate monthly cost (assuming 36-month depreciation)
-            const monthlyCost = (costPerWorkstation * workstationCount) / 36;
-            
-            // Add to monthly costs
-            monthlyCosts[m] += monthlyCost;
-          }
+          // Calculate total cost for this department
+          const departmentCost = costPerWorkstation * workstationCount;
+          
+          // Add to total cost
+          totalCost += departmentCost;
         }
       }
     }
   }
   
-  return monthlyCosts;
+  return totalCost;
 }
