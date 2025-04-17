@@ -161,13 +161,13 @@ export function exportToExcel(appState) {
   // Calculate total facility cost
   const totalFacilityCost = monthlyFacilityCosts.reduce((sum, cost) => sum + cost, 0);
   
-  // Calculate total workstation cost
-  const totalWorkstationCost = monthlyWorkstationCosts.reduce((sum, cost) => sum + cost, 0);
+  // Calculate total workstation cost from monthly costs
+  const totalWorkstationCostFromMonthly = monthlyWorkstationCosts.reduce((sum, cost) => sum + cost, 0);
   
   // Add cost breakdown
   statsData.push(["Labor", totalLaborCost, `${(totalLaborCost / totalProjectCost * 100).toFixed(1)}%`]);
   statsData.push(["Facilities", totalFacilityCost, `${(totalFacilityCost / totalProjectCost * 100).toFixed(1)}%`]);
-  statsData.push(["Workstations", totalWorkstationCost, `${(totalWorkstationCost / totalProjectCost * 100).toFixed(1)}%`]);
+  statsData.push(["Workstations", totalWorkstationCostFromMonthly, `${(totalWorkstationCostFromMonthly / totalProjectCost * 100).toFixed(1)}%`]);
   
   statsData.push([""]);
   statsData.push([""]);
@@ -334,8 +334,8 @@ export function exportToExcel(appState) {
     ["Department", "Workstation Type", "Quantity", "Total Cost"]
   ];
   
-  // Calculate total workstation cost
-  let totalWorkstationCost = 0;
+  // Calculate total workstation cost from assignments
+  let totalWorkstationCostFromAssignments = 0;
   const departmentWorkstationCosts = {};
   const workstationTypeCosts = {};
   
@@ -343,7 +343,7 @@ export function exportToExcel(appState) {
     const bundle = workstationData.workstationBundles.find(b => b.id === assignment.workstationId);
     if (bundle) {
       const cost = bundle.cost * assignment.quantity;
-      totalWorkstationCost += cost;
+      totalWorkstationCostFromAssignments += cost;
       
       // Track costs by department
       if (!departmentWorkstationCosts[assignment.departmentName]) {
@@ -373,7 +373,7 @@ export function exportToExcel(appState) {
   
   workstationSummaryData.push([""]);
   workstationSummaryData.push([""]);
-  workstationSummaryData.push(["Total Workstation Cost", totalWorkstationCost]);
+  workstationSummaryData.push(["Total Workstation Cost", totalWorkstationCostFromAssignments]);
   workstationSummaryData.push([""]);
   
   // Add breakdown by department
@@ -382,7 +382,7 @@ export function exportToExcel(appState) {
   workstationSummaryData.push(["Department", "Total Cost", "% of Total Workstation Cost"]);
   
   Object.entries(departmentWorkstationCosts).forEach(([department, cost]) => {
-    const percentage = totalWorkstationCost > 0 ? (cost / totalWorkstationCost * 100).toFixed(1) : 0;
+    const percentage = totalWorkstationCostFromAssignments > 0 ? (cost / totalWorkstationCostFromAssignments * 100).toFixed(1) : 0;
     workstationSummaryData.push([department, cost, `${percentage}%`]);
   });
   
@@ -395,7 +395,7 @@ export function exportToExcel(appState) {
   workstationSummaryData.push(["Workstation Type", "Quantity", "Total Cost", "% of Total Workstation Cost"]);
   
   Object.entries(workstationTypeCosts).forEach(([type, data]) => {
-    const percentage = totalWorkstationCost > 0 ? (data.cost / totalWorkstationCost * 100).toFixed(1) : 0;
+    const percentage = totalWorkstationCostFromAssignments > 0 ? (data.cost / totalWorkstationCostFromAssignments * 100).toFixed(1) : 0;
     workstationSummaryData.push([type, data.quantity, data.cost, `${percentage}%`]);
   });
   
