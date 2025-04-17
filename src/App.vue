@@ -444,6 +444,7 @@ import {
   createProjectData,
   applyProjectData
 } from './project-export.js';
+import { exportToMultipleCSV } from './export-csv.js';
 import FileUploader from './components/FileUploader.vue';
 import FacilitiesCostEditor from './components/FacilitiesCostEditor.vue';
 import WorkstationEditor from './components/WorkstationEditor.vue';
@@ -1529,6 +1530,39 @@ export default {
     },
     // Export data to CSV
     exportCSV() {
+      // Export to multiple CSV files
+      const appState = {
+        years: this.years,
+        monthsPerYear: this.monthsPerYear,
+        months: this.months,
+        sortedItems: this.sortedItems,
+        phases: this.phases,
+        departments: this.departments,
+        crewMatrix: this.crewMatrix,
+        monthlyLaborCosts: this.monthlyLaborCosts,
+        monthlyFacilityCosts: this.monthlyFacilityCosts,
+        monthlyWorkstationCosts: this.monthlyWorkstationCosts,
+        monthlyCosts: this.monthlyCosts,
+        cumulativeCosts: this.cumulativeCosts,
+        totalProjectCost: this.totalProjectCost,
+        peakMonthlyCost: this.peakMonthlyCost,
+        peakCrewSize: this.peakCrewSize,
+        facilitiesData: this.facilitiesData,
+        workstationData: this.workstationData,
+        facilitiesFunctions: {
+          calculateTotalFixedFacilityCosts,
+          calculateTotalVariableFacilityCostsPerPerson
+        },
+        exportFunctions: {
+          generateFacilitiesCSV,
+          generateWorkstationsCSV
+        }
+      };
+      
+      exportToMultipleCSV(appState);
+      return;
+      
+      // Legacy code below - no longer used
       // Create a CSV that exactly matches the original format
       
       // First, create the year header row
