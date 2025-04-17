@@ -38,14 +38,43 @@
           <button @click="toggleFacilitiesEditor" class="action-button facilities-button">
             <span class="icon">🏢</span> Facilities Costs
           </button>
-          <div class="facilities-toggle">
+          <button @click="toggleWorkstationEditor" class="action-button workstation-button">
+            <span class="icon">💻</span> Workstations
+          </button>
+          <div class="cost-toggles">
+            <div class="toggle-item">
+              <input 
+                type="checkbox" 
+                id="facilities-toggle" 
+                v-model="facilitiesIncludedInTotals"
+                @change="calculateCosts"
+              >
+              <label for="facilities-toggle">Include Facilities</label>
+            </div>
+            <div class="toggle-item">
+              <input 
+                type="checkbox" 
+                id="workstations-toggle" 
+                v-model="workstationsIncludedInTotals"
+                @change="calculateCosts"
+              >
+              <label for="workstations-toggle">Include Workstations</label>
+            </div>
+          </div>
+          <div class="export-import-buttons">
+            <button @click="exportProjectJSON" class="action-button json-button" title="Export Project as JSON">
+              <span class="icon">📤</span> Export JSON
+            </button>
+            <label for="import-json" class="action-button json-button" title="Import Project from JSON">
+              <span class="icon">📥</span> Import JSON
+            </label>
             <input 
-              type="checkbox" 
-              id="facilities-toggle" 
-              v-model="facilitiesIncludedInTotals"
-              @change="calculateCosts"
+              type="file" 
+              id="import-json" 
+              accept=".json" 
+              @change="importProjectJSON" 
+              style="display: none;"
             >
-            <label for="facilities-toggle">Include Facilities in Totals</label>
           </div>
           <div class="zoom-controls">
             <button @click="zoomOut" class="zoom-button" title="Zoom Out">-</button>
@@ -158,6 +187,15 @@
                 <tr class="cost-row non-editable">
                   <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Facility Cost</strong></td>
                   <td v-for="(cost, index) in monthlyFacilityCosts" :key="index" 
+                      :class="{ active: cost > 0 }"
+                      :style="getCellStyle()"
+                      :title="'$' + formatCurrency(cost)">
+                    {{ cost > 0 ? formatCompactCurrency(cost) : '' }}
+                  </td>
+                </tr>
+                <tr class="cost-row non-editable">
+                  <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Workstation Cost</strong></td>
+                  <td v-for="(cost, index) in monthlyWorkstationCosts" :key="index" 
                       :class="{ active: cost > 0 }"
                       :style="getCellStyle()"
                       :title="'$' + formatCurrency(cost)">
@@ -372,6 +410,19 @@
         @start-drag="startDrag($event, 'facilities')"
         @update-costs="calculateCosts"
       />
+      
+      <!-- Workstation Editor -->
+      <WorkstationEditor
+        v-if="showWorkstationEditor"
+        :workstationData="workstationData"
+        :departments="departments"
+        :editorPosition="editorPosition"
+        :editorStyle="editorStyle"
+        @close="showWorkstationEditor = false"
+        @reset-position="resetEditorPosition"
+        @start-drag="startDrag($event, 'workstation')"
+        @update-costs="calculateCosts"
+      />
     </main>
   </div>
 </template>
@@ -386,13 +437,28 @@ import {
   calculateTotalFixedFacilityCosts, 
   calculateTotalVariableFacilityCostsPerPerson 
 } from './facilities-data.js';
+import { 
+  workstationData,
+  calculateMonthlyWorkstationCosts,
+  initializeDepartmentAssignments
+} from './workstation-data.js';
+import {
+  exportProjectAsJSON,
+  importProjectFromJSON,
+  generateFacilitiesCSV,
+  generateWorkstationsCSV,
+  createProjectData,
+  applyProjectData
+} from './project-export.js';
 import FileUploader from './components/FileUploader.vue';
 import FacilitiesCostEditor from './components/FacilitiesCostEditor.vue';
+import WorkstationEditor from './components/WorkstationEditor.vue';
 
 export default {
   components: {
     FileUploader,
-    FacilitiesCostEditor
+    FacilitiesCostEditor,
+    WorkstationEditor
   },
   data() {
     return {
@@ -580,7 +646,11 @@ export default {
       showFacilitiesEditor: false,
       monthlyFacilityCosts: [],
       monthlyLaborCosts: [],
-      facilitiesIncludedInTotals: true
+      facilitiesIncludedInTotals: true,
+      workstationData: JSON.parse(JSON.stringify(workstationData)),
+      showWorkstationEditor: false,
+      monthlyWorkstationCosts: [],
+      workstationsIncludedInTotals: true
     };
   },
   created() {
@@ -601,6 +671,9 @@ export default {
     
     // Initialize item order
     this.initializeItemOrder();
+    
+    // Initialize workstation department assignments
+    initializeDepartmentAssignments(this.workstationData, this.departments);
     
     // Calculate costs
     this.calculateCosts();
@@ -1015,6 +1088,7 @@ export default {
       this.cumulativeCosts = new Array(this.months.length).fill(0);
       this.monthlyLaborCosts = new Array(this.months.length).fill(0);
       this.monthlyFacilityCosts = new Array(this.months.length).fill(0);
+      this.monthlyWorkstationCosts = new Array(this.months.length).fill(0);
       
       // Debug the crew matrix and department rates
       console.log('Crew matrix dimensions:', this.crewMatrix.length, 'x', 
@@ -1108,15 +1182,28 @@ export default {
         const facilityCost = calculateFacilityCostsForMonth(this.facilitiesData, monthlyCrewSize);
         this.monthlyFacilityCosts[m] = facilityCost;
         
-        // Add labor and facility costs to get total monthly cost
+        // Calculate workstation costs for this month
+        this.monthlyWorkstationCosts[m] = 0; // Reset for this month
+      }
+      
+      // Calculate workstation costs based on crew matrix
+      const workstationCosts = calculateMonthlyWorkstationCosts(this.workstationData, this.crewMatrix, this.departments);
+      for (let m = 0; m < this.months.length; m++) {
+        this.monthlyWorkstationCosts[m] = workstationCosts[m];
+        
+        // Add labor, facility, and workstation costs to get total monthly cost
+        this.monthlyCosts[m] = this.monthlyLaborCosts[m];
+        
         if (this.facilitiesIncludedInTotals) {
-          this.monthlyCosts[m] = this.monthlyLaborCosts[m] + this.monthlyFacilityCosts[m];
-        } else {
-          this.monthlyCosts[m] = this.monthlyLaborCosts[m];
+          this.monthlyCosts[m] += this.monthlyFacilityCosts[m];
+        }
+        
+        if (this.workstationsIncludedInTotals) {
+          this.monthlyCosts[m] += this.monthlyWorkstationCosts[m];
         }
         
         // Debug the monthly cost
-        console.log(`Month ${m} - Labor: $${this.monthlyLaborCosts[m]}, Facilities: $${this.monthlyFacilityCosts[m]}, Total: $${this.monthlyCosts[m]}`);
+        console.log(`Month ${m} - Labor: $${this.monthlyLaborCosts[m]}, Facilities: $${this.monthlyFacilityCosts[m]}, Workstations: $${this.monthlyWorkstationCosts[m]}, Total: $${this.monthlyCosts[m]}`);
       }
       
       // Calculate cumulative costs
@@ -1319,11 +1406,85 @@ export default {
     },
     toggleFacilitiesEditor() {
       this.showFacilitiesEditor = !this.showFacilitiesEditor;
+      this.showWorkstationEditor = false;
       
       // Reset editor position when opening
       if (this.showFacilitiesEditor) {
         this.editorPosition = 'position-right';
         this.editorStyle = { top: '150px', right: '20px' };
+      }
+    },
+    toggleWorkstationEditor() {
+      this.showWorkstationEditor = !this.showWorkstationEditor;
+      this.showFacilitiesEditor = false;
+      
+      // Reset editor position when opening
+      if (this.showWorkstationEditor) {
+        this.editorPosition = 'position-right';
+        this.editorStyle = { top: '150px', right: '20px' };
+      }
+    },
+    exportProjectJSON() {
+      // Create project data object
+      const projectData = createProjectData(this);
+      
+      // Export as JSON
+      const blob = exportProjectAsJSON(projectData);
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "crew_planner_project.json");
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    importProjectJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const jsonContent = e.target.result;
+          const projectData = importProjectFromJSON(jsonContent);
+          
+          // Apply project data to the current state
+          applyProjectData(projectData, this);
+          
+          // Update the crew matrix if needed
+          this.updateCrewMatrix();
+          
+          // Calculate costs
+          this.calculateCosts();
+          
+          // Show success message
+          alert('Project imported successfully!');
+        } catch (error) {
+          console.error('Error importing project:', error);
+          alert('Error importing project. Please check the file format and try again.');
+        }
+        
+        // Reset the file input
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    },
+    updateCrewMatrix() {
+      // Ensure crew matrix has the correct dimensions
+      if (this.crewMatrix.length !== this.departments.length) {
+        // Resize the crew matrix
+        this.crewMatrix = new Array(this.departments.length);
+        for (let d = 0; d < this.departments.length; d++) {
+          this.crewMatrix[d] = new Array(this.months.length).fill(0);
+        }
+        
+        // Recalculate crew distribution for each department
+        for (let d = 0; d < this.departments.length; d++) {
+          this.updateDepartmentDistribution(d);
+        }
       }
     },
     addNewPhase() {
@@ -1461,6 +1622,13 @@ export default {
         csvContent += this.monthlyFacilityCosts[i] + ",";
       }
       csvContent += "\n";
+      
+      // Add workstation costs
+      csvContent += "Monthly Workstation Cost,";
+      for (let i = 0; i < this.months.length; i++) {
+        csvContent += this.monthlyWorkstationCosts[i] + ",";
+      }
+      csvContent += "\n";
 
       // Add total monthly costs
       csvContent += "Total Monthly Cost,";
@@ -1486,6 +1654,27 @@ export default {
       csvContent += "Fixed Monthly Facility Costs," + calculateTotalFixedFacilityCosts(this.facilitiesData) + "\n";
       csvContent += "Variable Facility Costs Per Person," + calculateTotalVariableFacilityCostsPerPerson(this.facilitiesData) + "\n";
       
+      // Create separate CSV files for facilities and workstations
+      const facilitiesCSV = generateFacilitiesCSV(this.facilitiesData);
+      const workstationsCSV = generateWorkstationsCSV(this.workstationData);
+      
+      // Create blobs for the additional CSV files
+      const facilitiesBlob = new Blob([facilitiesCSV], { type: "text/csv;charset=utf-8;" });
+      const workstationsBlob = new Blob([workstationsCSV], { type: "text/csv;charset=utf-8;" });
+      
+      // Create download links for the additional CSV files
+      const facilitiesLink = document.createElement("a");
+      facilitiesLink.setAttribute("href", URL.createObjectURL(facilitiesBlob));
+      facilitiesLink.setAttribute("download", "facilities_data.csv");
+      facilitiesLink.style.visibility = "hidden";
+      document.body.appendChild(facilitiesLink);
+      
+      const workstationsLink = document.createElement("a");
+      workstationsLink.setAttribute("href", URL.createObjectURL(workstationsBlob));
+      workstationsLink.setAttribute("download", "workstations_data.csv");
+      workstationsLink.style.visibility = "hidden";
+      document.body.appendChild(workstationsLink);
+      
       // Create a blob and download link
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
@@ -1494,8 +1683,16 @@ export default {
       link.setAttribute("download", "crew_planning_data.csv");
       link.style.visibility = "hidden";
       document.body.appendChild(link);
+      
+      // Download all files
       link.click();
+      facilitiesLink.click();
+      workstationsLink.click();
+      
+      // Clean up
       document.body.removeChild(link);
+      document.body.removeChild(facilitiesLink);
+      document.body.removeChild(workstationsLink);
     },
     
     loadCSV(csvContent) {
@@ -1958,15 +2155,37 @@ main {
   font-size: 0.85rem;
 }
 
-.facilities-toggle {
+.cost-toggles {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   margin-left: 10px;
   font-size: 0.85rem;
 }
 
-.facilities-toggle input[type="checkbox"] {
+.toggle-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.toggle-item input[type="checkbox"] {
   margin-right: 5px;
+}
+
+.export-import-buttons {
+  display: flex;
+  gap: 5px;
+  margin-left: 10px;
+}
+
+.json-button {
+  background-color: #673ab7;
+  color: white;
+}
+
+.workstation-button {
+  background-color: #009688;
+  color: white;
 }
 
 .add-button {
