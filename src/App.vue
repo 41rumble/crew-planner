@@ -696,27 +696,79 @@ export default {
       this.updateDepartmentDistribution(dIndex);
     },
     updateDepartmentTimeframe(department) {
+      console.log(`Updating timeframe for department: ${department.name}, startMonth: ${department.startMonth}, endMonth: ${department.endMonth}`);
+      
       // Ensure end month is after start month
       if (department.endMonth <= department.startMonth) {
         department.endMonth = department.startMonth + 1;
+        console.log(`Adjusted endMonth to ${department.endMonth}`);
       }
       
-      // Adjust ramp durations if they exceed the new timeframe
-      const timeframeDuration = department.endMonth - department.startMonth;
-      const maxRampDuration = Math.floor(timeframeDuration / 2);
+      // Calculate the total timeframe duration
+      const timeframeDuration = department.endMonth - department.startMonth + 1;
+      console.log(`Timeframe duration: ${timeframeDuration} months`);
       
-      if (department.rampUpDuration > maxRampDuration) {
-        department.rampUpDuration = maxRampDuration;
-      }
-      
-      if (department.rampDownDuration > maxRampDuration) {
-        department.rampDownDuration = maxRampDuration;
+      // Ensure there's at least 1 month for the plateau
+      const totalRampDuration = department.rampUpDuration + department.rampDownDuration;
+      if (totalRampDuration >= timeframeDuration) {
+        // Reduce both ramps proportionally
+        const reductionFactor = (timeframeDuration - 1) / totalRampDuration;
+        department.rampUpDuration = Math.floor(department.rampUpDuration * reductionFactor);
+        department.rampDownDuration = Math.floor(department.rampDownDuration * reductionFactor);
+        
+        // Ensure at least one of them is reduced if both are non-zero
+        if (totalRampDuration > 0 && department.rampUpDuration + department.rampDownDuration >= timeframeDuration) {
+          if (department.rampUpDuration > 0) {
+            department.rampUpDuration--;
+          } else if (department.rampDownDuration > 0) {
+            department.rampDownDuration--;
+          }
+        }
+        
+        console.log(`Adjusted ramps: up=${department.rampUpDuration}, down=${department.rampDownDuration}`);
       }
       
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
     },
     updateDepartmentRamp(department) {
+      console.log(`Updating ramp for department: ${department.name}, rampUp: ${department.rampUpDuration}, rampDown: ${department.rampDownDuration}`);
+      
+      // Validate ramp durations
+      if (isNaN(department.rampUpDuration) || department.rampUpDuration < 0) {
+        department.rampUpDuration = 0;
+        console.log(`Adjusted rampUpDuration to ${department.rampUpDuration}`);
+      }
+      
+      if (isNaN(department.rampDownDuration) || department.rampDownDuration < 0) {
+        department.rampDownDuration = 0;
+        console.log(`Adjusted rampDownDuration to ${department.rampDownDuration}`);
+      }
+      
+      // Calculate the total timeframe duration
+      const timeframeDuration = department.endMonth - department.startMonth + 1;
+      console.log(`Timeframe duration: ${timeframeDuration} months`);
+      
+      // Ensure there's at least 1 month for the plateau
+      const totalRampDuration = department.rampUpDuration + department.rampDownDuration;
+      if (totalRampDuration >= timeframeDuration) {
+        // Reduce both ramps proportionally
+        const reductionFactor = (timeframeDuration - 1) / totalRampDuration;
+        department.rampUpDuration = Math.floor(department.rampUpDuration * reductionFactor);
+        department.rampDownDuration = Math.floor(department.rampDownDuration * reductionFactor);
+        
+        // Ensure at least one of them is reduced if both are non-zero
+        if (totalRampDuration > 0 && department.rampUpDuration + department.rampDownDuration >= timeframeDuration) {
+          if (department.rampUpDuration > 0) {
+            department.rampUpDuration--;
+          } else if (department.rampDownDuration > 0) {
+            department.rampDownDuration--;
+          }
+        }
+        
+        console.log(`Adjusted ramps: up=${department.rampUpDuration}, down=${department.rampDownDuration}`);
+      }
+      
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
     },
@@ -777,28 +829,83 @@ export default {
       const plateauEnd = endMonth - rampDownDuration;
       console.log(`Plateau: start=${plateauStart}, end=${plateauEnd}`);
       
-      // Apply ramp up
-      for (let i = 0; i < rampUpDuration; i++) {
-        const month = startMonth + i;
-        if (month >= 0 && month < this.months.length) {
-          const crewSize = Math.round((i + 1) * maxCrew / rampUpDuration);
-          this.crewMatrix[dIndex][month] = crewSize;
+      // Ensure the plateau is valid
+      if (plateauStart > plateauEnd) {
+        console.warn(`Invalid plateau: start=${plateauStart}, end=${plateauEnd}. Adjusting...`);
+        // Adjust the plateau to ensure it's valid
+        const midpoint = Math.floor((startMonth + endMonth) / 2);
+        const plateauDuration = Math.max(1, totalDuration - rampUpDuration - rampDownDuration);
+        const newPlateauStart = Math.min(midpoint, startMonth + rampUpDuration);
+        const newPlateauEnd = Math.max(midpoint, endMonth - rampDownDuration);
+        
+        console.log(`Adjusted plateau: start=${newPlateauStart}, end=${newPlateauEnd}`);
+        
+        // Apply ramp up
+        if (rampUpDuration > 0) {
+          for (let i = 0; i < rampUpDuration; i++) {
+            const month = startMonth + i;
+            if (month >= 0 && month < this.months.length) {
+              // Ensure we don't divide by zero
+              const rampFactor = rampUpDuration > 0 ? (i + 1) / rampUpDuration : 1;
+              const crewSize = Math.round(maxCrew * rampFactor);
+              this.crewMatrix[dIndex][month] = crewSize;
+            }
+          }
         }
-      }
-      
-      // Apply plateau (full crew)
-      for (let month = plateauStart; month <= plateauEnd; month++) {
-        if (month >= 0 && month < this.months.length) {
-          this.crewMatrix[dIndex][month] = maxCrew;
+        
+        // Apply plateau (full crew)
+        for (let month = newPlateauStart; month <= newPlateauEnd; month++) {
+          if (month >= 0 && month < this.months.length) {
+            this.crewMatrix[dIndex][month] = maxCrew;
+          }
         }
-      }
-      
-      // Apply ramp down
-      for (let i = 0; i < rampDownDuration; i++) {
-        const month = plateauEnd + 1 + i;
-        if (month >= 0 && month < this.months.length) {
-          const crewSize = Math.round(maxCrew * (rampDownDuration - i - 1) / rampDownDuration);
-          this.crewMatrix[dIndex][month] = crewSize;
+        
+        // Apply ramp down
+        if (rampDownDuration > 0) {
+          for (let i = 0; i < rampDownDuration; i++) {
+            const month = newPlateauEnd + 1 + i;
+            if (month >= 0 && month < this.months.length) {
+              // Ensure we don't divide by zero
+              const rampFactor = rampDownDuration > 0 ? (rampDownDuration - i - 1) / rampDownDuration : 0;
+              const crewSize = Math.round(maxCrew * rampFactor);
+              this.crewMatrix[dIndex][month] = crewSize;
+            }
+          }
+        }
+      } else {
+        // Normal case - plateau is valid
+        
+        // Apply ramp up
+        if (rampUpDuration > 0) {
+          for (let i = 0; i < rampUpDuration; i++) {
+            const month = startMonth + i;
+            if (month >= 0 && month < this.months.length) {
+              // Ensure we don't divide by zero
+              const rampFactor = rampUpDuration > 0 ? (i + 1) / rampUpDuration : 1;
+              const crewSize = Math.round(maxCrew * rampFactor);
+              this.crewMatrix[dIndex][month] = crewSize;
+            }
+          }
+        }
+        
+        // Apply plateau (full crew)
+        for (let month = plateauStart; month <= plateauEnd; month++) {
+          if (month >= 0 && month < this.months.length) {
+            this.crewMatrix[dIndex][month] = maxCrew;
+          }
+        }
+        
+        // Apply ramp down
+        if (rampDownDuration > 0) {
+          for (let i = 0; i < rampDownDuration; i++) {
+            const month = plateauEnd + 1 + i;
+            if (month >= 0 && month < this.months.length) {
+              // Ensure we don't divide by zero
+              const rampFactor = rampDownDuration > 0 ? (rampDownDuration - i - 1) / rampDownDuration : 0;
+              const crewSize = Math.round(maxCrew * rampFactor);
+              this.crewMatrix[dIndex][month] = crewSize;
+            }
+          }
         }
       }
       
