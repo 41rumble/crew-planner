@@ -35,6 +35,18 @@
           <button @click="addNewPhase" class="action-button phase-button">
             <span class="icon">+</span> Add Phase Label
           </button>
+          <button @click="toggleFacilitiesEditor" class="action-button facilities-button">
+            <span class="icon">🏢</span> Facilities Costs
+          </button>
+          <div class="facilities-toggle">
+            <input 
+              type="checkbox" 
+              id="facilities-toggle" 
+              v-model="facilitiesIncludedInTotals"
+              @change="calculateCosts"
+            >
+            <label for="facilities-toggle">Include Facilities in Totals</label>
+          </div>
           <div class="zoom-controls">
             <button @click="zoomOut" class="zoom-button" title="Zoom Out">-</button>
             <span>{{ Math.round(zoomLevel * 100) }}%</span>
@@ -135,7 +147,25 @@
                 
                 <!-- Cost rows -->
                 <tr class="cost-row non-editable">
-                  <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Monthly Cost</strong></td>
+                  <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Labor Cost</strong></td>
+                  <td v-for="(cost, index) in monthlyLaborCosts" :key="index" 
+                      :class="{ active: cost > 0 }"
+                      :style="getCellStyle()"
+                      :title="'$' + formatCurrency(cost)">
+                    {{ cost > 0 ? formatCompactCurrency(cost) : '' }}
+                  </td>
+                </tr>
+                <tr class="cost-row non-editable">
+                  <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Facility Cost</strong></td>
+                  <td v-for="(cost, index) in monthlyFacilityCosts" :key="index" 
+                      :class="{ active: cost > 0 }"
+                      :style="getCellStyle()"
+                      :title="'$' + formatCurrency(cost)">
+                    {{ cost > 0 ? formatCompactCurrency(cost) : '' }}
+                  </td>
+                </tr>
+                <tr class="cost-row non-editable">
+                  <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Total Monthly Cost</strong></td>
                   <td v-for="(cost, index) in monthlyCosts" :key="index" 
                       :class="{ active: cost > 0 }"
                       :style="getCellStyle()"
@@ -328,6 +358,20 @@
           </div>
         </div>
       </div>
+      
+      <!-- Facilities Cost Editor -->
+      <FacilitiesCostEditor
+        v-if="showFacilitiesEditor"
+        :facilitiesData="facilitiesData"
+        :departments="departments"
+        :editorPosition="editorPosition"
+        :editorStyle="editorStyle"
+        :peakCrewSize="peakCrewSize"
+        @close="showFacilitiesEditor = false"
+        @reset-position="resetEditorPosition"
+        @start-drag="startDrag($event, 'facilities')"
+        @update-costs="calculateCosts"
+      />
     </main>
   </div>
 </template>
@@ -336,11 +380,19 @@
 import { simpleData } from './simple-data.js';
 import { parseCSV, generateCSV } from './csv-loader.js';
 import { timelineDragHandlers } from './timeline-drag-handlers.js';
+import { 
+  facilitiesData, 
+  calculateFacilityCostsForMonth, 
+  calculateTotalFixedFacilityCosts, 
+  calculateTotalVariableFacilityCostsPerPerson 
+} from './facilities-data.js';
 import FileUploader from './components/FileUploader.vue';
+import FacilitiesCostEditor from './components/FacilitiesCostEditor.vue';
 
 export default {
   components: {
-    FileUploader
+    FileUploader,
+    FacilitiesCostEditor
   },
   data() {
     return {
@@ -523,7 +575,12 @@ export default {
       cumulativeCosts: [],
       totalProjectCost: 0,
       peakMonthlyCost: 0,
-      peakCrewSize: 0
+      peakCrewSize: 0,
+      facilitiesData: JSON.parse(JSON.stringify(facilitiesData)),
+      showFacilitiesEditor: false,
+      monthlyFacilityCosts: [],
+      monthlyLaborCosts: [],
+      facilitiesIncludedInTotals: true
     };
   },
   created() {
@@ -956,6 +1013,8 @@ export default {
       // Reset cost arrays
       this.monthlyCosts = new Array(this.months.length).fill(0);
       this.cumulativeCosts = new Array(this.months.length).fill(0);
+      this.monthlyLaborCosts = new Array(this.months.length).fill(0);
+      this.monthlyFacilityCosts = new Array(this.months.length).fill(0);
       
       // Debug the crew matrix and department rates
       console.log('Crew matrix dimensions:', this.crewMatrix.length, 'x', 
@@ -1033,12 +1092,31 @@ export default {
             console.log(`Month 0, Dept ${d} (${this.departments[d].name}): ${crewSize} crew * $${rate} = $${cost}`);
           }
           
-          // Add to monthly cost
-          this.monthlyCosts[m] += cost;
+          // Add to monthly labor cost
+          this.monthlyLaborCosts[m] += cost;
+        }
+        
+        // Calculate monthly crew size for facility costs
+        let monthlyCrewSize = 0;
+        for (let d = 0; d < this.departments.length; d++) {
+          if (this.crewMatrix[d] && this.crewMatrix[d][m]) {
+            monthlyCrewSize += this.crewMatrix[d][m];
+          }
+        }
+        
+        // Calculate facility costs for this month
+        const facilityCost = calculateFacilityCostsForMonth(this.facilitiesData, monthlyCrewSize);
+        this.monthlyFacilityCosts[m] = facilityCost;
+        
+        // Add labor and facility costs to get total monthly cost
+        if (this.facilitiesIncludedInTotals) {
+          this.monthlyCosts[m] = this.monthlyLaborCosts[m] + this.monthlyFacilityCosts[m];
+        } else {
+          this.monthlyCosts[m] = this.monthlyLaborCosts[m];
         }
         
         // Debug the monthly cost
-        console.log(`Month ${m} total cost: $${this.monthlyCosts[m]}`);
+        console.log(`Month ${m} - Labor: $${this.monthlyLaborCosts[m]}, Facilities: $${this.monthlyFacilityCosts[m]}, Total: $${this.monthlyCosts[m]}`);
       }
       
       // Calculate cumulative costs
@@ -1239,6 +1317,15 @@ export default {
     closePhaseEditor() {
       this.selectedPhaseIndex = null;
     },
+    toggleFacilitiesEditor() {
+      this.showFacilitiesEditor = !this.showFacilitiesEditor;
+      
+      // Reset editor position when opening
+      if (this.showFacilitiesEditor) {
+        this.editorPosition = 'position-right';
+        this.editorStyle = { top: '150px', right: '20px' };
+      }
+    },
     addNewPhase() {
       const newPhase = {
         name: 'New Phase',
@@ -1361,8 +1448,22 @@ export default {
         csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
       });
       
-      // Add monthly costs
-      csvContent += "Monthly Cost,";
+      // Add labor costs
+      csvContent += "Monthly Labor Cost,";
+      for (let i = 0; i < this.months.length; i++) {
+        csvContent += this.monthlyLaborCosts[i] + ",";
+      }
+      csvContent += "\n";
+      
+      // Add facility costs
+      csvContent += "Monthly Facility Cost,";
+      for (let i = 0; i < this.months.length; i++) {
+        csvContent += this.monthlyFacilityCosts[i] + ",";
+      }
+      csvContent += "\n";
+
+      // Add total monthly costs
+      csvContent += "Total Monthly Cost,";
       for (let i = 0; i < this.months.length; i++) {
         csvContent += this.monthlyCosts[i] + ",";
       }
@@ -1379,6 +1480,11 @@ export default {
       csvContent += "\nTotal Project Cost," + this.totalProjectCost + "\n";
       csvContent += "Peak Monthly Cost," + this.peakMonthlyCost + "\n";
       csvContent += "Peak Crew Size," + this.peakCrewSize + "\n";
+      
+      // Add facilities summary
+      csvContent += "\nFacilities Summary:\n";
+      csvContent += "Fixed Monthly Facility Costs," + calculateTotalFixedFacilityCosts(this.facilitiesData) + "\n";
+      csvContent += "Variable Facility Costs Per Person," + calculateTotalVariableFacilityCostsPerPerson(this.facilitiesData) + "\n";
       
       // Create a blob and download link
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -1850,6 +1956,17 @@ main {
   align-items: center;
   gap: 5px;
   font-size: 0.85rem;
+}
+
+.facilities-toggle {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  font-size: 0.85rem;
+}
+
+.facilities-toggle input[type="checkbox"] {
+  margin-right: 5px;
 }
 
 .add-button {
