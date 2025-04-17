@@ -1,7 +1,7 @@
 <template>
   <div class="file-uploader">
-    <label for="csv-upload" class="upload-button">
-      <span class="icon">📂</span> Load CSV
+    <label for="csv-upload" class="action-button upload-button">
+      <span class="icon">📂</span> Import CSV
     </label>
     <input 
       type="file" 
@@ -41,15 +41,9 @@ export default {
 }
 
 .upload-button {
-  display: inline-flex;
-  align-items: center;
   background-color: #4CAF50;
   color: white;
-  padding: 8px 16px;
-  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
 }
 
 .upload-button:hover {

@@ -29,72 +29,94 @@
           </div>
         </div>
         <div class="actions">
-          <button @click="addNewDepartment" class="action-button add-button">
-            <span class="icon">+</span> Add Department
-          </button>
-          <button @click="addNewPhase" class="action-button phase-button">
-            <span class="icon">+</span> Add Phase Label
-          </button>
-          <button @click="toggleFacilitiesEditor" class="action-button facilities-button">
-            <span class="icon">🏢</span> Facilities Costs
-          </button>
-          <button @click="toggleWorkstationEditor" class="action-button workstation-button">
-            <span class="icon">💻</span> Workstations
-          </button>
-          <div class="cost-toggles">
-            <div class="toggle-item">
-              <input 
-                type="checkbox" 
-                id="facilities-toggle" 
-                v-model="facilitiesIncludedInTotals"
-                @change="calculateCosts"
-              >
-              <label for="facilities-toggle">Include Facilities</label>
-            </div>
-            <div class="toggle-item">
-              <input 
-                type="checkbox" 
-                id="workstations-toggle" 
-                v-model="workstationsIncludedInTotals"
-                @change="calculateCosts"
-              >
-              <label for="workstations-toggle">Include Workstations</label>
+          <div class="action-group">
+            <div class="action-group-title">Content</div>
+            <div class="action-group-buttons">
+              <button @click="addNewDepartment" class="action-button add-button">
+                <span class="icon">+</span> Add Department
+              </button>
+              <button @click="addNewPhase" class="action-button phase-button">
+                <span class="icon">+</span> Add Phase Label
+              </button>
             </div>
           </div>
-          <div class="export-import-buttons">
-            <button @click="exportProjectJSON" class="action-button json-button" title="Export Project as JSON">
-              <span class="icon">📤</span> Export JSON
-            </button>
-            <label for="import-json" class="action-button json-button" title="Import Project from JSON">
-              <span class="icon">📥</span> Import JSON
-            </label>
-            <input 
-              type="file" 
-              id="import-json" 
-              accept=".json" 
-              @change="importProjectJSON" 
-              style="display: none;"
-            >
-          </div>
-          <div class="zoom-controls">
-            <button @click="zoomOut" class="zoom-button" title="Zoom Out">-</button>
-            <span>{{ Math.round(zoomLevel * 100) }}%</span>
-            <button @click="zoomIn" class="zoom-button" title="Zoom In">+</button>
-            <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
-            <div class="time-scale-control">
-              <label>Number of Years:</label>
-              <select v-model="numberOfYears" @change="updateTimeScale">
-                <option value="1">1 year</option>
-                <option value="2">2 years</option>
-                <option value="3">3 years</option>
-                <option value="4">4 years</option>
-                <option value="5">5 years</option>
-                <option value="6">6 years</option>
-              </select>
+          
+          <div class="action-group">
+            <div class="action-group-title">Cost Management</div>
+            <div class="action-group-buttons">
+              <button @click="toggleFacilitiesEditor" class="action-button facilities-button">
+                <span class="icon">🏢</span> Facilities
+              </button>
+              <button @click="toggleWorkstationEditor" class="action-button workstation-button">
+                <span class="icon">💻</span> Workstations
+              </button>
+              <div class="cost-toggles">
+                <div class="toggle-item">
+                  <input 
+                    type="checkbox" 
+                    id="facilities-toggle" 
+                    v-model="facilitiesIncludedInTotals"
+                    @change="calculateCosts"
+                  >
+                  <label for="facilities-toggle">Include Facilities</label>
+                </div>
+                <div class="toggle-item">
+                  <input 
+                    type="checkbox" 
+                    id="workstations-toggle" 
+                    v-model="workstationsIncludedInTotals"
+                    @change="calculateCosts"
+                  >
+                  <label for="workstations-toggle">Include Workstations</label>
+                </div>
+              </div>
             </div>
-            <button @click="exportCSV" class="export-button" title="Export to CSV">Export CSV</button>
-            <FileUploader @file-loaded="loadCSV" />
-            <a href="/sample_crew_plan.csv" download class="sample-link">Download Sample</a>
+          </div>
+          
+          <div class="action-group">
+            <div class="action-group-title">Import/Export</div>
+            <div class="action-group-buttons">
+              <button @click="exportProjectJSON" class="action-button json-button" title="Export Project as JSON">
+                <span class="icon">📤</span> Export JSON
+              </button>
+              <label for="import-json" class="action-button json-button" title="Import Project from JSON">
+                <span class="icon">📥</span> Import JSON
+              </label>
+              <input 
+                type="file" 
+                id="import-json" 
+                accept=".json" 
+                @change="importProjectJSON" 
+                style="display: none;"
+              >
+              <button @click="exportCSV" class="action-button export-button" title="Export to CSV">
+                <span class="icon">📄</span> Export CSV
+              </button>
+              <FileUploader @file-loaded="loadCSV" />
+            </div>
+          </div>
+          
+          <div class="action-group">
+            <div class="action-group-title">View Controls</div>
+            <div class="action-group-buttons">
+              <div class="zoom-controls">
+                <button @click="zoomOut" class="zoom-button" title="Zoom Out">-</button>
+                <span>{{ Math.round(zoomLevel * 100) }}%</span>
+                <button @click="zoomIn" class="zoom-button" title="Zoom In">+</button>
+                <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
+              </div>
+              <div class="time-scale-control">
+                <label>Number of Years:</label>
+                <select v-model="numberOfYears" @change="updateTimeScale">
+                  <option value="1">1 year</option>
+                  <option value="2">2 years</option>
+                  <option value="3">3 years</option>
+                  <option value="4">4 years</option>
+                  <option value="5">5 years</option>
+                  <option value="6">6 years</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
         <div class="table-container">
@@ -2183,44 +2205,98 @@ main {
 
 .actions {
   display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.action-group {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  min-width: 200px;
+}
+
+.action-group-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #546e7a;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 5px;
+}
+
+.action-group-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
 }
 
 .action-button {
-  padding: 5px 10px;
+  padding: 8px 12px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  transition: background-color 0.2s, transform 0.1s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.16), 0 2px 3px rgba(0,0,0,0.23);
+}
+
+.action-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12), 0 1px 1px rgba(0,0,0,0.24);
 }
 
 .cost-toggles {
   display: flex;
   flex-direction: column;
-  margin-left: 10px;
-  font-size: 0.85rem;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  background-color: #f1f8e9;
+  padding: 8px;
+  border-radius: 4px;
+  border-left: 3px solid #8bc34a;
 }
 
 .toggle-item {
   display: flex;
   align-items: center;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
+}
+
+.toggle-item:last-child {
+  margin-bottom: 0;
 }
 
 .toggle-item input[type="checkbox"] {
-  margin-right: 5px;
+  margin-right: 6px;
+  width: 16px;
+  height: 16px;
+}
+
+.toggle-item label {
+  color: #33691e;
+  font-weight: 500;
 }
 
 .export-import-buttons {
   display: flex;
-  gap: 5px;
-  margin-left: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .json-button {
@@ -2261,74 +2337,69 @@ main {
 .zoom-controls {
   display: flex;
   align-items: center;
-  gap: 3px;
-  margin-left: auto;
+  gap: 8px;
 }
 
 .time-scale-control {
   display: flex;
   align-items: center;
-  margin: 0 10px;
+  font-size: 0.9rem;
+  margin-top: 8px;
 }
 
 .time-scale-control label {
-  margin-right: 5px;
-  font-size: 14px;
+  margin-right: 8px;
+  font-weight: 500;
+  color: #546e7a;
 }
 
 .time-scale-control select {
-  padding: 3px 5px;
-  border-radius: 3px;
+  padding: 6px 10px;
+  border-radius: 4px;
   border: 1px solid #ccc;
+  background-color: white;
+  font-size: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .zoom-button {
-  width: 24px;
-  height: 24px;
-  border: 1px solid #ccc;
-  background-color: #fff;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background-color: #607d8b;
+  color: white;
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.zoom-button:hover {
+  background-color: #546e7a;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.16), 0 2px 3px rgba(0,0,0,0.23);
+}
+
+.zoom-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12), 0 1px 1px rgba(0,0,0,0.24);
 }
 
 .zoom-button.reset {
   width: auto;
-  padding: 0 6px;
-  font-size: 0.75rem;
+  padding: 0 8px;
+  font-size: 0.8rem;
 }
 
 .export-button {
-  margin-left: 10px;
   background-color: #2196F3;
   color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 3px 8px;
-  font-size: 0.75rem;
-  cursor: pointer;
 }
 
 .export-button:hover {
   background-color: #0b7dda;
-}
-
-.sample-link {
-  display: inline-flex;
-  align-items: center;
-  background-color: #ff9800;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 4px;
-  text-decoration: none;
-  font-size: 14px;
-  margin-left: 8px;
-  transition: background-color 0.3s;
-}
-
-.sample-link:hover {
-  background-color: #e68a00;
 }
 
 /* Drag handle styles */
