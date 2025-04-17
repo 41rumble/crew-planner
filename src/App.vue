@@ -29,76 +29,47 @@
           </div>
         </div>
         <div class="actions">
-          <div class="action-group">
-            <div class="action-group-title">Content</div>
-            <div class="action-group-buttons">
+          <div class="action-toolbar">
+            <div class="toolbar-section">
               <button @click="addNewDepartment" class="action-button add-button">
-                <span class="icon">+</span> Add Department
+                <span class="icon">+</span> Dept
               </button>
               <button @click="addNewPhase" class="action-button phase-button">
-                <span class="icon">+</span> Add Phase Label
+                <span class="icon">+</span> Phase
               </button>
-            </div>
-          </div>
-          
-          <div class="action-group">
-            <div class="action-group-title">Cost Management</div>
-            <div class="action-group-buttons">
+              <div class="divider"></div>
               <button @click="toggleFacilitiesEditor" class="action-button facilities-button">
                 <span class="icon">🏢</span> Facilities
               </button>
               <button @click="toggleWorkstationEditor" class="action-button workstation-button">
                 <span class="icon">💻</span> Workstations
               </button>
+              <div class="divider"></div>
               <div class="cost-toggles">
                 <div class="toggle-item">
-                  <input 
-                    type="checkbox" 
-                    id="facilities-toggle" 
-                    v-model="facilitiesIncludedInTotals"
-                    @change="calculateCosts"
-                  >
-                  <label for="facilities-toggle">Include Facilities</label>
+                  <input type="checkbox" id="facilities-toggle" v-model="facilitiesIncludedInTotals" @change="calculateCosts">
+                  <label for="facilities-toggle">Facilities</label>
                 </div>
                 <div class="toggle-item">
-                  <input 
-                    type="checkbox" 
-                    id="workstations-toggle" 
-                    v-model="workstationsIncludedInTotals"
-                    @change="calculateCosts"
-                  >
-                  <label for="workstations-toggle">Include Workstations</label>
+                  <input type="checkbox" id="workstations-toggle" v-model="workstationsIncludedInTotals" @change="calculateCosts">
+                  <label for="workstations-toggle">Workstations</label>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div class="action-group">
-            <div class="action-group-title">Import/Export</div>
-            <div class="action-group-buttons">
+            
+            <div class="toolbar-section">
               <button @click="exportProjectJSON" class="action-button json-button" title="Export Project as JSON">
-                <span class="icon">📤</span> Export JSON
+                <span class="icon">📤</span> JSON
               </button>
               <label for="import-json" class="action-button json-button" title="Import Project from JSON">
-                <span class="icon">📥</span> Import JSON
+                <span class="icon">📥</span> JSON
               </label>
-              <input 
-                type="file" 
-                id="import-json" 
-                accept=".json" 
-                @change="importProjectJSON" 
-                style="display: none;"
-              >
+              <input type="file" id="import-json" accept=".json" @change="importProjectJSON" style="display: none;">
               <button @click="exportCSV" class="action-button export-button" title="Export to CSV">
-                <span class="icon">📄</span> Export CSV
+                <span class="icon">📄</span> CSV
               </button>
               <FileUploader @file-loaded="loadCSV" />
-            </div>
-          </div>
-          
-          <div class="action-group">
-            <div class="action-group-title">View Controls</div>
-            <div class="action-group-buttons">
+              <div class="divider"></div>
               <div class="zoom-controls">
                 <button @click="zoomOut" class="zoom-button" title="Zoom Out">-</button>
                 <span>{{ Math.round(zoomLevel * 100) }}%</span>
@@ -106,14 +77,14 @@
                 <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
               </div>
               <div class="time-scale-control">
-                <label>Number of Years:</label>
+                <label>Years:</label>
                 <select v-model="numberOfYears" @change="updateTimeScale">
-                  <option value="1">1 year</option>
-                  <option value="2">2 years</option>
-                  <option value="3">3 years</option>
-                  <option value="4">4 years</option>
-                  <option value="5">5 years</option>
-                  <option value="6">6 years</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
                 </select>
               </div>
             </div>
@@ -2223,55 +2194,50 @@ main {
 }
 
 .actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 20px;
-  align-items: flex-start;
+  margin-bottom: 16px;
 }
 
-.action-group {
-  background-color: #ffffff;
+.action-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  min-width: 220px;
-  border: 1px solid #e5e7eb;
+  padding: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.action-group-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 8px;
-}
-
-.action-group-buttons {
+.toolbar-section {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
   align-items: center;
 }
 
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: #e2e8f0;
+  margin: 0 4px;
+}
+
 .action-button {
-  padding: 10px 14px;
+  padding: 6px 10px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.95rem;
+  gap: 6px;
+  font-size: 0.85rem;
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   background-color: #f9fafb;
   color: #374151;
   border: 1px solid #d1d5db;
+  height: 32px;
 }
 
 .action-button:hover {
@@ -2286,29 +2252,24 @@ main {
 
 .cost-toggles {
   display: flex;
-  flex-direction: column;
-  margin-top: 12px;
-  font-size: 0.9rem;
+  flex-direction: row;
+  font-size: 0.8rem;
   background-color: #f0fdf4;
-  padding: 12px;
+  padding: 4px 8px;
   border-radius: 6px;
   border: 1px solid #bbf7d0;
+  gap: 10px;
 }
 
 .toggle-item {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
-}
-
-.toggle-item:last-child {
-  margin-bottom: 0;
 }
 
 .toggle-item input[type="checkbox"] {
-  margin-right: 8px;
-  width: 18px;
-  height: 18px;
+  margin-right: 4px;
+  width: 14px;
+  height: 14px;
   accent-color: #16a34a;
   cursor: pointer;
 }
@@ -2317,6 +2278,7 @@ main {
   color: #166534;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .export-import-buttons {
@@ -2387,32 +2349,39 @@ main {
 .zoom-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+}
+
+.zoom-controls span {
+  font-size: 0.85rem;
+  color: #475569;
+  min-width: 40px;
+  text-align: center;
 }
 
 .time-scale-control {
   display: flex;
   align-items: center;
-  font-size: 0.9rem;
-  margin-top: 12px;
+  font-size: 0.85rem;
 }
 
 .time-scale-control label {
-  margin-right: 10px;
+  margin-right: 6px;
   font-weight: 500;
   color: #475569;
 }
 
 .time-scale-control select {
-  padding: 8px 12px;
+  padding: 4px 8px;
   border-radius: 6px;
   border: 1px solid #cbd5e1;
   background-color: #f8fafc;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   color: #334155;
   cursor: pointer;
   transition: all 0.2s ease;
+  height: 32px;
 }
 
 .time-scale-control select:hover {
@@ -2427,20 +2396,21 @@ main {
 }
 
 .zoom-button {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   background-color: #f1f5f9;
   color: #334155;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   border: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
 }
 
 .zoom-button:hover {
@@ -2455,8 +2425,8 @@ main {
 
 .zoom-button.reset {
   width: auto;
-  padding: 0 12px;
-  font-size: 0.85rem;
+  padding: 0 8px;
+  font-size: 0.8rem;
 }
 
 .export-button {

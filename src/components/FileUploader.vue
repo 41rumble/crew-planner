@@ -1,7 +1,7 @@
 <template>
   <div class="file-uploader">
     <label for="csv-upload" class="action-button upload-button">
-      <span class="icon">📂</span> Import CSV
+      <span class="icon">📂</span> CSV
     </label>
     <input 
       type="file" 
