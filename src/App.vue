@@ -1649,10 +1649,55 @@ export default {
       csvContent += "Peak Monthly Cost," + this.peakMonthlyCost + "\n";
       csvContent += "Peak Crew Size," + this.peakCrewSize + "\n";
       
+      // Add department rates by phase
+      csvContent += "\nDepartment Rates by Phase:\n";
+      
+      // Group departments by phase using the sortedItems
+      const phaseMap = {};
+      let currentPhase = "No Phase";
+      
+      this.sortedItems.forEach(item => {
+        if (item.type === 'phase') {
+          currentPhase = this.phases[item.index].name;
+          if (!phaseMap[currentPhase]) {
+            phaseMap[currentPhase] = [];
+          }
+        } else if (item.type === 'department') {
+          if (!phaseMap[currentPhase]) {
+            phaseMap[currentPhase] = [];
+          }
+          phaseMap[currentPhase].push(this.departments[item.index]);
+        }
+      });
+      
+      // Add departments and rates by phase
+      for (const [phaseName, phaseDepts] of Object.entries(phaseMap)) {
+        csvContent += phaseName + "\n";
+        csvContent += "Department,Rate ($/month)\n";
+        
+        phaseDepts.forEach(dept => {
+          csvContent += dept.name + "," + dept.rate + "\n";
+        });
+        
+        csvContent += "\n";
+      }
+      
       // Add facilities summary
       csvContent += "\nFacilities Summary:\n";
       csvContent += "Fixed Monthly Facility Costs," + calculateTotalFixedFacilityCosts(this.facilitiesData) + "\n";
       csvContent += "Variable Facility Costs Per Person," + calculateTotalVariableFacilityCostsPerPerson(this.facilitiesData) + "\n";
+      
+      // Add workstation summary
+      csvContent += "\nWorkstation Summary:\n";
+      csvContent += "Department,Workstation Type,Quantity,Monthly Cost\n";
+      
+      this.workstationData.departmentAssignments.forEach(assignment => {
+        const bundle = this.workstationData.workstationBundles.find(b => b.id === assignment.workstationId);
+        if (bundle) {
+          const monthlyCost = (bundle.cost * assignment.quantity) / 36; // 36-month depreciation
+          csvContent += assignment.departmentName + "," + bundle.name + "," + assignment.quantity + "," + monthlyCost + "\n";
+        }
+      });
       
       // Create separate CSV files for facilities and workstations
       const facilitiesCSV = generateFacilitiesCSV(this.facilitiesData);
