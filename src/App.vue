@@ -2396,8 +2396,8 @@ main {
 }
 
 .zoom-button {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background-color: #f1f5f9;
   color: #334155;
   border-radius: 6px;
@@ -2427,6 +2427,7 @@ main {
   width: auto;
   padding: 0 8px;
   font-size: 0.8rem;
+  height: 32px;
 }
 
 .export-button {

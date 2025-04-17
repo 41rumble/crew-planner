@@ -596,6 +596,7 @@ export default {
 
 .editor-content {
   padding: 15px;
+  padding-bottom: 100px; /* Add extra padding at the bottom for scrolling */
   overflow-y: auto;
   flex-grow: 1;
 }
