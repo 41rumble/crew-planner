@@ -150,9 +150,50 @@ export function exportToExcel(appState) {
     ["Peak Monthly Cost", peakMonthlyCost],
     ["Peak Crew Size", peakCrewSize],
     [""],
-    ["Department Rates by Phase:"],
-    [""]
+    ["Cost Breakdown"],
+    [""],
+    ["Category", "Amount", "% of Total Project Cost"]
   ];
+  
+  // Calculate total labor cost
+  const totalLaborCost = monthlyLaborCosts.reduce((sum, cost) => sum + cost, 0);
+  
+  // Calculate total facility cost
+  const totalFacilityCost = monthlyFacilityCosts.reduce((sum, cost) => sum + cost, 0);
+  
+  // Calculate total workstation cost
+  const totalWorkstationCost = monthlyWorkstationCosts.reduce((sum, cost) => sum + cost, 0);
+  
+  // Add cost breakdown
+  statsData.push(["Labor", totalLaborCost, `${(totalLaborCost / totalProjectCost * 100).toFixed(1)}%`]);
+  statsData.push(["Facilities", totalFacilityCost, `${(totalFacilityCost / totalProjectCost * 100).toFixed(1)}%`]);
+  statsData.push(["Workstations", totalWorkstationCost, `${(totalWorkstationCost / totalProjectCost * 100).toFixed(1)}%`]);
+  
+  statsData.push([""]);
+  statsData.push([""]);
+  statsData.push(["Monthly Cost Analysis"]);
+  statsData.push([""]);
+  
+  // Find the month with peak cost
+  let peakCostMonth = 0;
+  for (let i = 0; i < monthlyCosts.length; i++) {
+    if (monthlyCosts[i] === peakMonthlyCost) {
+      peakCostMonth = i;
+      break;
+    }
+  }
+  
+  statsData.push(["Peak Cost Month", months[peakCostMonth]]);
+  statsData.push(["Peak Cost Breakdown:"]);
+  statsData.push(["  Labor", monthlyLaborCosts[peakCostMonth], `${(monthlyLaborCosts[peakCostMonth] / peakMonthlyCost * 100).toFixed(1)}%`]);
+  statsData.push(["  Facilities", monthlyFacilityCosts[peakCostMonth], `${(monthlyFacilityCosts[peakCostMonth] / peakMonthlyCost * 100).toFixed(1)}%`]);
+  statsData.push(["  Workstations", monthlyWorkstationCosts[peakCostMonth], `${(monthlyWorkstationCosts[peakCostMonth] / peakMonthlyCost * 100).toFixed(1)}%`]);
+  
+  statsData.push([""]);
+  statsData.push([""]);
+  statsData.push(["Department Rates by Phase:"]);
+  statsData.push([""]);
+  
   
   // Group departments by phase using the sortedItems
   const phaseMap = {};
@@ -192,9 +233,93 @@ export function exportToExcel(appState) {
   const facilitiesSummaryData = [
     ["Facilities Summary"],
     [""],
-    ["Fixed Monthly Facility Costs", calculateTotalFixedFacilityCosts(facilitiesData)],
-    ["Variable Facility Costs Per Person", calculateTotalVariableFacilityCostsPerPerson(facilitiesData)]
+    ["Total Fixed Monthly Facility Costs", calculateTotalFixedFacilityCosts(facilitiesData)],
+    ["Total Variable Facility Costs Per Person", calculateTotalVariableFacilityCostsPerPerson(facilitiesData)],
+    [""]
   ];
+  
+  // Add breakdown of fixed facility costs by category
+  facilitiesSummaryData.push(["Fixed Facility Costs Breakdown by Category"]);
+  facilitiesSummaryData.push([""]);
+  facilitiesSummaryData.push(["Category", "Monthly Cost", "% of Total Fixed Costs"]);
+  
+  const totalFixedCost = calculateTotalFixedFacilityCosts(facilitiesData);
+  const fixedCostsByCategory = {};
+  
+  // Calculate costs by category
+  facilitiesData.fixedFacilityCosts.forEach(category => {
+    let categoryCost = 0;
+    category.items.forEach(item => {
+      categoryCost += item.cost;
+    });
+    fixedCostsByCategory[category.category] = categoryCost;
+  });
+  
+  // Add each category to the summary
+  Object.entries(fixedCostsByCategory).forEach(([category, cost]) => {
+    const percentage = totalFixedCost > 0 ? (cost / totalFixedCost * 100).toFixed(1) : 0;
+    facilitiesSummaryData.push([category, cost, `${percentage}%`]);
+  });
+  
+  facilitiesSummaryData.push([""]);
+  facilitiesSummaryData.push([""]);
+  
+  // Add breakdown of variable facility costs by category
+  facilitiesSummaryData.push(["Variable Facility Costs Breakdown by Category"]);
+  facilitiesSummaryData.push([""]);
+  facilitiesSummaryData.push(["Category", "Cost Per Person", "% of Total Variable Costs"]);
+  
+  const totalVariableCost = calculateTotalVariableFacilityCostsPerPerson(facilitiesData);
+  const variableCostsByCategory = {};
+  
+  // Calculate costs by category
+  facilitiesData.variableFacilityCosts.forEach(category => {
+    let categoryCost = 0;
+    category.items.forEach(item => {
+      categoryCost += item.cost;
+    });
+    variableCostsByCategory[category.category] = categoryCost;
+  });
+  
+  // Add each category to the summary
+  Object.entries(variableCostsByCategory).forEach(([category, cost]) => {
+    const percentage = totalVariableCost > 0 ? (cost / totalVariableCost * 100).toFixed(1) : 0;
+    facilitiesSummaryData.push([category, cost, `${percentage}%`]);
+  });
+  
+  facilitiesSummaryData.push([""]);
+  facilitiesSummaryData.push([""]);
+  
+  // Add detailed breakdown of all facility costs
+  facilitiesSummaryData.push(["Detailed Facility Costs Breakdown"]);
+  facilitiesSummaryData.push([""]);
+  facilitiesSummaryData.push(["Category", "Item", "Cost", "Type", "Notes"]);
+  
+  // Add fixed facility costs
+  facilitiesData.fixedFacilityCosts.forEach(category => {
+    category.items.forEach(item => {
+      facilitiesSummaryData.push([
+        category.category,
+        item.name,
+        item.cost,
+        "Fixed (Monthly)",
+        item.notes || ""
+      ]);
+    });
+  });
+  
+  // Add variable facility costs
+  facilitiesData.variableFacilityCosts.forEach(category => {
+    category.items.forEach(item => {
+      facilitiesSummaryData.push([
+        category.category,
+        item.name,
+        item.cost,
+        "Variable (Per Person)",
+        item.notes || ""
+      ]);
+    });
+  });
   
   // Create the facilities summary worksheet
   const facilitiesSummaryWorksheet = XLSX.utils.aoa_to_sheet(facilitiesSummaryData);
@@ -204,20 +329,87 @@ export function exportToExcel(appState) {
   const workstationSummaryData = [
     ["Workstation Summary"],
     [""],
+    ["Total Workstation Costs by Department"],
+    [""],
     ["Department", "Workstation Type", "Quantity", "Total Cost"]
   ];
+  
+  // Calculate total workstation cost
+  let totalWorkstationCost = 0;
+  const departmentWorkstationCosts = {};
+  const workstationTypeCosts = {};
   
   workstationData.departmentAssignments.forEach(assignment => {
     const bundle = workstationData.workstationBundles.find(b => b.id === assignment.workstationId);
     if (bundle) {
-      const totalCost = bundle.cost * assignment.quantity;
+      const cost = bundle.cost * assignment.quantity;
+      totalWorkstationCost += cost;
+      
+      // Track costs by department
+      if (!departmentWorkstationCosts[assignment.departmentName]) {
+        departmentWorkstationCosts[assignment.departmentName] = 0;
+      }
+      departmentWorkstationCosts[assignment.departmentName] += cost;
+      
+      // Track costs by workstation type
+      if (!workstationTypeCosts[bundle.name]) {
+        workstationTypeCosts[bundle.name] = {
+          cost: 0,
+          quantity: 0
+        };
+      }
+      workstationTypeCosts[bundle.name].cost += cost;
+      workstationTypeCosts[bundle.name].quantity += assignment.quantity;
+      
+      // Add to the detailed list
       workstationSummaryData.push([
         assignment.departmentName,
         bundle.name,
         assignment.quantity,
-        totalCost
+        cost
       ]);
     }
+  });
+  
+  workstationSummaryData.push([""]);
+  workstationSummaryData.push([""]);
+  workstationSummaryData.push(["Total Workstation Cost", totalWorkstationCost]);
+  workstationSummaryData.push([""]);
+  
+  // Add breakdown by department
+  workstationSummaryData.push(["Workstation Costs by Department"]);
+  workstationSummaryData.push([""]);
+  workstationSummaryData.push(["Department", "Total Cost", "% of Total Workstation Cost"]);
+  
+  Object.entries(departmentWorkstationCosts).forEach(([department, cost]) => {
+    const percentage = totalWorkstationCost > 0 ? (cost / totalWorkstationCost * 100).toFixed(1) : 0;
+    workstationSummaryData.push([department, cost, `${percentage}%`]);
+  });
+  
+  workstationSummaryData.push([""]);
+  workstationSummaryData.push([""]);
+  
+  // Add breakdown by workstation type
+  workstationSummaryData.push(["Workstation Costs by Type"]);
+  workstationSummaryData.push([""]);
+  workstationSummaryData.push(["Workstation Type", "Quantity", "Total Cost", "% of Total Workstation Cost"]);
+  
+  Object.entries(workstationTypeCosts).forEach(([type, data]) => {
+    const percentage = totalWorkstationCost > 0 ? (data.cost / totalWorkstationCost * 100).toFixed(1) : 0;
+    workstationSummaryData.push([type, data.quantity, data.cost, `${percentage}%`]);
+  });
+  
+  workstationSummaryData.push([""]);
+  workstationSummaryData.push([""]);
+  
+  // Add workstation bundle details
+  workstationSummaryData.push(["Workstation Bundle Details"]);
+  workstationSummaryData.push([""]);
+  workstationSummaryData.push(["Bundle Name", "Cost", "Components"]);
+  
+  workstationData.workstationBundles.forEach(bundle => {
+    const componentsList = bundle.components.map(c => `${c.name} (${c.quantity}x)`).join(", ");
+    workstationSummaryData.push([bundle.name, bundle.cost, componentsList]);
   });
   
   // Create the workstation summary worksheet
