@@ -68,6 +68,9 @@
               <button @click="exportCSV" class="action-button export-button" title="Export to CSV">
                 <span class="icon">📄</span> CSV
               </button>
+              <button @click="exportExcel" class="action-button excel-button" title="Export to Excel">
+                <span class="icon">📊</span> Excel
+              </button>
               <FileUploader @file-loaded="loadCSV" />
               <div class="divider"></div>
               <div class="zoom-controls">
@@ -445,6 +448,7 @@ import {
   applyProjectData
 } from './project-export.js';
 import { exportToMultipleCSV } from './export-csv.js';
+import { exportToExcel } from './export-excel.js';
 import FileUploader from './components/FileUploader.vue';
 import FacilitiesCostEditor from './components/FacilitiesCostEditor.vue';
 import WorkstationEditor from './components/WorkstationEditor.vue';
@@ -1528,10 +1532,9 @@ export default {
         }
       }
     },
-    // Export data to CSV
-    exportCSV() {
-      // Export to multiple CSV files
-      const appState = {
+    // Helper method to create app state for export
+    getExportAppState() {
+      return {
         years: this.years,
         monthsPerYear: this.monthsPerYear,
         months: this.months,
@@ -1558,8 +1561,19 @@ export default {
           generateWorkstationsCSV
         }
       };
-      
+    },
+    
+    // Export to CSV files
+    exportCSV() {
+      const appState = this.getExportAppState();
       exportToMultipleCSV(appState);
+      return;
+    },
+    
+    // Export to Excel file
+    exportExcel() {
+      const appState = this.getExportAppState();
+      exportToExcel(appState);
       return;
       
       // Legacy code below - no longer used
@@ -2474,6 +2488,17 @@ main {
 .export-button:hover {
   background-color: #e0e7ff;
   border-color: #a5b4fc;
+}
+
+.excel-button {
+  background-color: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.excel-button:hover {
+  background-color: #d1fae5;
+  border-color: #6ee7b7;
 }
 
 .facilities-button {
