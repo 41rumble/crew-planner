@@ -64,19 +64,70 @@ export const timelineDragHandlers = {
     const monthIndex = Array.from(tdElement.parentElement.children).indexOf(tdElement) - 1; // -1 to account for the fixed column
     if (monthIndex < 0 || monthIndex >= this.months.length) return;
     
-    // Update the department's start or end month
+    console.log(`Dragging ${this.dragHandleType} handle to month ${monthIndex} (${this.months[monthIndex]})`);
+    
+    // Get the department being dragged
     const department = this.departments[this.draggedDepartmentIndex];
+    console.log(`Department: ${department.name}, current startMonth: ${department.startMonth}, endMonth: ${department.endMonth}`);
     
     if (this.dragHandleType === 'start') {
       // Don't allow start month to go beyond end month
       if (monthIndex <= department.endMonth) {
+        // Store the original duration
+        const originalDuration = department.endMonth - department.startMonth;
+        
+        // Update the start month
         department.startMonth = monthIndex;
+        
+        // Calculate the new duration
+        const newDuration = department.endMonth - department.startMonth;
+        
+        // Adjust ramp durations proportionally if the duration has changed
+        if (newDuration !== originalDuration) {
+          // Calculate the proportion of the original duration that was ramp up
+          const rampUpProportion = department.rampUpDuration / originalDuration;
+          
+          // Calculate the new ramp up duration based on the same proportion
+          department.rampUpDuration = Math.round(rampUpProportion * newDuration);
+          
+          // Ensure ramp up duration is not too large
+          const maxRampDuration = Math.floor(newDuration / 2);
+          if (department.rampUpDuration > maxRampDuration) {
+            department.rampUpDuration = maxRampDuration;
+          }
+        }
+        
+        // Update the department
         this.updateDepartmentTimeframe(department);
       }
     } else if (this.dragHandleType === 'end') {
       // Don't allow end month to go before start month
       if (monthIndex >= department.startMonth) {
+        // Store the original duration
+        const originalDuration = department.endMonth - department.startMonth;
+        
+        // Update the end month
         department.endMonth = monthIndex;
+        
+        // Calculate the new duration
+        const newDuration = department.endMonth - department.startMonth;
+        
+        // Adjust ramp durations proportionally if the duration has changed
+        if (newDuration !== originalDuration) {
+          // Calculate the proportion of the original duration that was ramp down
+          const rampDownProportion = department.rampDownDuration / originalDuration;
+          
+          // Calculate the new ramp down duration based on the same proportion
+          department.rampDownDuration = Math.round(rampDownProportion * newDuration);
+          
+          // Ensure ramp down duration is not too large
+          const maxRampDuration = Math.floor(newDuration / 2);
+          if (department.rampDownDuration > maxRampDuration) {
+            department.rampDownDuration = maxRampDuration;
+          }
+        }
+        
+        // Update the department
         this.updateDepartmentTimeframe(department);
       }
     }
