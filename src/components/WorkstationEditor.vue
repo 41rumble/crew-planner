@@ -263,8 +263,12 @@
         </div>
         
         <div class="cost-summary">
-          <div class="summary-label">Total Backend Infrastructure Cost:</div>
-          <div class="summary-value">${{ formatCurrency(totalBackendCost) }}</div>
+          <div class="summary-label">One-time Backend Infrastructure Cost:</div>
+          <div class="summary-value">${{ formatCurrency(backendCosts.oneTime) }}</div>
+        </div>
+        <div class="cost-summary">
+          <div class="summary-label">Monthly Backend Infrastructure Cost:</div>
+          <div class="summary-value">${{ formatCurrency(backendCosts.monthly) }}</div>
         </div>
         
         <div class="categories-list">
@@ -340,6 +344,12 @@
                 <div class="item-total">
                   ${{ formatCurrency(item.cost * item.quantity) }}
                 </div>
+                <div class="item-cost-type">
+                  <select v-model="item.costType" @change="updateCosts()">
+                    <option value="one-time">One-time</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
                 <div class="item-notes">
                   <span v-if="editingBackendItem === 'notes-' + categoryIndex + '-' + itemIndex">
                     <input 
@@ -402,7 +412,10 @@ export default {
       editingBackendCategory: null,
       editingBackendItem: null,
       editingAssignment: null,
-      totalBackendCost: 0
+      backendCosts: {
+        oneTime: 0,
+        monthly: 0
+      }
     };
   },
   mounted() {
@@ -551,7 +564,8 @@ export default {
           name: 'New Item',
           cost: 0,
           quantity: 1,
-          notes: ''
+          notes: '',
+          costType: 'one-time' // Default to one-time cost
         });
         this.updateCosts();
       }
@@ -590,7 +604,7 @@ export default {
       }
     },
     updateCosts() {
-      this.totalBackendCost = calculateBackendInfrastructureCost(this.workstationData.backendInfrastructure);
+      this.backendCosts = calculateBackendInfrastructureCost(this.workstationData.backendInfrastructure);
       this.$emit('update-costs');
     }
   }
