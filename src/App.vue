@@ -772,6 +772,29 @@ export default {
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
     },
+    
+    // Update only the visual representation of a department during drag
+    updateDepartmentVisualOnly(department) {
+      console.log(`Updating visual only for department: ${department.name}`);
+      
+      // Find the department index
+      const dIndex = this.departments.indexOf(department);
+      if (dIndex === -1) return;
+      
+      // Clear the crew matrix for this department
+      if (!this.crewMatrix[dIndex]) {
+        this.crewMatrix[dIndex] = new Array(this.months.length).fill(0);
+      } else {
+        this.crewMatrix[dIndex].fill(0);
+      }
+      
+      // Fill in the crew matrix with the max crew value for the active months
+      for (let m = department.startMonth; m <= department.endMonth; m++) {
+        if (m >= 0 && m < this.months.length) {
+          this.crewMatrix[dIndex][m] = department.maxCrew;
+        }
+      }
+    },
     updateAllDepartments() {
       console.log('Updating all departments, count:', this.departments.length);
       this.initializeCrewMatrix();

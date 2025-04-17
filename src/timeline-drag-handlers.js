@@ -73,62 +73,22 @@ export const timelineDragHandlers = {
     if (this.dragHandleType === 'start') {
       // Don't allow start month to go beyond end month
       if (monthIndex <= department.endMonth) {
-        // Store the original duration
-        const originalDuration = department.endMonth - department.startMonth;
-        
-        // Update the start month
+        // Just update the start month during drag
         department.startMonth = monthIndex;
         
-        // Calculate the new duration
-        const newDuration = department.endMonth - department.startMonth;
-        
-        // Adjust ramp durations proportionally if the duration has changed
-        if (newDuration !== originalDuration) {
-          // Calculate the proportion of the original duration that was ramp up
-          const rampUpProportion = department.rampUpDuration / originalDuration;
-          
-          // Calculate the new ramp up duration based on the same proportion
-          department.rampUpDuration = Math.round(rampUpProportion * newDuration);
-          
-          // Ensure ramp up duration is not too large
-          const maxRampDuration = Math.floor(newDuration / 2);
-          if (department.rampUpDuration > maxRampDuration) {
-            department.rampUpDuration = maxRampDuration;
-          }
-        }
-        
-        // Update the department
-        this.updateDepartmentTimeframe(department);
+        // Only update the visual representation during drag, not the actual distribution
+        // This will be done on mouse up
+        this.updateDepartmentVisualOnly(department);
       }
     } else if (this.dragHandleType === 'end') {
       // Don't allow end month to go before start month
       if (monthIndex >= department.startMonth) {
-        // Store the original duration
-        const originalDuration = department.endMonth - department.startMonth;
-        
-        // Update the end month
+        // Just update the end month during drag
         department.endMonth = monthIndex;
         
-        // Calculate the new duration
-        const newDuration = department.endMonth - department.startMonth;
-        
-        // Adjust ramp durations proportionally if the duration has changed
-        if (newDuration !== originalDuration) {
-          // Calculate the proportion of the original duration that was ramp down
-          const rampDownProportion = department.rampDownDuration / originalDuration;
-          
-          // Calculate the new ramp down duration based on the same proportion
-          department.rampDownDuration = Math.round(rampDownProportion * newDuration);
-          
-          // Ensure ramp down duration is not too large
-          const maxRampDuration = Math.floor(newDuration / 2);
-          if (department.rampDownDuration > maxRampDuration) {
-            department.rampDownDuration = maxRampDuration;
-          }
-        }
-        
-        // Update the department
-        this.updateDepartmentTimeframe(department);
+        // Only update the visual representation during drag, not the actual distribution
+        // This will be done on mouse up
+        this.updateDepartmentVisualOnly(department);
       }
     }
   },
@@ -138,6 +98,36 @@ export const timelineDragHandlers = {
    */
   handleMouseUp() {
     if (this.isDraggingTimelineHandle) {
+      // Get the department that was being dragged
+      const department = this.departments[this.draggedDepartmentIndex];
+      
+      if (department) {
+        console.log(`Drag ended for department: ${department.name}`);
+        console.log(`Final position: startMonth=${department.startMonth}, endMonth=${department.endMonth}`);
+        
+        // Calculate the total timeframe duration
+        const timeframeDuration = department.endMonth - department.startMonth + 1;
+        
+        // Adjust ramp durations proportionally based on the new timeframe
+        if (this.dragHandleType === 'start') {
+          // Adjust ramp up duration proportionally
+          const maxRampDuration = Math.floor(timeframeDuration / 2);
+          if (department.rampUpDuration > maxRampDuration) {
+            department.rampUpDuration = maxRampDuration;
+          }
+        } else if (this.dragHandleType === 'end') {
+          // Adjust ramp down duration proportionally
+          const maxRampDuration = Math.floor(timeframeDuration / 2);
+          if (department.rampDownDuration > maxRampDuration) {
+            department.rampDownDuration = maxRampDuration;
+          }
+        }
+        
+        // Now update the department with the proper ramp calculations
+        this.updateDepartmentTimeframe(department);
+      }
+      
+      // Reset drag state
       this.isDraggingTimelineHandle = false;
       this.draggedDepartmentIndex = null;
       this.dragHandleType = null;
