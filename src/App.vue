@@ -16,11 +16,11 @@
           <div class="summary-header">
             <div class="summary-stat">
               <div class="stat-label">Total Project Cost</div>
-              <div class="stat-value">${{ formatCurrency(totalProjectCost) }}</div>
+              <div class="stat-value">${{ formatCurrency(totalProjectCost).replace('$', '') }}</div>
             </div>
             <div class="summary-stat">
               <div class="stat-label">Peak Monthly Cost</div>
-              <div class="stat-value">${{ formatCurrency(peakMonthlyCost) }}</div>
+              <div class="stat-value">${{ formatCurrency(peakMonthlyCost).replace('$', '') }}</div>
             </div>
             <div class="summary-stat">
               <div class="stat-label">Peak Crew Size</div>
@@ -40,7 +40,20 @@
             <span>{{ Math.round(zoomLevel * 100) }}%</span>
             <button @click="zoomIn" class="zoom-button" title="Zoom In">+</button>
             <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
+            <div class="time-scale-control">
+              <label>Number of Years:</label>
+              <select v-model="numberOfYears" @change="updateTimeScale">
+                <option value="1">1 year</option>
+                <option value="2">2 years</option>
+                <option value="3">3 years</option>
+                <option value="4">4 years</option>
+                <option value="5">5 years</option>
+                <option value="6">6 years</option>
+              </select>
+            </div>
             <button @click="exportCSV" class="export-button" title="Export to CSV">Export CSV</button>
+            <FileUploader @file-loaded="loadCSV" />
+            <a href="/sample_crew_plan.csv" download class="sample-link">Download Sample</a>
           </div>
         </div>
         <div class="table-container">
@@ -51,7 +64,7 @@
                 <tr class="year-row">
                   <th class="fixed-column-header"></th>
                   <th v-for="(year, index) in years" :key="`year-${index}`" :colspan="getMonthsInYear(year)" class="year-header">
-                    <span @click="editYear(index)" class="editable-year">{{ year }}</span>
+                    <span @click="editYear(index)" class="editable-year">Year {{ year }}</span>
                   </th>
                 </tr>
                 <tr>
@@ -102,9 +115,20 @@
                       {{ departments[item.index].name }}
                     </td>
                     <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`" 
-                        :class="{ active: crewMatrix[item.index][mIndex] > 0 }"
-                        :style="getCellStyle()">
-                      {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
+                        :class="{ 
+                          active: crewMatrix[item.index][mIndex] > 0,
+                          'start-handle': mIndex === departments[item.index].startMonth,
+                          'end-handle': mIndex === departments[item.index].endMonth,
+                          'dept-cell': true,
+                          'in-range': mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
+                        }"
+                        :style="getCellStyle()"
+                        @mousedown="handleCellMouseDown($event, item.index, mIndex)">
+                      <div class="cell-content">
+                        {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
+                        <div v-if="mIndex === departments[item.index].startMonth" class="start-drag-handle" title="Drag to adjust start month"></div>
+                        <div v-if="mIndex === departments[item.index].endMonth" class="end-drag-handle" title="Drag to adjust end month"></div>
+                      </div>
                     </td>
                   </tr>
                 </template>
@@ -160,15 +184,25 @@
             >
           </div>
           <div class="slider-container">
-            <label>Max Crew Size: {{ departments[selectedDepartmentIndex].maxCrew }}</label>
-            <input 
-              type="range" 
-              v-model="departments[selectedDepartmentIndex].maxCrew" 
-              min="0" 
-              max="100" 
-              class="slider"
-              @input="updateDepartmentCrew(departments[selectedDepartmentIndex])"
-            >
+            <label>Max Crew Size:</label>
+            <div class="input-with-number">
+              <input 
+                type="range" 
+                v-model.number="departments[selectedDepartmentIndex].maxCrew" 
+                min="0" 
+                max="100" 
+                class="slider"
+                @input="updateDepartmentCrew(departments[selectedDepartmentIndex])"
+              >
+              <input 
+                type="number" 
+                v-model.number="departments[selectedDepartmentIndex].maxCrew" 
+                min="0" 
+                max="1000" 
+                class="number-input"
+                @input="updateDepartmentCrew(departments[selectedDepartmentIndex])"
+              >
+            </div>
           </div>
           <div class="slider-container">
             <label>Start Month: {{ getMonthName(departments[selectedDepartmentIndex].startMonth) }}</label>
@@ -299,17 +333,33 @@
 </template>
 
 <script>
+import { simpleData } from './simple-data.js';
+import { parseCSV, generateCSV } from './csv-loader.js';
+import { timelineDragHandlers } from './timeline-drag-handlers.js';
+import FileUploader from './components/FileUploader.vue';
+
 export default {
+  components: {
+    FileUploader
+  },
   data() {
     return {
-      years: [2022, 2023, 2024, 2025],
+      years: simpleData.years,
       monthsPerYear: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       shortMonthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       singleLetterMonths: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
-      months: [],
+      months: simpleData.months,
+      departments: simpleData.departments,
+      phases: simpleData.phases,
+      crewMatrix: [],
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
       zoomLevel: 1.0, // Start at 100% zoom
+      numberOfYears: 4, // Default number of years
+      // For timeline drag handles
+      isDraggingTimelineHandle: false,
+      draggedDepartmentIndex: null,
+      dragHandleType: null, // 'start' or 'end'
       editorPosition: 'position-left',
       draggedItem: null,
       editorStyle: { top: '150px', left: '20px' },
@@ -477,17 +527,25 @@ export default {
     };
   },
   created() {
-    // Generate all months across years
-    this.generateMonths();
+    console.log("App created, using simple data");
     
-    // Initialize crew matrix
-    this.initializeCrewMatrix();
+    // Generate months with the current time scale
+    this.generateMonthsWithTimeScale();
+    
+    // Make sure crewMatrix is initialized
+    if (!this.crewMatrix || this.crewMatrix.length === 0) {
+      this.initializeCrewMatrix();
+      
+      // Update crew distribution for all departments
+      for (let i = 0; i < this.departments.length; i++) {
+        this.updateDepartmentDistribution(i);
+      }
+    }
     
     // Initialize item order
     this.initializeItemOrder();
     
-    // Calculate initial crew distribution and costs
-    this.updateAllDepartments();
+    // Calculate costs
     this.calculateCosts();
   },
   
@@ -498,34 +556,60 @@ export default {
     }
   },
   methods: {
+    // Timeline drag handlers
+    ...timelineDragHandlers,
     // Initialize the item order with phases first, then departments
     initializeItemOrder() {
       this.itemOrder = [];
       
-      // Add phases
-      for (let i = 0; i < this.phases.length; i++) {
+      // Sort phases by their original index if available
+      const sortedPhases = [...this.phases].map((phase, index) => ({ phase, index }))
+        .sort((a, b) => {
+          // If both phases have originalIndex, use that
+          if (a.phase.originalIndex !== undefined && b.phase.originalIndex !== undefined) {
+            return a.phase.originalIndex - b.phase.originalIndex;
+          }
+          // Otherwise, use the current index
+          return a.index - b.index;
+        });
+      
+      console.log('Phases sorted by original index:', sortedPhases.map(p => `${p.phase.name} (${p.phase.originalIndex !== undefined ? p.phase.originalIndex : 'undefined'})`));
+      
+      // Add phases in their original order
+      for (const { index: i } of sortedPhases) {
         this.itemOrder.push({ type: 'phase', index: i });
+        console.log(`Added phase: ${this.phases[i].name}`);
         
         // Add departments that belong to this phase
+        const departmentsInPhase = [];
         for (let j = 0; j < this.departments.length; j++) {
           // Simple heuristic: if department's start month is within phase's timeframe
           const dept = this.departments[j];
           const phase = this.phases[i];
           
-          if (dept.startMonth >= phase.startMonth && dept.startMonth <= phase.endMonth) {
+          if (dept.phase === i || (dept.startMonth >= phase.startMonth && dept.startMonth <= phase.endMonth)) {
             // Check if this department is already added
             const alreadyAdded = this.itemOrder.some(item => 
               item.type === 'department' && item.index === j
             );
             
             if (!alreadyAdded) {
-              this.itemOrder.push({ type: 'department', index: j });
+              departmentsInPhase.push({ index: j, startMonth: dept.startMonth });
             }
           }
         }
+        
+        // Sort departments within this phase by start month
+        departmentsInPhase.sort((a, b) => a.startMonth - b.startMonth);
+        
+        // Add sorted departments to the item order
+        for (const { index } of departmentsInPhase) {
+          this.itemOrder.push({ type: 'department', index });
+          console.log(`  Added department: ${this.departments[index].name}`);
+        }
       }
       
-      // Add any remaining departments
+      // Add any remaining departments that weren't assigned to a phase
       for (let j = 0; j < this.departments.length; j++) {
         const alreadyAdded = this.itemOrder.some(item => 
           item.type === 'department' && item.index === j
@@ -533,15 +617,21 @@ export default {
         
         if (!alreadyAdded) {
           this.itemOrder.push({ type: 'department', index: j });
+          console.log(`Added unassigned department: ${this.departments[j].name}`);
         }
       }
+      
+      console.log('Initialized item order with', this.itemOrder.length, 'items');
     },
     
     initializeCrewMatrix() {
+      console.log('Initializing crew matrix for departments:', this.departments.length, 'months:', this.months.length);
       this.crewMatrix = [];
       for (let i = 0; i < this.departments.length; i++) {
         this.crewMatrix.push(new Array(this.months.length).fill(0));
       }
+      console.log('Crew matrix initialized with dimensions:', this.crewMatrix.length, 
+        this.crewMatrix.length > 0 ? this.crewMatrix[0].length : 0);
     },
     
     // Get the full month name with year
@@ -593,46 +683,174 @@ export default {
       };
     },
     updateDepartmentCrew(department) {
+      console.log(`Updating crew for department: ${department.name}, maxCrew: ${department.maxCrew}`);
+      
+      // Validate maxCrew
+      if (isNaN(department.maxCrew) || department.maxCrew < 0 || department.maxCrew > 1000) {
+        console.error(`Invalid maxCrew for ${department.name}: ${department.maxCrew}`);
+        department.maxCrew = Math.min(Math.max(0, department.maxCrew || 0), 1000);
+        console.log(`Adjusted maxCrew to ${department.maxCrew}`);
+      }
+      
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
-      this.calculateCosts();
     },
     updateDepartmentTimeframe(department) {
+      console.log(`Updating timeframe for department: ${department.name}, startMonth: ${department.startMonth}, endMonth: ${department.endMonth}`);
+      
       // Ensure end month is after start month
       if (department.endMonth <= department.startMonth) {
         department.endMonth = department.startMonth + 1;
+        console.log(`Adjusted endMonth to ${department.endMonth}`);
       }
       
-      // Adjust ramp durations if they exceed the new timeframe
-      const timeframeDuration = department.endMonth - department.startMonth;
-      const maxRampDuration = Math.floor(timeframeDuration / 2);
+      // Calculate the total timeframe duration
+      const timeframeDuration = department.endMonth - department.startMonth + 1;
+      console.log(`Timeframe duration: ${timeframeDuration} months`);
       
-      if (department.rampUpDuration > maxRampDuration) {
-        department.rampUpDuration = maxRampDuration;
-      }
-      
-      if (department.rampDownDuration > maxRampDuration) {
-        department.rampDownDuration = maxRampDuration;
+      // Ensure there's at least 1 month for the plateau
+      const totalRampDuration = department.rampUpDuration + department.rampDownDuration;
+      if (totalRampDuration >= timeframeDuration) {
+        // Reduce both ramps proportionally
+        const reductionFactor = (timeframeDuration - 1) / totalRampDuration;
+        department.rampUpDuration = Math.floor(department.rampUpDuration * reductionFactor);
+        department.rampDownDuration = Math.floor(department.rampDownDuration * reductionFactor);
+        
+        // Ensure at least one of them is reduced if both are non-zero
+        if (totalRampDuration > 0 && department.rampUpDuration + department.rampDownDuration >= timeframeDuration) {
+          if (department.rampUpDuration > 0) {
+            department.rampUpDuration--;
+          } else if (department.rampDownDuration > 0) {
+            department.rampDownDuration--;
+          }
+        }
+        
+        console.log(`Adjusted ramps: up=${department.rampUpDuration}, down=${department.rampDownDuration}`);
       }
       
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
-      this.calculateCosts();
     },
     updateDepartmentRamp(department) {
+      console.log(`Updating ramp for department: ${department.name}, rampUp: ${department.rampUpDuration}, rampDown: ${department.rampDownDuration}`);
+      
+      // Validate ramp durations
+      if (isNaN(department.rampUpDuration) || department.rampUpDuration < 0) {
+        department.rampUpDuration = 0;
+        console.log(`Adjusted rampUpDuration to ${department.rampUpDuration}`);
+      }
+      
+      if (isNaN(department.rampDownDuration) || department.rampDownDuration < 0) {
+        department.rampDownDuration = 0;
+        console.log(`Adjusted rampDownDuration to ${department.rampDownDuration}`);
+      }
+      
+      // Calculate the total timeframe duration
+      const timeframeDuration = department.endMonth - department.startMonth + 1;
+      console.log(`Timeframe duration: ${timeframeDuration} months`);
+      
+      // Ensure there's at least 1 month for the plateau
+      const totalRampDuration = department.rampUpDuration + department.rampDownDuration;
+      if (totalRampDuration >= timeframeDuration) {
+        // Reduce both ramps proportionally
+        const reductionFactor = (timeframeDuration - 1) / totalRampDuration;
+        department.rampUpDuration = Math.floor(department.rampUpDuration * reductionFactor);
+        department.rampDownDuration = Math.floor(department.rampDownDuration * reductionFactor);
+        
+        // Ensure at least one of them is reduced if both are non-zero
+        if (totalRampDuration > 0 && department.rampUpDuration + department.rampDownDuration >= timeframeDuration) {
+          if (department.rampUpDuration > 0) {
+            department.rampUpDuration--;
+          } else if (department.rampDownDuration > 0) {
+            department.rampDownDuration--;
+          }
+        }
+        
+        console.log(`Adjusted ramps: up=${department.rampUpDuration}, down=${department.rampDownDuration}`);
+      }
+      
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
-      this.calculateCosts();
     },
-    updateAllDepartments() {
-      this.initializeCrewMatrix();
-      for (let i = 0; i < this.departments.length; i++) {
-        this.updateDepartmentDistribution(i);
+    
+    // Update only the visual representation of a department during drag
+    updateDepartmentVisualOnly(department) {
+      console.log(`Updating visual only for department: ${department.name}`);
+      
+      // Find the department index
+      const dIndex = this.departments.indexOf(department);
+      if (dIndex === -1) return;
+      
+      // Clear the crew matrix for this department
+      if (!this.crewMatrix[dIndex]) {
+        this.crewMatrix[dIndex] = new Array(this.months.length).fill(0);
+      } else {
+        this.crewMatrix[dIndex].fill(0);
+      }
+      
+      // Fill in the crew matrix with the max crew value for the active months
+      for (let m = department.startMonth; m <= department.endMonth; m++) {
+        if (m >= 0 && m < this.months.length) {
+          this.crewMatrix[dIndex][m] = department.maxCrew;
+        }
       }
     },
+    
+    // Calculate a ramp value ensuring it's at least 1 if maxCrew > 0
+    calculateRampValue(currentStep, totalSteps, maxValue) {
+      if (maxValue <= 0) return 0;
+      if (totalSteps <= 0) return maxValue;
+      
+      const rampFactor = currentStep / totalSteps;
+      return Math.max(1, Math.round(maxValue * rampFactor));
+    },
+    updateAllDepartments() {
+      console.log('Updating all departments, count:', this.departments.length);
+      this.initializeCrewMatrix();
+      console.log('Initialized crew matrix:', this.crewMatrix.length, 
+        this.crewMatrix.length > 0 ? this.crewMatrix[0].length : 0);
+      
+      for (let i = 0; i < this.departments.length; i++) {
+        console.log('Updating department distribution for:', this.departments[i].name);
+        this.updateDepartmentDistribution(i);
+      }
+      
+      console.log('Final crew matrix after updates:', this.crewMatrix);
+    },
     updateDepartmentDistribution(dIndex) {
+      console.log(`Updating department distribution for index ${dIndex}`);
+      
+      // Validate department index
+      if (dIndex < 0 || dIndex >= this.departments.length) {
+        console.error(`Invalid department index: ${dIndex}`);
+        return;
+      }
+      
       const department = this.departments[dIndex];
+      console.log(`Department: ${department.name}`);
+      
+      // Validate department properties
+      if (!department) {
+        console.error(`Department at index ${dIndex} is undefined`);
+        return;
+      }
+      
+      // Ensure maxCrew is reasonable
+      if (isNaN(department.maxCrew) || department.maxCrew < 0 || department.maxCrew > 1000) {
+        console.error(`Invalid maxCrew for ${department.name}: ${department.maxCrew}`);
+        department.maxCrew = Math.min(Math.max(0, department.maxCrew || 0), 1000);
+        console.log(`Adjusted maxCrew to ${department.maxCrew}`);
+      }
+      
+      // Extract department properties
       const { startMonth, endMonth, maxCrew, rampUpDuration, rampDownDuration } = department;
+      console.log(`Parameters: startMonth=${startMonth}, endMonth=${endMonth}, maxCrew=${maxCrew}, rampUp=${rampUpDuration}, rampDown=${rampDownDuration}`);
+      
+      // Validate crew matrix
+      if (!this.crewMatrix[dIndex]) {
+        console.error(`Crew matrix row for department ${dIndex} is undefined`);
+        this.crewMatrix[dIndex] = new Array(this.months.length).fill(0);
+      }
       
       // Clear previous values
       this.crewMatrix[dIndex].fill(0);
@@ -641,38 +859,186 @@ export default {
       const totalDuration = endMonth - startMonth + 1;
       const plateauStart = startMonth + rampUpDuration;
       const plateauEnd = endMonth - rampDownDuration;
+      console.log(`Plateau: start=${plateauStart}, end=${plateauEnd}`);
       
-      // Apply ramp up
-      for (let i = 0; i < rampUpDuration; i++) {
-        const month = startMonth + i;
-        const crewSize = Math.round((i + 1) * maxCrew / rampUpDuration);
-        this.crewMatrix[dIndex][month] = crewSize;
+      // Ensure the plateau is valid
+      if (plateauStart > plateauEnd) {
+        console.warn(`Invalid plateau: start=${plateauStart}, end=${plateauEnd}. Adjusting...`);
+        // Adjust the plateau to ensure it's valid
+        const midpoint = Math.floor((startMonth + endMonth) / 2);
+        const plateauDuration = Math.max(1, totalDuration - rampUpDuration - rampDownDuration);
+        const newPlateauStart = Math.min(midpoint, startMonth + rampUpDuration);
+        const newPlateauEnd = Math.max(midpoint, endMonth - rampDownDuration);
+        
+        console.log(`Adjusted plateau: start=${newPlateauStart}, end=${newPlateauEnd}`);
+        
+        // Apply ramp up
+        if (rampUpDuration > 0) {
+          for (let i = 0; i < rampUpDuration; i++) {
+            const month = startMonth + i;
+            if (month >= 0 && month < this.months.length) {
+              // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+              const crewSize = this.calculateRampValue(i + 1, rampUpDuration, maxCrew);
+              this.crewMatrix[dIndex][month] = crewSize;
+            }
+          }
+        }
+        
+        // Apply plateau (full crew)
+        for (let month = newPlateauStart; month <= newPlateauEnd; month++) {
+          if (month >= 0 && month < this.months.length) {
+            this.crewMatrix[dIndex][month] = maxCrew;
+          }
+        }
+        
+        // Apply ramp down
+        if (rampDownDuration > 0) {
+          for (let i = 0; i < rampDownDuration; i++) {
+            const month = newPlateauEnd + 1 + i;
+            if (month >= 0 && month < this.months.length) {
+              // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+              const crewSize = this.calculateRampValue(rampDownDuration - i - 1, rampDownDuration, maxCrew);
+              this.crewMatrix[dIndex][month] = crewSize;
+            }
+          }
+        }
+      } else {
+        // Normal case - plateau is valid
+        
+        // Apply ramp up
+        if (rampUpDuration > 0) {
+          for (let i = 0; i < rampUpDuration; i++) {
+            const month = startMonth + i;
+            if (month >= 0 && month < this.months.length) {
+              // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+              const crewSize = this.calculateRampValue(i + 1, rampUpDuration, maxCrew);
+              this.crewMatrix[dIndex][month] = crewSize;
+            }
+          }
+        }
+        
+        // Apply plateau (full crew)
+        for (let month = plateauStart; month <= plateauEnd; month++) {
+          if (month >= 0 && month < this.months.length) {
+            this.crewMatrix[dIndex][month] = maxCrew;
+          }
+        }
+        
+        // Apply ramp down
+        if (rampDownDuration > 0) {
+          for (let i = 0; i < rampDownDuration; i++) {
+            const month = plateauEnd + 1 + i;
+            if (month >= 0 && month < this.months.length) {
+              // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+              const crewSize = this.calculateRampValue(rampDownDuration - i - 1, rampDownDuration, maxCrew);
+              this.crewMatrix[dIndex][month] = crewSize;
+            }
+          }
+        }
       }
       
-      // Apply plateau (full crew)
-      for (let month = plateauStart; month <= plateauEnd; month++) {
-        this.crewMatrix[dIndex][month] = maxCrew;
+      // Validate the crew matrix values
+      for (let i = 0; i < this.crewMatrix[dIndex].length; i++) {
+        if (isNaN(this.crewMatrix[dIndex][i]) || this.crewMatrix[dIndex][i] < 0 || this.crewMatrix[dIndex][i] > 1000) {
+          console.error(`Invalid crew size at [${dIndex}][${i}]: ${this.crewMatrix[dIndex][i]}`);
+          this.crewMatrix[dIndex][i] = 0;
+        }
       }
       
-      // Apply ramp down
-      for (let i = 0; i < rampDownDuration; i++) {
-        const month = plateauEnd + 1 + i;
-        const crewSize = Math.round(maxCrew * (rampDownDuration - i - 1) / rampDownDuration);
-        this.crewMatrix[dIndex][month] = crewSize;
-      }
+      // Recalculate costs after updating the crew matrix
+      this.$nextTick(() => {
+        this.calculateCosts();
+      });
     },
     calculateCosts() {
+      console.log('Calculating costs...');
+      
       // Reset cost arrays
       this.monthlyCosts = new Array(this.months.length).fill(0);
       this.cumulativeCosts = new Array(this.months.length).fill(0);
       
+      // Debug the crew matrix and department rates
+      console.log('Crew matrix dimensions:', this.crewMatrix.length, 'x', 
+        this.crewMatrix.length > 0 ? this.crewMatrix[0].length : 0);
+      console.log('Departments length:', this.departments.length);
+      console.log('Months length:', this.months.length);
+      
+      // Check for any unreasonable rates
+      let hasInvalidRates = false;
+      for (let d = 0; d < this.departments.length; d++) {
+        const rate = this.departments[d].rate;
+        if (isNaN(rate) || rate > 50000 || rate < 1000) {
+          console.error(`Invalid rate for ${this.departments[d].name}: ${rate}`);
+          hasInvalidRates = true;
+          // Fix the invalid rate
+          this.departments[d].rate = 8000;
+          console.log(`Fixed rate for ${this.departments[d].name} to 8000`);
+        }
+      }
+      
+      if (hasInvalidRates) {
+        console.warn('Fixed invalid rates in the departments');
+      }
+      
+      // Check for any NaN or extremely large values in the crew matrix
+      let hasInvalidValues = false;
+      for (let d = 0; d < this.departments.length; d++) {
+        for (let m = 0; m < this.months.length; m++) {
+          const crewSize = this.crewMatrix[d][m];
+          if (isNaN(crewSize) || crewSize > 1000) {
+            console.error(`Invalid crew size at [${d}][${m}]: ${crewSize}`);
+            hasInvalidValues = true;
+            // Fix the invalid value
+            this.crewMatrix[d][m] = 0;
+          }
+        }
+      }
+      
+      if (hasInvalidValues) {
+        console.warn('Fixed invalid crew sizes in the matrix');
+      }
+      
       // Calculate monthly costs
       for (let m = 0; m < this.months.length; m++) {
         for (let d = 0; d < this.departments.length; d++) {
-          const crewSize = this.crewMatrix[d][m];
-          const rate = this.departments[d].rate;
-          this.monthlyCosts[m] += crewSize * rate;
+          // Skip if department or crew matrix is invalid
+          if (!this.departments[d] || !this.crewMatrix[d]) {
+            console.error(`Invalid department or crew matrix at index ${d}`);
+            continue;
+          }
+          
+          // Get crew size and rate
+          let crewSize = this.crewMatrix[d][m];
+          let rate = this.departments[d].rate;
+          
+          // Validate crew size
+          if (isNaN(crewSize) || crewSize < 0 || crewSize > 1000) {
+            console.error(`Invalid crew size at [${d}][${m}]: ${crewSize}`);
+            crewSize = 0;
+            this.crewMatrix[d][m] = 0; // Fix the value in the matrix
+          }
+          
+          // Validate rate
+          if (isNaN(rate) || rate < 1000 || rate > 50000) {
+            console.error(`Invalid rate for ${this.departments[d].name}: ${rate}`);
+            rate = 8000; // Use a default rate
+            this.departments[d].rate = 8000; // Fix the rate in the department
+          }
+          
+          // Calculate cost for this department and month
+          const cost = crewSize * rate;
+          
+          // Debug the calculation for the first month
+          if (m === 0) {
+            console.log(`Month 0, Dept ${d} (${this.departments[d].name}): ${crewSize} crew * $${rate} = $${cost}`);
+          }
+          
+          // Add to monthly cost
+          this.monthlyCosts[m] += cost;
         }
+        
+        // Debug the monthly cost
+        console.log(`Month ${m} total cost: $${this.monthlyCosts[m]}`);
       }
       
       // Calculate cumulative costs
@@ -686,18 +1052,67 @@ export default {
       this.totalProjectCost = this.cumulativeCosts[this.cumulativeCosts.length - 1];
       this.peakMonthlyCost = Math.max(...this.monthlyCosts);
       
+      console.log('Total project cost:', this.totalProjectCost);
+      console.log('Peak monthly cost:', this.peakMonthlyCost);
+      
       // Calculate peak crew size
       let maxCrewSize = 0;
       for (let m = 0; m < this.months.length; m++) {
         let monthlyCrewSize = 0;
         for (let d = 0; d < this.departments.length; d++) {
-          monthlyCrewSize += this.crewMatrix[d][m];
+          // Skip if department or crew matrix is invalid
+          if (!this.departments[d] || !this.crewMatrix[d]) {
+            console.error(`Invalid department or crew matrix at index ${d}`);
+            continue;
+          }
+          
+          // Get crew size
+          let crewSize = this.crewMatrix[d][m];
+          
+          // Validate crew size
+          if (isNaN(crewSize) || crewSize < 0 || crewSize > 1000) {
+            console.error(`Invalid crew size at [${d}][${m}]: ${crewSize}`);
+            crewSize = 0;
+            this.crewMatrix[d][m] = 0; // Fix the value in the matrix
+          }
+          
+          // Add to monthly crew size
+          monthlyCrewSize += crewSize;
         }
+        
+        // Validate monthly crew size
+        if (isNaN(monthlyCrewSize) || monthlyCrewSize < 0 || monthlyCrewSize > 10000) {
+          console.error(`Invalid monthly crew size for month ${m}: ${monthlyCrewSize}`);
+          monthlyCrewSize = 0;
+        }
+        
+        // Update max crew size
         maxCrewSize = Math.max(maxCrewSize, monthlyCrewSize);
+        
+        // Debug monthly crew size
+        console.log(`Month ${m} crew size: ${monthlyCrewSize}`);
       }
+      
+      // Validate max crew size
+      if (isNaN(maxCrewSize) || maxCrewSize < 0 || maxCrewSize > 10000) {
+        console.error(`Invalid max crew size: ${maxCrewSize}`);
+        maxCrewSize = 0;
+      }
+      
       this.peakCrewSize = maxCrewSize;
+      console.log('Peak crew size:', this.peakCrewSize);
     },
     formatCurrency(value) {
+      // Check if the value is unreasonably large
+      if (value > 1000000000000) { // More than a trillion
+        console.error(`Unreasonably large currency value: ${value}`);
+        // Return a more reasonable value
+        return new Intl.NumberFormat('en-US', {
+          style: 'decimal',
+          maximumFractionDigits: 0
+        }).format(0);
+      }
+      
       return new Intl.NumberFormat('en-US', {
         style: 'decimal',
         maximumFractionDigits: 0
@@ -708,6 +1123,12 @@ export default {
     formatCompactCurrency(value) {
       // Handle zero values
       if (value === 0) {
+        return '$0';
+      }
+      
+      // Check if the value is unreasonably large
+      if (value > 1000000000000) { // More than a trillion
+        console.error(`Unreasonably large compact currency value: ${value}`);
         return '$0';
       }
       
@@ -731,7 +1152,10 @@ export default {
         }
       } else {
         // Full format for normal zoom
-        return '$' + this.formatCurrency(value);
+        return '$' + new Intl.NumberFormat('en-US', {
+          style: 'decimal',
+          maximumFractionDigits: 0
+        }).format(value);
       }
     },
     // Department selection and editing
@@ -753,18 +1177,53 @@ export default {
         rate: 8000
       };
       
+      // Add the new department to the departments array
       this.departments.push(newDepartment);
+      
+      // Add a new row to the crew matrix
       this.crewMatrix.push(new Array(this.months.length).fill(0));
+      
+      // Add the new department to the itemOrder array
+      this.itemOrder.push({
+        type: 'department',
+        index: this.departments.length - 1
+      });
+      
+      // Update the department distribution
       this.updateDepartmentDistribution(this.departments.length - 1);
-      this.calculateCosts();
+      
+      // Select the new department for editing
       this.selectDepartment(this.departments.length - 1);
     },
     removeDepartment() {
       if (this.selectedDepartmentIndex !== null) {
         if (confirm(`Are you sure you want to remove "${this.departments[this.selectedDepartmentIndex].name}"?`)) {
+          // Remove the department from the departments array
           this.departments.splice(this.selectedDepartmentIndex, 1);
+          
+          // Remove the corresponding row from the crew matrix
           this.crewMatrix.splice(this.selectedDepartmentIndex, 1);
+          
+          // Update the itemOrder array to remove references to the deleted department
+          // and adjust indices for departments that come after the deleted one
+          this.itemOrder = this.itemOrder.filter(item => {
+            // Remove the item if it's the department we're deleting
+            if (item.type === 'department' && item.index === this.selectedDepartmentIndex) {
+              return false;
+            }
+            
+            // Adjust indices for departments that come after the deleted one
+            if (item.type === 'department' && item.index > this.selectedDepartmentIndex) {
+              item.index--;
+            }
+            
+            return true;
+          });
+          
+          // Recalculate costs
           this.calculateCosts();
+          
+          // Clear the selection
           this.selectedDepartmentIndex = null;
         }
       }
@@ -787,67 +1246,131 @@ export default {
         endMonth: 12
       };
       
+      // Add the new phase to the phases array
       this.phases.push(newPhase);
+      
+      // Add the new phase to the itemOrder array
+      this.itemOrder.push({
+        type: 'phase',
+        index: this.phases.length - 1
+      });
+      
+      // Select the new phase for editing
       this.selectedPhaseIndex = this.phases.length - 1;
     },
     removePhase() {
       if (this.selectedPhaseIndex !== null) {
         if (confirm(`Are you sure you want to remove "${this.phases[this.selectedPhaseIndex].name}"?`)) {
+          // Remove the phase from the phases array
           this.phases.splice(this.selectedPhaseIndex, 1);
+          
+          // Update the itemOrder array to remove references to the deleted phase
+          // and adjust indices for phases that come after the deleted one
+          this.itemOrder = this.itemOrder.filter(item => {
+            // Remove the item if it's the phase we're deleting
+            if (item.type === 'phase' && item.index === this.selectedPhaseIndex) {
+              return false;
+            }
+            
+            // Adjust indices for phases that come after the deleted one
+            if (item.type === 'phase' && item.index > this.selectedPhaseIndex) {
+              item.index--;
+            }
+            
+            return true;
+          });
+          
+          // Clear the selection
           this.selectedPhaseIndex = null;
         }
       }
     },
     // Export data to CSV
     exportCSV() {
-      // Create CSV header row
-      let csvContent = "Department,";
+      // Create a CSV that exactly matches the original format
       
-      // Add month headers
-      csvContent += this.months.join(",") + ",Rate\n";
+      // First, create the year header row
+      let csvContent = ",";
+      this.years.forEach(year => {
+        // Add the year followed by empty cells for each month
+        csvContent += year + "," + ",".repeat(11) + ",";
+      });
+      csvContent += "\n";
       
-      // Add data in the same order as displayed in the UI
+      // Create the month header row
+      csvContent += ",";
+      this.years.forEach(year => {
+        // Add all months for this year
+        this.monthsPerYear.forEach(month => {
+          csvContent += month + ",";
+        });
+      });
+      csvContent += "\n";
+      
+      // Add an empty row
+      csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+      
+      // Group departments by their section/category
+      const sections = {};
+      let currentSection = "Departments";
+      
+      // First pass: identify all sections and their departments
       this.sortedItems.forEach(item => {
         if (item.type === 'phase') {
-          // Add phase row
-          const phase = this.phases[item.index];
-          csvContent += phase.name + " (Phase),";
-          
-          // Add phase indicators for each month
-          for (let i = 0; i < this.months.length; i++) {
-            csvContent += this.isMonthInPhase(phase, i) ? "X," : ",";
+          // This is a section header
+          currentSection = this.phases[item.index].name;
+          sections[currentSection] = [];
+        } else if (item.type === 'department') {
+          // Add this department to the current section
+          if (!sections[currentSection]) {
+            sections[currentSection] = [];
           }
-          
-          // No rate for phases
-          csvContent += "\n";
-        } else {
-          // Add department row
-          const dept = this.departments[item.index];
-          csvContent += dept.name + ",";
-          
-          // Add crew counts for each month
-          for (let i = 0; i < this.months.length; i++) {
-            csvContent += this.crewMatrix[item.index][i] + ",";
-          }
-          
-          // Add rate
-          csvContent += dept.rate + "\n";
+          sections[currentSection].push({
+            index: item.index,
+            dept: this.departments[item.index]
+          });
         }
       });
       
-      // Add empty row
-      csvContent += "\n";
+      // Second pass: output each section with its departments
+      Object.keys(sections).forEach(sectionName => {
+        // Add section header
+        csvContent += sectionName + ":,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+        
+        // Add departments in this section
+        sections[sectionName].forEach(deptInfo => {
+          // Add department name
+          csvContent += deptInfo.dept.name + ",";
+          
+          // Add crew counts for each month
+          for (let i = 0; i < this.months.length; i++) {
+            csvContent += this.crewMatrix[deptInfo.index][i] + ",";
+          }
+          
+          // Do NOT add rate at the end - this causes issues with the import
+          csvContent += "\n";
+          
+          // Add an empty row after each department (only if not the last department in the section)
+          if (sections[sectionName].indexOf(deptInfo) < sections[sectionName].length - 1) {
+            csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+          }
+        });
+        
+        // Add an empty row after each section
+        csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+        csvContent += ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+      });
       
       // Add monthly costs
       csvContent += "Monthly Cost,";
-      for (let i = 0; i < this.monthlyCosts.length; i++) {
+      for (let i = 0; i < this.months.length; i++) {
         csvContent += this.monthlyCosts[i] + ",";
       }
       csvContent += "\n";
       
       // Add cumulative costs
       csvContent += "Cumulative Cost,";
-      for (let i = 0; i < this.cumulativeCosts.length; i++) {
+      for (let i = 0; i < this.months.length; i++) {
         csvContent += this.cumulativeCosts[i] + ",";
       }
       csvContent += "\n";
@@ -869,6 +1392,97 @@ export default {
       document.body.removeChild(link);
     },
     
+    loadCSV(csvContent) {
+      try {
+        console.log('CSV content length:', csvContent.length);
+        
+        // Parse the CSV content
+        const parsedData = parseCSV(csvContent);
+        console.log('Parsed CSV data:', parsedData);
+        
+        // Debug the crew matrix
+        console.log('Crew matrix dimensions:', 
+          parsedData.crewMatrix.length, 
+          parsedData.crewMatrix.length > 0 ? parsedData.crewMatrix[0].length : 0);
+        
+        // Debug department rates
+        console.log('Department rates:');
+        parsedData.departments.forEach(dept => {
+          console.log(`${dept.name}: ${dept.rate}`);
+        });
+        
+        // Update the application state with the parsed data
+        this.years = parsedData.years;
+        this.months = parsedData.months;
+        this.departments = parsedData.departments;
+        this.phases = parsedData.phases;
+        
+        // Use the item order from the parsed data if available, otherwise initialize it
+        if (parsedData.itemOrder) {
+          console.log('Using item order from parsed data:', parsedData.itemOrder);
+          this.itemOrder = parsedData.itemOrder;
+        } else {
+          console.log('No item order in parsed data, initializing...');
+          this.initializeItemOrder();
+        }
+        
+        // Initialize the crew matrix
+        console.log('Setting crew matrix from parsed data:', parsedData.crewMatrix);
+        this.crewMatrix = JSON.parse(JSON.stringify(parsedData.crewMatrix)); // Deep copy
+        
+        // Ensure the crew matrix has the correct dimensions
+        if (this.crewMatrix.length !== this.departments.length) {
+          console.warn(`Crew matrix length (${this.crewMatrix.length}) doesn't match departments length (${this.departments.length})`);
+          // Reinitialize the crew matrix
+          this.initializeCrewMatrix();
+          
+          // Copy data from the original matrix where possible
+          for (let i = 0; i < Math.min(parsedData.crewMatrix.length, this.departments.length); i++) {
+            for (let j = 0; j < Math.min(parsedData.crewMatrix[i].length, this.months.length); j++) {
+              this.crewMatrix[i][j] = parsedData.crewMatrix[i][j];
+            }
+          }
+        }
+        
+        // Ensure each row in the crew matrix has the correct length
+        for (let i = 0; i < this.crewMatrix.length; i++) {
+          if (this.crewMatrix[i].length !== this.months.length) {
+            console.warn(`Crew matrix row ${i} length (${this.crewMatrix[i].length}) doesn't match months length (${this.months.length})`);
+            // Reinitialize this row
+            const newRow = new Array(this.months.length).fill(0);
+            // Copy data where possible
+            for (let j = 0; j < Math.min(this.crewMatrix[i].length, this.months.length); j++) {
+              newRow[j] = this.crewMatrix[i][j];
+            }
+            this.crewMatrix[i] = newRow;
+          }
+        }
+        
+        // Ensure all departments have reasonable rates
+        this.departments.forEach(dept => {
+          // If rate is unreasonably high, reset it
+          if (dept.rate > 50000) {
+            console.warn(`Resetting unreasonable rate for ${dept.name}: ${dept.rate} -> 8000`);
+            dept.rate = 8000;
+          }
+          // If rate is too low, set a minimum
+          else if (dept.rate < 1000) {
+            console.warn(`Increasing too low rate for ${dept.name}: ${dept.rate} -> 1000`);
+            dept.rate = 1000;
+          }
+        });
+        
+        // Calculate costs based on the loaded crew matrix
+        this.calculateCosts();
+        
+        // Show success message
+        alert('CSV file loaded successfully!');
+      } catch (error) {
+        console.error('Error loading CSV:', error);
+        alert('Error loading CSV file. Please check the format and try again.');
+      }
+    },
+    
     // Generate months based on years
     generateMonths() {
       // Clear existing months
@@ -877,7 +1491,7 @@ export default {
       // Generate all months across years
       this.years.forEach(year => {
         this.monthsPerYear.forEach(month => {
-          this.months.push(`${month} ${year}`);
+          this.months.push(`${month} Y${year}`);
         });
       });
     },
@@ -885,11 +1499,23 @@ export default {
     // Edit year
     editYear(index) {
       const currentYear = this.years[index];
-      const newYear = prompt(`Edit year (currently ${currentYear}):`, currentYear);
+      const newYear = prompt(`Edit year number (currently Year ${currentYear}):`, currentYear);
       
       if (newYear && !isNaN(newYear) && newYear.trim() !== '') {
         // Update the year
         const yearValue = parseInt(newYear.trim());
+        
+        // Ensure year is positive
+        if (yearValue <= 0) {
+          alert('Year number must be positive.');
+          return;
+        }
+        
+        // Check if this year already exists
+        if (this.years.includes(yearValue) && this.years[index] !== yearValue) {
+          alert('This year already exists in the timeline.');
+          return;
+        }
         
         // Create a new array with the updated year
         const updatedYears = [...this.years];
@@ -904,7 +1530,6 @@ export default {
         
         // Recalculate
         this.updateAllDepartments();
-        this.calculateCosts();
       }
     },
     
@@ -923,6 +1548,41 @@ export default {
     },
     resetZoom() {
       this.zoomLevel = 1;
+    },
+    
+    // Time scale controls
+    updateTimeScale() {
+      // Convert numberOfYears to number
+      this.numberOfYears = parseInt(this.numberOfYears);
+      console.log(`Updating number of years to ${this.numberOfYears}`);
+      
+      // Generate years array based on the number of years
+      this.years = Array.from({ length: this.numberOfYears }, (_, i) => i + 1);
+      console.log('Updated years array:', this.years);
+      
+      // Regenerate months with the new years
+      this.generateMonthsWithTimeScale();
+    },
+    
+    // Generate months based on years
+    generateMonthsWithTimeScale() {
+      // Clear existing months
+      this.months = [];
+      
+      // Generate all months for each year
+      this.years.forEach(year => {
+        this.monthsPerYear.forEach(month => {
+          this.months.push(`${month} Y${year}`);
+        });
+      });
+      
+      console.log(`Generated ${this.months.length} months for ${this.years.length} years`);
+      
+      // Reinitialize crew matrix
+      this.initializeCrewMatrix();
+      
+      // Recalculate
+      this.updateAllDepartments();
     },
     // Editor position and dragging
     resetEditorPosition() {
@@ -1224,6 +1884,23 @@ main {
   margin-left: auto;
 }
 
+.time-scale-control {
+  display: flex;
+  align-items: center;
+  margin: 0 10px;
+}
+
+.time-scale-control label {
+  margin-right: 5px;
+  font-size: 14px;
+}
+
+.time-scale-control select {
+  padding: 3px 5px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
+}
+
 .zoom-button {
   width: 24px;
   height: 24px;
@@ -1254,6 +1931,80 @@ main {
 
 .export-button:hover {
   background-color: #0b7dda;
+}
+
+.sample-link {
+  display: inline-flex;
+  align-items: center;
+  background-color: #ff9800;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+  margin-left: 8px;
+  transition: background-color 0.3s;
+}
+
+.sample-link:hover {
+  background-color: #e68a00;
+}
+
+/* Drag handle styles */
+.dept-cell {
+  position: relative;
+}
+
+.cell-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.start-handle {
+  border-left: 3px solid var(--primary-color);
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.end-handle {
+  border-right: 3px solid var(--primary-color);
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.start-drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 100%;
+  cursor: w-resize;
+  background: linear-gradient(90deg, var(--primary-color) 0%, transparent 100%);
+  opacity: 0.7;
+  z-index: 5;
+}
+
+.end-drag-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 10px;
+  height: 100%;
+  cursor: e-resize;
+  background: linear-gradient(90deg, transparent 0%, var(--primary-color) 100%);
+  opacity: 0.7;
+  z-index: 5;
+}
+
+.start-drag-handle:hover, .end-drag-handle:hover {
+  opacity: 1;
+  width: 12px;
+}
+
+.in-range {
+  background-color: rgba(76, 175, 80, 0.05);
 }
 
 .table-container {
@@ -1591,6 +2342,21 @@ main {
 .slider {
   width: 100%;
   margin-top: 5px;
+}
+
+.input-with-number {
+  display: flex;
+  align-items: center;
+}
+
+.input-with-number .slider {
+  flex: 1;
+}
+
+.input-with-number .number-input {
+  width: 60px;
+  margin-left: 10px;
+  text-align: center;
 }
 
 .rate-input {
