@@ -1616,8 +1616,8 @@ export default {
       }
       csvContent += "\n";
       
-      // Add workstation costs
-      csvContent += "Monthly Workstation Cost,";
+      // Add workstation costs (one-time cost in first month)
+      csvContent += "Workstation Cost (One-time),";
       for (let i = 0; i < this.months.length; i++) {
         csvContent += this.monthlyWorkstationCosts[i] + ",";
       }

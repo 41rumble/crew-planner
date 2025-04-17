@@ -209,13 +209,10 @@ export function calculateMonthlyWorkstationCosts(workstationData, crewMatrix, de
   const monthlyCosts = new Array(crewMatrix[0]?.length || 0).fill(0);
   const totalWorkstationCost = calculateTotalWorkstationCost(workstationData, crewMatrix, departments);
   
-  // Distribute the total workstation cost evenly across the project duration
-  // This represents the depreciation of the workstations over the project
-  const monthlyDepreciationCost = totalWorkstationCost / monthlyCosts.length;
-  
-  // Apply the monthly depreciation cost to all months
-  for (let m = 0; m < monthlyCosts.length; m++) {
-    monthlyCosts[m] = monthlyDepreciationCost;
+  // Apply the total workstation cost to the first month only
+  // This represents a one-time purchase cost rather than a monthly expense
+  if (monthlyCosts.length > 0) {
+    monthlyCosts[0] = totalWorkstationCost;
   }
   
   return monthlyCosts;

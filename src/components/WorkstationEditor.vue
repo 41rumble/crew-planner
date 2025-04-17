@@ -193,7 +193,7 @@
             <div class="assignment-department">Department</div>
             <div class="assignment-workstation">Workstation Type</div>
             <div class="assignment-quantity">Quantity</div>
-            <div class="assignment-cost">Monthly Cost</div>
+            <div class="assignment-cost">Total Cost</div>
             <div class="assignment-notes">Notes</div>
           </div>
           <div v-for="(assignment, assignmentIndex) in workstationData.departmentAssignments" :key="'assignment-' + assignmentIndex" class="assignment">
@@ -578,8 +578,8 @@ export default {
     getAssignmentMonthlyCost(assignment) {
       const bundle = this.workstationData.workstationBundles.find(b => b.id === assignment.workstationId);
       if (bundle) {
-        // Calculate monthly cost (assuming 36-month depreciation)
-        return (bundle.cost * assignment.quantity) / 36;
+        // Return the total cost (one-time purchase)
+        return bundle.cost * assignment.quantity;
       }
       return 0;
     },
