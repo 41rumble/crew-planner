@@ -795,6 +795,15 @@ export default {
         }
       }
     },
+    
+    // Calculate a ramp value ensuring it's at least 1 if maxCrew > 0
+    calculateRampValue(currentStep, totalSteps, maxValue) {
+      if (maxValue <= 0) return 0;
+      if (totalSteps <= 0) return maxValue;
+      
+      const rampFactor = currentStep / totalSteps;
+      return Math.max(1, Math.round(maxValue * rampFactor));
+    },
     updateAllDepartments() {
       console.log('Updating all departments, count:', this.departments.length);
       this.initializeCrewMatrix();
@@ -868,9 +877,8 @@ export default {
           for (let i = 0; i < rampUpDuration; i++) {
             const month = startMonth + i;
             if (month >= 0 && month < this.months.length) {
-              // Ensure we don't divide by zero
-              const rampFactor = rampUpDuration > 0 ? (i + 1) / rampUpDuration : 1;
-              const crewSize = Math.round(maxCrew * rampFactor);
+              // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+              const crewSize = this.calculateRampValue(i + 1, rampUpDuration, maxCrew);
               this.crewMatrix[dIndex][month] = crewSize;
             }
           }
@@ -888,9 +896,8 @@ export default {
           for (let i = 0; i < rampDownDuration; i++) {
             const month = newPlateauEnd + 1 + i;
             if (month >= 0 && month < this.months.length) {
-              // Ensure we don't divide by zero
-              const rampFactor = rampDownDuration > 0 ? (rampDownDuration - i - 1) / rampDownDuration : 0;
-              const crewSize = Math.round(maxCrew * rampFactor);
+              // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+              const crewSize = this.calculateRampValue(rampDownDuration - i - 1, rampDownDuration, maxCrew);
               this.crewMatrix[dIndex][month] = crewSize;
             }
           }
@@ -903,9 +910,8 @@ export default {
           for (let i = 0; i < rampUpDuration; i++) {
             const month = startMonth + i;
             if (month >= 0 && month < this.months.length) {
-              // Ensure we don't divide by zero
-              const rampFactor = rampUpDuration > 0 ? (i + 1) / rampUpDuration : 1;
-              const crewSize = Math.round(maxCrew * rampFactor);
+              // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+              const crewSize = this.calculateRampValue(i + 1, rampUpDuration, maxCrew);
               this.crewMatrix[dIndex][month] = crewSize;
             }
           }
@@ -923,9 +929,8 @@ export default {
           for (let i = 0; i < rampDownDuration; i++) {
             const month = plateauEnd + 1 + i;
             if (month >= 0 && month < this.months.length) {
-              // Ensure we don't divide by zero
-              const rampFactor = rampDownDuration > 0 ? (rampDownDuration - i - 1) / rampDownDuration : 0;
-              const crewSize = Math.round(maxCrew * rampFactor);
+              // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+              const crewSize = this.calculateRampValue(rampDownDuration - i - 1, rampDownDuration, maxCrew);
               this.crewMatrix[dIndex][month] = crewSize;
             }
           }
