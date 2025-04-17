@@ -125,6 +125,9 @@ export const timelineDragHandlers = {
         
         // Now update the department with the proper ramp calculations
         this.updateDepartmentTimeframe(department);
+        
+        // Explicitly calculate costs to update Peak Monthly Cost and Peak Crew Size
+        this.calculateCosts();
       }
       
       // Reset drag state
