@@ -96,26 +96,26 @@ export const workstationData = {
     {
       category: "Rendering",
       items: [
-        { name: "3Delight", cost: 1370, quantity: 80, notes: "Renderer licenses", costType: "one-time" },
+        { name: "3Delight", cost: 1370, quantity: 80, notes: "Renderer licenses", costType: "one-time", purchaseMonth: 0 },
         { name: "Maintenance", cost: 515, quantity: 160, notes: "Annual maintenance", costType: "monthly" },
-        { name: "Smedge - Site License", cost: 2000, quantity: 2, notes: "Render farm management", costType: "one-time" }
+        { name: "Smedge - Site License", cost: 2000, quantity: 2, notes: "Render farm management", costType: "one-time", purchaseMonth: 0 }
       ]
     },
     {
       category: "Networking",
       items: [
-        { name: "Routers", cost: 900, quantity: 6, costType: "one-time" },
-        { name: "Cabling", cost: 2000, quantity: 1, costType: "one-time" }
+        { name: "Routers", cost: 900, quantity: 6, costType: "one-time", purchaseMonth: 0 },
+        { name: "Cabling", cost: 2000, quantity: 1, costType: "one-time", purchaseMonth: 0 }
       ]
     },
     {
       category: "Storage",
       items: [
-        { name: "SYD 36TB Server", cost: 12000, quantity: 1, costType: "one-time" },
-        { name: "BKK 36TB Server", cost: 12000, quantity: 1, costType: "one-time" },
-        { name: "SYD Backup Tape Library", cost: 14000, quantity: 1, costType: "one-time" },
-        { name: "BKK Backup Tape Library", cost: 14000, quantity: 1, costType: "one-time" },
-        { name: "LTO5 Tapes", cost: 100, quantity: 100, costType: "one-time" }
+        { name: "SYD 36TB Server", cost: 12000, quantity: 1, costType: "one-time", purchaseMonth: 0 },
+        { name: "BKK 36TB Server", cost: 12000, quantity: 1, costType: "one-time", purchaseMonth: 3 },
+        { name: "SYD Backup Tape Library", cost: 14000, quantity: 1, costType: "one-time", purchaseMonth: 0 },
+        { name: "BKK Backup Tape Library", cost: 14000, quantity: 1, costType: "one-time", purchaseMonth: 3 },
+        { name: "LTO5 Tapes", cost: 100, quantity: 100, costType: "one-time", purchaseMonth: 1 }
       ]
     }
   ],
@@ -160,17 +160,26 @@ export function calculateBackendInfrastructureCost(infrastructure) {
 // Helper function to calculate monthly backend infrastructure costs
 export function calculateMonthlyBackendInfrastructureCosts(infrastructure, monthCount) {
   const costs = new Array(monthCount).fill(0);
-  const backendCosts = calculateBackendInfrastructureCost(infrastructure);
   
-  // Apply one-time costs to the first month
-  if (costs.length > 0) {
-    costs[0] += backendCosts.oneTime;
-  }
-  
-  // Apply monthly costs to all months
-  for (let i = 0; i < costs.length; i++) {
-    costs[i] += backendCosts.monthly;
-  }
+  // Process each item individually to handle purchase months
+  infrastructure.forEach(category => {
+    category.items.forEach(item => {
+      const itemCost = item.cost * item.quantity;
+      
+      if (item.costType === 'monthly') {
+        // Apply monthly costs to all months
+        for (let i = 0; i < costs.length; i++) {
+          costs[i] += itemCost;
+        }
+      } else {
+        // Apply one-time cost to the specified purchase month
+        const purchaseMonth = item.purchaseMonth || 0; // Default to month 0 if not specified
+        if (purchaseMonth >= 0 && purchaseMonth < costs.length) {
+          costs[purchaseMonth] += itemCost;
+        }
+      }
+    });
+  });
   
   return costs;
 }

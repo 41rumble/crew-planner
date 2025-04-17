@@ -409,6 +409,7 @@
         v-if="showWorkstationEditor"
         :workstationData="workstationData"
         :departments="departments"
+        :months="months"
         :editorPosition="editorPosition"
         :editorStyle="editorStyle"
         @close="showWorkstationEditor = false"

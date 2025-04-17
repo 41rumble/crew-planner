@@ -294,6 +294,16 @@
             </div>
             
             <div class="category-items" v-if="selectedBackendCategory === categoryIndex">
+              <div class="backend-item-header">
+                <div class="item-name">Name</div>
+                <div class="item-cost">Cost</div>
+                <div class="item-quantity">Qty</div>
+                <div class="item-total">Total</div>
+                <div class="item-cost-type">Type</div>
+                <div class="item-purchase-month">Month</div>
+                <div class="item-notes">Notes</div>
+                <div class="item-actions"></div>
+              </div>
               <div v-for="(item, itemIndex) in category.items" :key="'backend-' + categoryIndex + '-' + itemIndex" class="backend-item">
                 <div class="item-name">
                   <span v-if="editingBackendItem === 'name-' + categoryIndex + '-' + itemIndex">
@@ -350,6 +360,17 @@
                     <option value="monthly">Monthly</option>
                   </select>
                 </div>
+                <div class="item-purchase-month" v-if="item.costType === 'one-time'">
+                  <span class="purchase-month-label">Month:</span>
+                  <input 
+                    type="number" 
+                    v-model.number="item.purchaseMonth" 
+                    min="0" 
+                    :max="maxPurchaseMonth" 
+                    @change="updateCosts()"
+                    class="purchase-month-input"
+                  >
+                </div>
                 <div class="item-notes">
                   <span v-if="editingBackendItem === 'notes-' + categoryIndex + '-' + itemIndex">
                     <input 
@@ -400,6 +421,15 @@ export default {
     editorStyle: {
       type: Object,
       default: () => ({ top: '150px', right: '20px' })
+    },
+    months: {
+      type: Array,
+      default: () => []
+    }
+  },
+  computed: {
+    maxPurchaseMonth() {
+      return this.months.length > 0 ? this.months.length - 1 : 47; // Default to 48 months (4 years) if not provided
     }
   },
   data() {
@@ -565,7 +595,8 @@ export default {
           cost: 0,
           quantity: 1,
           notes: '',
-          costType: 'one-time' // Default to one-time cost
+          costType: 'one-time', // Default to one-time cost
+          purchaseMonth: 0 // Default to first month
         });
         this.updateCosts();
       }
@@ -903,7 +934,7 @@ export default {
 
 .backend-item {
   display: grid;
-  grid-template-columns: 2fr 1fr 0.5fr 1fr 2fr 0.5fr;
+  grid-template-columns: 2fr 1fr 0.5fr 1fr 1fr 0.8fr 2fr 0.5fr;
   gap: 10px;
   align-items: center;
   padding: 8px 0;
@@ -954,5 +985,36 @@ export default {
   padding: 5px;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.item-purchase-month {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.purchase-month-label {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.purchase-month-input {
+  width: 50px;
+  padding: 3px 5px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.backend-item-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.5fr 1fr 1fr 0.8fr 2fr 0.5fr;
+  gap: 10px;
+  background-color: #f5f5f5;
+  font-weight: bold;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  font-size: 0.85rem;
 }
 </style>
