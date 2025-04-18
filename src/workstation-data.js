@@ -97,7 +97,7 @@ export const workstationData = {
       category: "Rendering",
       items: [
         { name: "3Delight", cost: 1370, quantity: 80, notes: "Renderer licenses", costType: "one-time", purchaseMonth: 0 },
-        { name: "Maintenance", cost: 515, quantity: 160, notes: "Annual maintenance", costType: "monthly" },
+        { name: "Maintenance", cost: 6860, quantity: 1, notes: "Annual maintenance (total monthly cost)", costType: "monthly" },
         { name: "Smedge - Site License", cost: 2000, quantity: 2, notes: "Render farm management", costType: "one-time", purchaseMonth: 0 }
       ]
     },
@@ -167,9 +167,12 @@ export function calculateMonthlyBackendInfrastructureCosts(infrastructure, month
       const itemCost = item.cost * item.quantity;
       
       if (item.costType === 'monthly') {
+        // For monthly costs, calculate the total monthly cost
+        const monthlyCost = item.cost * item.quantity;
+        
         // Apply monthly costs to all months
         for (let i = 0; i < costs.length; i++) {
-          costs[i] += itemCost;
+          costs[i] += monthlyCost;
         }
       } else {
         // Apply one-time cost to the specified purchase month
