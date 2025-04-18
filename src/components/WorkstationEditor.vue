@@ -193,6 +193,7 @@
             <div class="assignment-department">Department</div>
             <div class="assignment-workstation">Workstation Type</div>
             <div class="assignment-quantity">Quantity</div>
+            <div class="assignment-purchase-month">Purchase Month</div>
             <div class="assignment-cost">Total Cost</div>
             <div class="assignment-notes">Notes</div>
           </div>
@@ -232,6 +233,23 @@
               </span>
               <span v-else @dblclick="startEditingAssignment(assignmentIndex, 'quantity')">
                 {{ assignment.quantity }}
+              </span>
+            </div>
+            <div class="assignment-purchase-month">
+              <span v-if="editingAssignment === 'purchaseMonth-' + assignmentIndex">
+                <input 
+                  v-model.number="assignment.purchaseMonth" 
+                  @blur="editingAssignment = null; updateCosts()" 
+                  @keyup.enter="editingAssignment = null; updateCosts()"
+                  ref="assignmentPurchaseMonthInput"
+                  class="assignment-edit-input purchase-month-input"
+                  type="number"
+                  min="0"
+                  :max="maxPurchaseMonth"
+                >
+              </span>
+              <span v-else @dblclick="startEditingAssignment(assignmentIndex, 'purchaseMonth')">
+                {{ assignment.purchaseMonth || 0 }}
               </span>
             </div>
             <div class="assignment-cost">
@@ -964,7 +982,7 @@ export default {
 
 .assignment-header {
   display: grid;
-  grid-template-columns: 1.5fr 1.5fr 0.5fr 1fr 2fr;
+  grid-template-columns: 1.5fr 1.5fr 0.5fr 0.5fr 1fr 2fr;
   gap: 10px;
   background-color: #f5f5f5;
   font-weight: bold;
@@ -973,7 +991,7 @@ export default {
 
 .assignment {
   display: grid;
-  grid-template-columns: 1.5fr 1.5fr 0.5fr 1fr 2fr;
+  grid-template-columns: 1.5fr 1.5fr 0.5fr 0.5fr 1fr 2fr;
   gap: 10px;
   padding: 10px;
   border-top: 1px solid #eee;

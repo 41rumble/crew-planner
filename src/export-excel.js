@@ -331,7 +331,7 @@ export function exportToExcel(appState) {
     [""],
     ["Total Workstation Costs by Department"],
     [""],
-    ["Department", "Workstation Type", "Quantity", "Total Cost"]
+    ["Department", "Workstation Type", "Quantity", "Purchase Month", "Total Cost"]
   ];
   
   // Calculate total workstation cost from assignments
@@ -366,6 +366,7 @@ export function exportToExcel(appState) {
         assignment.departmentName,
         bundle.name,
         assignment.quantity,
+        assignment.purchaseMonth || 0,
         cost
       ]);
     }

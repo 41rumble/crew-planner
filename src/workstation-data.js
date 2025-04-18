@@ -233,6 +233,7 @@ export function initializeDepartmentAssignments(workstationData, departments) {
       departmentName: dept.name,
       workstationId: workstationId,
       quantity: dept.maxCrew, // Default to max crew size
+      purchaseMonth: dept.startMonth || 0, // Default to department start month
       notes: `Default assignment for ${dept.name}`
     });
   });
@@ -243,13 +244,36 @@ export function initializeDepartmentAssignments(workstationData, departments) {
 // Helper function to calculate monthly workstation costs based on peak crew size
 export function calculateMonthlyWorkstationCosts(workstationData, crewMatrix, departments) {
   const monthlyCosts = new Array(crewMatrix[0]?.length || 0).fill(0);
-  const totalWorkstationCost = calculateTotalWorkstationCost(workstationData, crewMatrix, departments);
   
-  // Apply the total workstation cost to the first month only
-  // This represents a one-time purchase cost rather than a monthly expense
-  if (monthlyCosts.length > 0) {
-    monthlyCosts[0] = totalWorkstationCost;
-  }
+  // Apply workstation costs based on purchase month for each department
+  workstationData.departmentAssignments.forEach(assignment => {
+    const bundle = workstationData.workstationBundles.find(b => b.id === assignment.workstationId);
+    if (bundle) {
+      // Find the department index
+      const deptIndex = departments.findIndex(d => 
+        d.name.toLowerCase().replace(/\s+/g, '-') === assignment.departmentId);
+      
+      if (deptIndex >= 0) {
+        // Calculate peak crew size for this department
+        let peakCrewSize = 0;
+        for (let m = 0; m < crewMatrix[deptIndex].length; m++) {
+          peakCrewSize = Math.max(peakCrewSize, crewMatrix[deptIndex][m]);
+        }
+        
+        // Use the minimum of peak crew size and assigned quantity
+        const workstationCount = Math.min(peakCrewSize, assignment.quantity);
+        
+        // Calculate total cost for this department
+        const departmentCost = bundle.cost * workstationCount;
+        
+        // Apply the cost to the specified purchase month
+        const purchaseMonth = assignment.purchaseMonth || 0;
+        if (purchaseMonth >= 0 && purchaseMonth < monthlyCosts.length) {
+          monthlyCosts[purchaseMonth] += departmentCost;
+        }
+      }
+    }
+  });
   
   return monthlyCosts;
 }

@@ -113,14 +113,15 @@ export function generateWorkstationsCSV(workstationData) {
   
   // Department Assignments
   csvContent += "\nDepartment Assignments\n";
-  csvContent += "Department,Workstation Type,Quantity,Total Cost,Notes\n";
+  csvContent += "Department,Workstation Type,Quantity,Purchase Month,Total Cost,Notes\n";
   
   workstationData.departmentAssignments.forEach(assignment => {
     // Calculate total cost for this assignment
     const bundle = workstationData.workstationBundles.find(b => b.id === assignment.workstationId);
     const totalCost = bundle ? bundle.cost * assignment.quantity : 0;
+    const purchaseMonth = assignment.purchaseMonth || 0;
     
-    csvContent += `${assignment.departmentName},${assignment.workstationId},${assignment.quantity},${totalCost},"${assignment.notes || ''}"\n`;
+    csvContent += `${assignment.departmentName},${assignment.workstationId},${assignment.quantity},${purchaseMonth},${totalCost},"${assignment.notes || ''}"\n`;
   });
   
   // Backend Infrastructure
