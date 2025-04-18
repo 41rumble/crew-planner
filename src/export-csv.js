@@ -129,6 +129,12 @@ export function exportToMultipleCSV(appState) {
     timelineCSV += monthlyWorkstationCosts[i] + ",";
   }
   timelineCSV += "\n";
+  
+  timelineCSV += "Backend Infrastructure Cost,";
+  for (let i = 0; i < months.length; i++) {
+    timelineCSV += monthlyBackendCosts[i] + ",";
+  }
+  timelineCSV += "\n";
 
   timelineCSV += "Total Monthly Cost,";
   for (let i = 0; i < months.length; i++) {

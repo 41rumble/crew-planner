@@ -199,6 +199,15 @@
                   </td>
                 </tr>
                 <tr class="cost-row non-editable">
+                  <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Backend Cost</strong></td>
+                  <td v-for="(cost, index) in monthlyBackendCosts" :key="index" 
+                      :class="{ active: cost > 0 }"
+                      :style="getCellStyle()"
+                      :title="'$' + formatCurrency(cost)">
+                    {{ cost > 0 ? formatCompactCurrency(cost) : '' }}
+                  </td>
+                </tr>
+                <tr class="cost-row non-editable">
                   <td class="fixed-column" :style="getDepartmentColumnStyle()"><strong>Total Monthly Cost</strong></td>
                   <td v-for="(cost, index) in monthlyCosts" :key="index" 
                       :class="{ active: cost > 0 }"
@@ -437,6 +446,7 @@ import {
 import { 
   workstationData,
   calculateMonthlyWorkstationCosts,
+  calculateMonthlyBackendInfrastructureCosts,
   initializeDepartmentAssignments
 } from './workstation-data.js';
 import {
@@ -649,7 +659,9 @@ export default {
       workstationData: JSON.parse(JSON.stringify(workstationData)),
       showWorkstationEditor: false,
       monthlyWorkstationCosts: [],
-      workstationsIncludedInTotals: true
+      monthlyBackendCosts: [],
+      workstationsIncludedInTotals: true,
+      backendIncludedInTotals: true
     };
   },
   created() {
@@ -1088,6 +1100,7 @@ export default {
       this.monthlyLaborCosts = new Array(this.months.length).fill(0);
       this.monthlyFacilityCosts = new Array(this.months.length).fill(0);
       this.monthlyWorkstationCosts = new Array(this.months.length).fill(0);
+      this.monthlyBackendCosts = new Array(this.months.length).fill(0);
       
       // Debug the crew matrix and department rates
       console.log('Crew matrix dimensions:', this.crewMatrix.length, 'x', 
@@ -1187,10 +1200,15 @@ export default {
       
       // Calculate workstation costs based on crew matrix
       const workstationCosts = calculateMonthlyWorkstationCosts(this.workstationData, this.crewMatrix, this.departments);
+      
+      // Calculate backend infrastructure costs
+      const backendCosts = calculateMonthlyBackendInfrastructureCosts(this.workstationData.backendInfrastructure, this.months.length);
+      
       for (let m = 0; m < this.months.length; m++) {
         this.monthlyWorkstationCosts[m] = workstationCosts[m];
+        this.monthlyBackendCosts[m] = backendCosts[m];
         
-        // Add labor, facility, and workstation costs to get total monthly cost
+        // Add labor, facility, workstation, and backend costs to get total monthly cost
         this.monthlyCosts[m] = this.monthlyLaborCosts[m];
         
         if (this.facilitiesIncludedInTotals) {
@@ -1199,10 +1217,11 @@ export default {
         
         if (this.workstationsIncludedInTotals) {
           this.monthlyCosts[m] += this.monthlyWorkstationCosts[m];
+          this.monthlyCosts[m] += this.monthlyBackendCosts[m];
         }
         
         // Debug the monthly cost
-        console.log(`Month ${m} - Labor: $${this.monthlyLaborCosts[m]}, Facilities: $${this.monthlyFacilityCosts[m]}, Workstations: $${this.monthlyWorkstationCosts[m]}, Total: $${this.monthlyCosts[m]}`);
+        console.log(`Month ${m} - Labor: $${this.monthlyLaborCosts[m]}, Facilities: $${this.monthlyFacilityCosts[m]}, Workstations: $${this.monthlyWorkstationCosts[m]}, Backend: $${this.monthlyBackendCosts[m]}, Total: $${this.monthlyCosts[m]}`);
       }
       
       // Calculate cumulative costs
@@ -1545,6 +1564,7 @@ export default {
         monthlyLaborCosts: this.monthlyLaborCosts,
         monthlyFacilityCosts: this.monthlyFacilityCosts,
         monthlyWorkstationCosts: this.monthlyWorkstationCosts,
+        monthlyBackendCosts: this.monthlyBackendCosts,
         monthlyCosts: this.monthlyCosts,
         cumulativeCosts: this.cumulativeCosts,
         totalProjectCost: this.totalProjectCost,
@@ -1669,6 +1689,13 @@ export default {
       csvContent += "Workstation Cost (One-time),";
       for (let i = 0; i < this.months.length; i++) {
         csvContent += this.monthlyWorkstationCosts[i] + ",";
+      }
+      csvContent += "\n";
+      
+      // Add backend infrastructure costs
+      csvContent += "Backend Infrastructure Cost,";
+      for (let i = 0; i < this.months.length; i++) {
+        csvContent += this.monthlyBackendCosts[i] + ",";
       }
       csvContent += "\n";
 

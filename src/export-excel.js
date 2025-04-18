@@ -19,6 +19,7 @@ export function exportToExcel(appState) {
     monthlyLaborCosts,
     monthlyFacilityCosts,
     monthlyWorkstationCosts,
+    monthlyBackendCosts,
     monthlyCosts,
     cumulativeCosts,
     totalProjectCost,
@@ -121,6 +122,7 @@ export function exportToExcel(appState) {
   const laborCostRow = ["Monthly Labor Cost"];
   const facilityCostRow = ["Monthly Facility Cost"];
   const workstationCostRow = ["Workstation Cost (One-time)"];
+  const backendCostRow = ["Backend Infrastructure Cost"];
   const totalCostRow = ["Total Monthly Cost"];
   const cumulativeCostRow = ["Cumulative Cost"];
   
@@ -128,6 +130,7 @@ export function exportToExcel(appState) {
     laborCostRow.push(monthlyLaborCosts[i]);
     facilityCostRow.push(monthlyFacilityCosts[i]);
     workstationCostRow.push(monthlyWorkstationCosts[i]);
+    backendCostRow.push(monthlyBackendCosts[i]);
     totalCostRow.push(monthlyCosts[i]);
     cumulativeCostRow.push(cumulativeCosts[i]);
   }
@@ -135,6 +138,7 @@ export function exportToExcel(appState) {
   timelineData.push(laborCostRow);
   timelineData.push(facilityCostRow);
   timelineData.push(workstationCostRow);
+  timelineData.push(backendCostRow);
   timelineData.push(totalCostRow);
   timelineData.push(cumulativeCostRow);
   
@@ -164,10 +168,14 @@ export function exportToExcel(appState) {
   // Calculate total workstation cost from monthly costs
   const totalWorkstationCostFromMonthly = monthlyWorkstationCosts.reduce((sum, cost) => sum + cost, 0);
   
+  // Calculate total backend infrastructure cost
+  const totalBackendCost = monthlyBackendCosts.reduce((sum, cost) => sum + cost, 0);
+  
   // Add cost breakdown
   statsData.push(["Labor", totalLaborCost, `${(totalLaborCost / totalProjectCost * 100).toFixed(1)}%`]);
   statsData.push(["Facilities", totalFacilityCost, `${(totalFacilityCost / totalProjectCost * 100).toFixed(1)}%`]);
   statsData.push(["Workstations", totalWorkstationCostFromMonthly, `${(totalWorkstationCostFromMonthly / totalProjectCost * 100).toFixed(1)}%`]);
+  statsData.push(["Backend Infrastructure", totalBackendCost, `${(totalBackendCost / totalProjectCost * 100).toFixed(1)}%`]);
   
   statsData.push([""]);
   statsData.push([""]);
@@ -188,6 +196,7 @@ export function exportToExcel(appState) {
   statsData.push(["  Labor", monthlyLaborCosts[peakCostMonth], `${(monthlyLaborCosts[peakCostMonth] / peakMonthlyCost * 100).toFixed(1)}%`]);
   statsData.push(["  Facilities", monthlyFacilityCosts[peakCostMonth], `${(monthlyFacilityCosts[peakCostMonth] / peakMonthlyCost * 100).toFixed(1)}%`]);
   statsData.push(["  Workstations", monthlyWorkstationCosts[peakCostMonth], `${(monthlyWorkstationCosts[peakCostMonth] / peakMonthlyCost * 100).toFixed(1)}%`]);
+  statsData.push(["  Backend Infrastructure", monthlyBackendCosts[peakCostMonth], `${(monthlyBackendCosts[peakCostMonth] / peakMonthlyCost * 100).toFixed(1)}%`]);
   
   statsData.push([""]);
   statsData.push([""]);
