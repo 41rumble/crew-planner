@@ -325,6 +325,7 @@ export default {
     startDrag(event) {
       // Only start drag if clicking on the header (card title)
       if (event.target.closest('.v-card-title')) {
+        console.log('FacilitiesCostEditor: startDrag');
         this.$emit('start-drag', event);
       }
     },
@@ -356,12 +357,15 @@ export default {
 
 .draggable-card {
   cursor: move !important;
+  width: 100%;
+  height: 100%;
 }
 
 .draggable-card .v-card-title {
   cursor: move !important;
   user-select: none !important;
   touch-action: none !important;
+  background-color: var(--info-color) !important;
 }
 
 .facilities-editor {

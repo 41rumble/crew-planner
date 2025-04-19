@@ -515,6 +515,7 @@
         @reset-position="resetEditorPosition"
         @start-drag="startDrag($event, 'facilities')"
         @update-costs="calculateCosts"
+        ref="facilitiesEditor"
       />
       
       <!-- Workstation Editor -->
@@ -529,6 +530,7 @@
         @reset-position="resetEditorPosition"
         @start-drag="startDrag($event, 'workstation')"
         @update-costs="calculateCosts"
+        ref="workstationEditor"
       />
     </v-main>
   </v-app>
@@ -2109,12 +2111,19 @@ export default {
     },
     
     startDrag(event, editorType) {
-      // Only start drag if clicking on the header
-      if (event.target.closest('.editor-header') && !event.target.closest('button')) {
+      console.log(`App: startDrag called for ${editorType}`);
+      // Only start drag if clicking on the header (either old style or Vuetify)
+      if ((event.target.closest('.editor-header') || event.target.closest('.v-card-title')) && !event.target.closest('button')) {
         this.isDragging = true;
         this.activeEditor = editorType;
         
+        console.log(`App: dragging ${editorType}`);
         const editor = this.$refs[editorType + 'Editor'];
+        if (!editor) {
+          console.error(`Editor ref not found: ${editorType}Editor`);
+          return;
+        }
+        
         const rect = editor.getBoundingClientRect();
         
         this.dragOffset = {
