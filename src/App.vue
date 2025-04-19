@@ -3011,6 +3011,14 @@ main {
   user-select: none; /* Prevent text selection during drag */
 }
 
+.facilities-editor {
+  width: 600px; /* Wider width for facilities editor */
+}
+
+.workstation-editor {
+  width: 800px; /* Even wider for hardware editor which has more content */
+}
+
 .draggable-card {
   cursor: move !important;
   width: 100%;
@@ -3183,6 +3191,11 @@ main {
     top: auto !important;
     width: 90%;
     max-width: 500px;
+  }
+  
+  .facilities-editor, .workstation-editor {
+    width: 90%;
+    max-width: 600px;
   }
   
   .position-left, .position-right {
