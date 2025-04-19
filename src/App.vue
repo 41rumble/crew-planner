@@ -85,11 +85,71 @@
           </v-col>
         </v-row>
         
-        <div class="actions">
+        <v-row class="mt-2">
+          <v-col cols="12" md="6">
+            <v-card class="pa-2">
+              <v-card-text class="py-2">
+                <div class="d-flex flex-wrap align-center">
+                  <v-btn-group class="mr-4 mb-2">
+                    <v-btn color="primary" prepend-icon="mdi-file-export" @click="exportProjectJSON" size="small">JSON</v-btn>
+                    <v-btn color="primary" prepend-icon="mdi-file-delimited" @click="exportCSV" size="small">CSV</v-btn>
+                    <v-btn color="primary" prepend-icon="mdi-microsoft-excel" @click="exportExcel" size="small">Excel</v-btn>
+                  </v-btn-group>
+                  
+                  <v-btn color="primary" prepend-icon="mdi-file-import" size="small" class="mr-2 mb-2" @click="$refs.jsonFileInput.click()">
+                    Import JSON
+                  </v-btn>
+                  <input type="file" ref="jsonFileInput" accept=".json" @change="importProjectJSON" style="display: none;">
+                  
+                  <FileUploader @file-loaded="loadFile" />
+                  
+                  <v-btn variant="text" color="primary" href="/sample_crew_plan.csv" download class="mb-2">
+                    Sample
+                  </v-btn>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+          
+          <v-col cols="12" md="6">
+            <v-card class="pa-2">
+              <v-card-text class="py-2">
+                <div class="d-flex flex-wrap align-center">
+                  <v-btn-group variant="outlined" class="mr-4 mb-2">
+                    <v-btn icon="mdi-minus" @click="zoomOut" title="Zoom Out" size="small"></v-btn>
+                    <v-btn disabled size="small">{{ Math.round(zoomLevel * 100) }}%</v-btn>
+                    <v-btn icon="mdi-plus" @click="zoomIn" title="Zoom In" size="small"></v-btn>
+                    <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="small"></v-btn>
+                  </v-btn-group>
+                  
+                  <v-select
+                    v-model="numberOfYears"
+                    @update:model-value="updateTimeScale"
+                    :items="[
+                      { title: '1 year', value: '1' },
+                      { title: '2 years', value: '2' },
+                      { title: '3 years', value: '3' },
+                      { title: '4 years', value: '4' },
+                      { title: '5 years', value: '5' },
+                      { title: '6 years', value: '6' }
+                    ]"
+                    label="Years"
+                    variant="outlined"
+                    density="compact"
+                    class="mb-2"
+                    style="max-width: 120px;"
+                  ></v-select>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+        
+        <!-- Hidden original actions -->
+        <div class="actions" style="display: none;">
           <div class="action-toolbar">
+            <div class="toolbar-section" style="display: none;"></div>
             <div class="toolbar-section" style="display: none;">
-            
-            <div class="toolbar-section">
               <button @click="exportProjectJSON" class="action-button json-button" title="Export Project as JSON">
                 <span class="icon">📤</span> JSON
               </button>

@@ -1,62 +1,32 @@
 <template>
-  <div class="file-uploader">
-    <label for="csv-upload" class="action-button upload-button">
-      <span class="icon">📂</span> CSV
-    </label>
-    <input 
-      type="file" 
-      id="csv-upload" 
-      accept=".csv" 
-      @change="handleFileUpload" 
-      class="file-input"
-    >
-  </div>
+  <v-file-input
+    accept=".csv,.xlsx,.json"
+    label="Upload"
+    variant="outlined"
+    density="compact"
+    hide-details
+    class="d-inline-block mr-2 mb-2"
+    style="max-width: 150px;"
+    @update:model-value="handleFileUpload"
+  ></v-file-input>
 </template>
 
 <script>
 export default {
   name: 'FileUploader',
   methods: {
-    handleFileUpload(event) {
-      const file = event.target.files[0];
+    handleFileUpload(file) {
       if (!file) return;
       
       const reader = new FileReader();
+      
       reader.onload = (e) => {
-        const csvContent = e.target.result;
-        this.$emit('file-loaded', csvContent);
-        
-        // Reset the file input so the same file can be selected again
-        event.target.value = '';
+        const fileContent = e.target.result;
+        this.$emit('file-loaded', fileContent);
       };
+      
       reader.readAsText(file);
     }
   }
 }
 </script>
-
-<style scoped>
-.file-uploader {
-  display: inline-block;
-}
-
-.upload-button {
-  background-color: #f0f9ff;
-  color: #0369a1;
-  border-color: #bae6fd;
-  cursor: pointer;
-}
-
-.upload-button:hover {
-  background-color: #e0f2fe;
-  border-color: #7dd3fc;
-}
-
-.icon {
-  margin-right: 8px;
-}
-
-.file-input {
-  display: none;
-}
-</style>
