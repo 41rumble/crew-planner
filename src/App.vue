@@ -442,8 +442,8 @@
         @start-drag="startDrag($event, 'workstation')"
         @update-costs="calculateCosts"
       />
-    </main>
-  </div>
+    </v-main>
+  </v-app>
 </template>
 
 <script>
