@@ -256,8 +256,8 @@
                     <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`" 
                         :class="{ 
                           active: crewMatrix[item.index] && crewMatrix[item.index][mIndex] > 0,
-                          'start-handle': departments[item.index] && mIndex === departments[item.index].startMonth,
-                          'end-handle': departments[item.index] && mIndex === departments[item.index].endMonth,
+                          'start-handle': departments[item.index] && typeof departments[item.index].startMonth === 'number' && mIndex === departments[item.index].startMonth,
+                          'end-handle': departments[item.index] && typeof departments[item.index].endMonth === 'number' && mIndex === departments[item.index].endMonth,
                           'dept-cell': true,
                           'in-range': departments[item.index] && mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
                         }"
@@ -265,8 +265,8 @@
                         @mousedown="handleCellMouseDown($event, item.index, mIndex)">
                       <div class="cell-content">
                         {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
-                        <div v-if="mIndex === departments[item.index].startMonth" class="start-drag-handle" title="Drag to adjust start month"></div>
-                        <div v-if="mIndex === departments[item.index].endMonth" class="end-drag-handle" title="Drag to adjust end month"></div>
+                        <div v-if="departments[item.index] && mIndex === departments[item.index].startMonth" class="start-drag-handle" title="Drag to adjust start month"></div>
+                        <div v-if="departments[item.index] && mIndex === departments[item.index].endMonth" class="end-drag-handle" title="Drag to adjust end month"></div>
                       </div>
                     </td>
                   </tr>
