@@ -9,8 +9,8 @@
         </div>
       </v-card-title>
       <v-card-text class="bg-white">
-    <div class="editor-content">
-      <div class="tabs">
+        <div class="editor-content">
+          <div class="tabs">
         <button 
           :class="{ active: activeTab === 'bundles' }" 
           @click="activeTab = 'bundles'"
