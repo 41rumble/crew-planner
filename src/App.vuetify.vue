@@ -405,9 +405,25 @@
 .table-scroll-container {
   overflow: auto;
   max-height: calc(100vh - 350px);
-  /* Ensure vertical scrolling works properly */
-  overflow-y: scroll;
-  overflow-x: auto;
+  /* Force vertical scrolling to be always visible */
+  overflow-y: scroll !important;
+  overflow-x: auto !important;
+  scrollbar-width: thin; /* For Firefox */
+}
+
+/* For Webkit browsers like Chrome/Safari */
+.table-scroll-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
 }
 
 .table-wrapper {
@@ -442,19 +458,27 @@
 
 /* Draggable editor panels */
 .floating-editor {
-  position: fixed;
-  z-index: 1000;
+  position: fixed !important;
+  z-index: 1000 !important;
   top: 100px;
   left: 100px;
   width: 500px;
   max-width: 90vw;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
   border-radius: 8px;
   overflow: hidden;
+  transition: none !important; /* Disable transitions for smooth dragging */
+  user-select: none; /* Prevent text selection during drag */
 }
 
 .draggable-card {
-  cursor: move;
+  cursor: move !important;
+}
+
+.draggable-card .v-card-title {
+  cursor: move !important;
+  user-select: none !important;
+  touch-action: none !important;
 }
 
 .department-editor {
