@@ -2273,6 +2273,16 @@ export default {
 </script>
 
 <style>
+:root {
+  --primary-color: #1976D2;
+  --secondary-color: #424242;
+  --accent-color: #82B1FF;
+  --error-color: #FF5252;
+  --info-color: #2196F3;
+  --success-color: #4CAF50;
+  --warning-color: #FFC107;
+}
+
 body, html {
   margin: 0;
   padding: 0;
@@ -2656,12 +2666,12 @@ main {
 
 .start-handle {
   border-left: 3px solid var(--primary-color);
-  background-color: rgba(76, 175, 80, 0.1);
+  background-color: rgba(25, 118, 210, 0.1); /* Using primary-color rgba */
 }
 
 .end-handle {
   border-right: 3px solid var(--primary-color);
-  background-color: rgba(76, 175, 80, 0.1);
+  background-color: rgba(25, 118, 210, 0.1); /* Using primary-color rgba */
 }
 
 .start-drag-handle {
