@@ -350,85 +350,95 @@
             </div>
           </v-card-title>
           <v-card-text class="bg-white">
-            <v-text-field
-              v-model="departments[selectedDepartmentIndex].name"
-              label="Department Name"
-              variant="outlined"
-              density="compact"
-              class="mb-4"
-            ></v-text-field>
+            <div class="mb-3">
+              <label class="text-subtitle-2 mb-1 d-block">Department Name:</label>
+              <v-text-field
+                v-model="departments[selectedDepartmentIndex].name"
+                variant="outlined"
+                density="compact"
+                hide-details
+              ></v-text-field>
+            </div>
 
-            <div class="text-subtitle-2 mb-2">Max Crew Size</div>
-            <v-slider
-              v-model="departments[selectedDepartmentIndex].maxCrew"
-              @update:model-value="updateDepartmentCrew(departments[selectedDepartmentIndex])"
-              min="0"
-              max="100"
-              thumb-label
-              class="mb-4"
-            >
-              <template v-slot:append>
+            <div class="mb-3">
+              <label class="text-subtitle-2 mb-1 d-block">Max Crew Size:</label>
+              <div class="d-flex align-center">
+                <v-slider
+                  v-model="departments[selectedDepartmentIndex].maxCrew"
+                  @update:model-value="updateDepartmentCrew(departments[selectedDepartmentIndex])"
+                  min="0"
+                  max="100"
+                  hide-details
+                  class="mr-2"
+                ></v-slider>
                 <v-text-field
                   v-model="departments[selectedDepartmentIndex].maxCrew"
                   type="number"
                   style="width: 70px"
                   density="compact"
+                  hide-details
                   @input="updateDepartmentCrew(departments[selectedDepartmentIndex])"
                 ></v-text-field>
-              </template>
-            </v-slider>
+              </div>
+            </div>
 
-            <div class="text-subtitle-2 mb-2">Start Month: {{ getMonthName(departments[selectedDepartmentIndex].startMonth) }}</div>
-            <v-slider
-              v-model="departments[selectedDepartmentIndex].startMonth"
-              @update:model-value="updateDepartmentTimeframe(departments[selectedDepartmentIndex])"
-              min="0"
-              :max="months.length - 1"
-              thumb-label
-              class="mb-4"
-            ></v-slider>
+            <div class="mb-3">
+              <label class="text-subtitle-2 mb-1 d-block">Start Month: {{ getMonthName(departments[selectedDepartmentIndex].startMonth) }}</label>
+              <v-slider
+                v-model="departments[selectedDepartmentIndex].startMonth"
+                @update:model-value="updateDepartmentTimeframe(departments[selectedDepartmentIndex])"
+                min="0"
+                :max="months.length - 1"
+                hide-details
+              ></v-slider>
+            </div>
 
-            <div class="text-subtitle-2 mb-2">End Month: {{ getMonthName(departments[selectedDepartmentIndex].endMonth) }}</div>
-            <v-slider
-              v-model="departments[selectedDepartmentIndex].endMonth"
-              @update:model-value="updateDepartmentTimeframe(departments[selectedDepartmentIndex])"
-              :min="departments[selectedDepartmentIndex].startMonth"
-              :max="months.length - 1"
-              thumb-label
-              class="mb-4"
-            ></v-slider>
+            <div class="mb-3">
+              <label class="text-subtitle-2 mb-1 d-block">End Month: {{ getMonthName(departments[selectedDepartmentIndex].endMonth) }}</label>
+              <v-slider
+                v-model="departments[selectedDepartmentIndex].endMonth"
+                @update:model-value="updateDepartmentTimeframe(departments[selectedDepartmentIndex])"
+                :min="departments[selectedDepartmentIndex].startMonth"
+                :max="months.length - 1"
+                hide-details
+              ></v-slider>
+            </div>
 
-            <div class="text-subtitle-2 mb-2">Ramp Up Duration (months): {{ departments[selectedDepartmentIndex].rampUpDuration }}</div>
-            <v-slider
-              v-model="departments[selectedDepartmentIndex].rampUpDuration"
-              @update:model-value="updateDepartmentRamp(departments[selectedDepartmentIndex])"
-              min="0"
-              :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
-              thumb-label
-              class="mb-4"
-            ></v-slider>
+            <div class="mb-3">
+              <label class="text-subtitle-2 mb-1 d-block">Ramp Up Duration (months): {{ departments[selectedDepartmentIndex].rampUpDuration }}</label>
+              <v-slider
+                v-model="departments[selectedDepartmentIndex].rampUpDuration"
+                @update:model-value="updateDepartmentRamp(departments[selectedDepartmentIndex])"
+                min="0"
+                :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
+                hide-details
+              ></v-slider>
+            </div>
 
-            <div class="text-subtitle-2 mb-2">Ramp Down Duration (months): {{ departments[selectedDepartmentIndex].rampDownDuration }}</div>
-            <v-slider
-              v-model="departments[selectedDepartmentIndex].rampDownDuration"
-              @update:model-value="updateDepartmentRamp(departments[selectedDepartmentIndex])"
-              min="0"
-              :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
-              thumb-label
-              class="mb-4"
-            ></v-slider>
+            <div class="mb-3">
+              <label class="text-subtitle-2 mb-1 d-block">Ramp Down Duration (months): {{ departments[selectedDepartmentIndex].rampDownDuration }}</label>
+              <v-slider
+                v-model="departments[selectedDepartmentIndex].rampDownDuration"
+                @update:model-value="updateDepartmentRamp(departments[selectedDepartmentIndex])"
+                min="0"
+                :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
+                hide-details
+              ></v-slider>
+            </div>
 
-            <v-text-field
-              v-model="departments[selectedDepartmentIndex].rate"
-              @update:model-value="calculateCosts"
-              label="Rate ($/month)"
-              type="number"
-              min="0"
-              step="100"
-              variant="outlined"
-              density="compact"
-              class="mb-4"
-            ></v-text-field>
+            <div class="mb-4">
+              <label class="text-subtitle-2 mb-1 d-block">Rate ($/month):</label>
+              <v-text-field
+                v-model="departments[selectedDepartmentIndex].rate"
+                @update:model-value="calculateCosts"
+                type="number"
+                min="0"
+                step="100"
+                variant="outlined"
+                density="compact"
+                hide-details
+              ></v-text-field>
+            </div>
           
             <div class="d-flex">
               <v-btn color="primary" @click="moveDepartmentUp" :disabled="selectedDepartmentIndex === 0" class="mr-2">
@@ -447,7 +457,7 @@
       </div>
       
       <!-- Phase Editor Panel -->
-                  <div v-if="selectedPhaseIndex !== null" class="floating-editor phase-editor draggable-panel"
+                        <div v-if="selectedPhaseIndex !== null" class="floating-editor phase-editor draggable-panel"
            :class="editorPosition"
            :style="editorStyle"
            ref="phaseEditor"
@@ -461,31 +471,35 @@
             </div>
           </v-card-title>
           <v-card-text class="bg-white">
-            <v-text-field
-              v-model="phases[selectedPhaseIndex].name"
-              label="Phase Name"
-              variant="outlined"
-              density="compact"
-              class="mb-4"
-            ></v-text-field>
+            <div class="mb-3">
+              <label class="text-subtitle-2 mb-1 d-block">Phase Name:</label>
+              <v-text-field
+                v-model="phases[selectedPhaseIndex].name"
+                variant="outlined"
+                density="compact"
+                hide-details
+              ></v-text-field>
+            </div>
 
-            <div class="text-subtitle-2 mb-2">Start Month: {{ getMonthName(phases[selectedPhaseIndex].startMonth) }}</div>
-            <v-slider
-              v-model="phases[selectedPhaseIndex].startMonth"
-              min="0"
-              :max="months.length - 1"
-              thumb-label
-              class="mb-4"
-            ></v-slider>
+            <div class="mb-3">
+              <label class="text-subtitle-2 mb-1 d-block">Start Month: {{ getMonthName(phases[selectedPhaseIndex].startMonth) }}</label>
+              <v-slider
+                v-model="phases[selectedPhaseIndex].startMonth"
+                min="0"
+                :max="months.length - 1"
+                hide-details
+              ></v-slider>
+            </div>
 
-            <div class="text-subtitle-2 mb-2">End Month: {{ getMonthName(phases[selectedPhaseIndex].endMonth) }}</div>
-            <v-slider
-              v-model="phases[selectedPhaseIndex].endMonth"
-              :min="phases[selectedPhaseIndex].startMonth"
-              :max="months.length - 1"
-              thumb-label
-              class="mb-4"
-            ></v-slider>
+            <div class="mb-4">
+              <label class="text-subtitle-2 mb-1 d-block">End Month: {{ getMonthName(phases[selectedPhaseIndex].endMonth) }}</label>
+              <v-slider
+                v-model="phases[selectedPhaseIndex].endMonth"
+                :min="phases[selectedPhaseIndex].startMonth"
+                :max="months.length - 1"
+                hide-details
+              ></v-slider>
+            </div>
           
             <div class="d-flex">
               <v-btn color="secondary" @click="movePhaseUp" :disabled="selectedPhaseIndex === 0" class="mr-2">
