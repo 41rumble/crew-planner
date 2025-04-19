@@ -1710,20 +1710,20 @@ export default {
       const appState = this.getExportAppState();
       
       try {
-        console.log('Starting enhanced Excel export...');
+        console.log('Starting formatted Excel export...');
         
-        // Use the enhanced Excel export with formatting
-        const { createFormattedExcel } = await import('./excel-export-fixed.js');
-        console.log('Successfully imported createFormattedExcel function');
+        // Use the formatted Excel export
+        const { exportToFormattedExcel } = await import('./format-excel.js');
+        console.log('Successfully imported exportToFormattedExcel function');
         
-        const blob = await createFormattedExcel(appState);
+        const blob = await exportToFormattedExcel(appState);
         console.log('Successfully created formatted Excel blob');
         
         // Create download link
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", "crew_planner_project.xlsx");
+        link.setAttribute("download", "crew_planning_data.xlsx");
         link.style.visibility = "hidden";
         document.body.appendChild(link);
         link.click();

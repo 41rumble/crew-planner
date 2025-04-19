@@ -6,8 +6,10 @@ import * as XLSX from 'xlsx';
 /**
  * Export project data to a single Excel file with multiple sheets
  * @param {Object} appState - The current application state
+ * @param {boolean} returnWorkbook - If true, return the workbook object instead of downloading
+ * @returns {Object|undefined} - The workbook object if returnWorkbook is true
  */
-export function exportToExcel(appState) {
+export function exportToExcel(appState, returnWorkbook = false) {
   const {
     years,
     monthsPerYear,
@@ -547,6 +549,11 @@ export function exportToExcel(appState) {
   // Create the workstations detail worksheet
   const workstationsDetailWorksheet = XLSX.utils.aoa_to_sheet(workstationsDetailData);
   XLSX.utils.book_append_sheet(workbook, workstationsDetailWorksheet, "Workstations Detail");
+  
+  // If returnWorkbook is true, return the workbook object
+  if (returnWorkbook) {
+    return workbook;
+  }
   
   // Generate the Excel file
   const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
