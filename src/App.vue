@@ -442,10 +442,10 @@
           
             <div class="d-flex flex-column">
               <div class="d-flex mb-2">
-                <v-btn color="primary" @click="moveDepartmentUp" :disabled="selectedDepartmentIndex === 0" class="mr-2" size="small">
+                <v-btn color="primary" @click="moveDepartmentUp" :disabled="selectedDepartmentIndex === 0" class="mr-2" style="flex: 1;">
                   Move Up
                 </v-btn>
-                <v-btn color="primary" @click="moveDepartmentDown" :disabled="selectedDepartmentIndex === departments.length - 1" size="small">
+                <v-btn color="primary" @click="moveDepartmentDown" :disabled="selectedDepartmentIndex === departments.length - 1" style="flex: 1;">
                   Move Down
                 </v-btn>
               </div>
@@ -504,10 +504,10 @@
           
             <div class="d-flex flex-column">
               <div class="d-flex mb-2">
-                <v-btn color="secondary" @click="movePhaseUp" :disabled="selectedPhaseIndex === 0" class="mr-2" size="small">
+                <v-btn color="secondary" @click="movePhaseUp" :disabled="selectedPhaseIndex === 0" class="mr-2" style="flex: 1;">
                   Move Up
                 </v-btn>
-                <v-btn color="secondary" @click="movePhaseDown" :disabled="selectedPhaseIndex === phases.length - 1" size="small">
+                <v-btn color="secondary" @click="movePhaseDown" :disabled="selectedPhaseIndex === phases.length - 1" style="flex: 1;">
                   Move Down
                 </v-btn>
               </div>
