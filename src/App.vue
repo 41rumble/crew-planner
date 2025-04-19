@@ -27,13 +27,13 @@
                   <v-col cols="12" md="4" class="py-0">
                     <div class="d-flex align-center">
                       <div class="text-subtitle-2 mr-2">Peak Monthly Cost:</div>
-                      <div class="text-h6 font-weight-bold text-secondary">${{ formatCurrency(peakMonthlyCost).replace('$', '') }}</div>
+                      <div class="text-h6 font-weight-bold text-primary">${{ formatCurrency(peakMonthlyCost).replace('$', '') }}</div>
                     </div>
                   </v-col>
                   <v-col cols="12" md="4" class="py-0">
                     <div class="d-flex align-center">
                       <div class="text-subtitle-2 mr-2">Peak Crew Size:</div>
-                      <div class="text-h6 font-weight-bold text-info">{{ peakCrewSize }} crew members</div>
+                      <div class="text-h6 font-weight-bold text-primary">{{ peakCrewSize }} crew members</div>
                     </div>
                   </v-col>
                 </v-row>
