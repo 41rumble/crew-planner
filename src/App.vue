@@ -1009,6 +1009,7 @@ export default {
 
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
+    },
     // Update only the visual representation of a department during drag
     updateDepartmentVisualOnly(department) {
       console.log(`Updating visual only for department: ${department.name}`);
