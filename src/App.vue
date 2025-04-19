@@ -341,14 +341,15 @@
            :style="editorStyle"
            ref="departmentEditor"
            @mousedown="startDrag($event, 'department')">
-        <div class="editor-header">
-          <h2>Department Editor</h2>
-          <div class="editor-controls">
-            <button @click="resetEditorPosition" class="reset-button" title="Reset Position">⟲</button>
-            <button @click="closeDepartmentEditor" class="close-button">X</button>
-          </div>
-        </div>
-        <div class="editor-content">
+        <v-card color="primary" class="draggable-card">
+          <v-card-title class="d-flex justify-space-between align-center text-white">
+            <span>Department Editor</span>
+            <div>
+              <v-btn icon="mdi-refresh" @click="resetEditorPosition" variant="text" color="white" density="compact"></v-btn>
+              <v-btn icon="mdi-close" @click="closeDepartmentEditor" variant="text" color="white" density="compact"></v-btn>
+            </div>
+          </v-card-title>
+          <v-card-text class="bg-white">
           <div class="name-input">
             <label>Department Name:</label>
             <input 
@@ -434,17 +435,18 @@
             >
           </div>
           <div class="editor-actions">
-            <button @click="moveDepartmentUp" class="action-button move-up-button" :disabled="selectedDepartmentIndex === 0">
+            <v-btn color="primary" @click="moveDepartmentUp" :disabled="selectedDepartmentIndex === 0" class="mr-2">
               Move Up
-            </button>
-            <button @click="moveDepartmentDown" class="action-button move-down-button" :disabled="selectedDepartmentIndex === departments.length - 1">
+            </v-btn>
+            <v-btn color="primary" @click="moveDepartmentDown" :disabled="selectedDepartmentIndex === departments.length - 1" class="mr-2">
               Move Down
-            </button>
-            <button @click="removeDepartment" class="action-button delete-button">
+            </v-btn>
+            <v-btn color="error" @click="removeDepartment">
               Remove Department
-            </button>
+            </v-btn>
           </div>
-        </div>
+          </v-card-text>
+        </v-card>
       </div>
       
       <!-- Phase Editor Panel -->
@@ -453,14 +455,15 @@
            :style="editorStyle"
            ref="phaseEditor"
            @mousedown="startDrag($event, 'phase')">
-        <div class="editor-header">
-          <h2>Phase Editor</h2>
-          <div class="editor-controls">
-            <button @click="resetEditorPosition" class="reset-button" title="Reset Position">⟲</button>
-            <button @click="closePhaseEditor" class="close-button">X</button>
-          </div>
-        </div>
-        <div class="editor-content">
+        <v-card color="secondary" class="draggable-card">
+          <v-card-title class="d-flex justify-space-between align-center text-white">
+            <span>Phase Editor</span>
+            <div>
+              <v-btn icon="mdi-refresh" @click="resetEditorPosition" variant="text" color="white" density="compact"></v-btn>
+              <v-btn icon="mdi-close" @click="closePhaseEditor" variant="text" color="white" density="compact"></v-btn>
+            </div>
+          </v-card-title>
+          <v-card-text class="bg-white">
           <div class="name-input">
             <label>Phase Name:</label>
             <input 
@@ -490,17 +493,18 @@
             >
           </div>
           <div class="editor-actions">
-            <button @click="movePhaseUp" class="action-button move-up-button" :disabled="selectedPhaseIndex === 0">
+            <v-btn color="secondary" @click="movePhaseUp" :disabled="selectedPhaseIndex === 0" class="mr-2">
               Move Up
-            </button>
-            <button @click="movePhaseDown" class="action-button move-down-button" :disabled="selectedPhaseIndex === phases.length - 1">
+            </v-btn>
+            <v-btn color="secondary" @click="movePhaseDown" :disabled="selectedPhaseIndex === phases.length - 1" class="mr-2">
               Move Down
-            </button>
-            <button @click="removePhase" class="action-button delete-button">
+            </v-btn>
+            <v-btn color="error" @click="removePhase">
               Remove Phase
-            </button>
+            </v-btn>
           </div>
-        </div>
+          </v-card-text>
+        </v-card>
       </div>
       
       <!-- Facilities Cost Editor -->
@@ -2113,7 +2117,7 @@ export default {
     startDrag(event, editorType) {
       console.log(`App: startDrag called for ${editorType}`);
       // Only start drag if clicking on the header (either old style or Vuetify)
-      if ((event.target.closest('.editor-header') || event.target.closest('.v-card-title')) && !event.target.closest('button')) {
+      if ((event.target.closest('.editor-header') || event.target.closest('.v-card-title')) && !event.target.closest('button') && !event.target.closest('.v-btn')) {
         this.isDragging = true;
         this.activeEditor = editorType;
         
@@ -2995,16 +2999,24 @@ main {
 /* Floating editor panel */
 .floating-editor {
   width: 350px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   position: fixed !important;
   z-index: 1000 !important;
   max-height: 80vh;
   overflow-y: auto;
-  cursor: move !important;
   transition: none !important; /* Disable transitions for smooth dragging */
   user-select: none; /* Prevent text selection during drag */
+}
+
+.draggable-card {
+  cursor: move !important;
+  width: 100%;
+  height: 100%;
+}
+
+.draggable-card .v-card-title {
+  cursor: move !important;
+  user-select: none !important;
+  touch-action: none !important;
 }
 
 .editor-header {
