@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app @mousedown="handleGlobalMouseDown">
     <v-app-bar color="primary" density="compact">
       <v-app-bar-title>Crew Planning Tool</v-app-bar-title>
     </v-app-bar>
@@ -336,7 +336,7 @@
       </v-container>
       
       <!-- Floating Editor Panel -->
-      <div v-if="selectedDepartmentIndex !== null" class="floating-editor department-editor" 
+      <div v-if="selectedDepartmentIndex !== null" class="floating-editor department-editor draggable-panel" 
            :class="editorPosition"
            :style="editorStyle"
            ref="departmentEditor"
@@ -450,7 +450,7 @@
       </div>
       
       <!-- Phase Editor Panel -->
-      <div v-if="selectedPhaseIndex !== null" class="floating-editor phase-editor" 
+      <div v-if="selectedPhaseIndex !== null" class="floating-editor phase-editor draggable-panel" 
            :class="editorPosition"
            :style="editorStyle"
            ref="phaseEditor"
@@ -508,34 +508,34 @@
       </div>
       
       <!-- Facilities Cost Editor -->
-      <div v-if="showFacilitiesEditor" @mousedown="startDrag($event, 'facilities')">
-        <FacilitiesCostEditor
-          :facilitiesData="facilitiesData"
-          :departments="departments"
-          :editorPosition="editorPosition"
-          :editorStyle="editorStyle"
-          :peakCrewSize="peakCrewSize"
-          @close="showFacilitiesEditor = false"
-          @reset-position="resetEditorPosition"
-          @update-costs="calculateCosts"
-          ref="facilitiesEditor"
-        />
-      </div>
+      <FacilitiesCostEditor
+        v-if="showFacilitiesEditor"
+        :facilitiesData="facilitiesData"
+        :departments="departments"
+        :editorPosition="editorPosition"
+        :editorStyle="editorStyle"
+        :peakCrewSize="peakCrewSize"
+        @close="showFacilitiesEditor = false"
+        @reset-position="resetEditorPosition"
+        @update-costs="calculateCosts"
+        ref="facilitiesEditor"
+        class="draggable-panel"
+      />
       
       <!-- Workstation Editor -->
-      <div v-if="showWorkstationEditor" @mousedown="startDrag($event, 'workstation')">
-        <WorkstationEditor
-          :workstationData="workstationData"
-          :departments="departments"
-          :months="months"
-          :editorPosition="editorPosition"
-          :editorStyle="editorStyle"
-          @close="showWorkstationEditor = false"
-          @reset-position="resetEditorPosition"
-          @update-costs="calculateCosts"
-          ref="workstationEditor"
-        />
-      </div>
+      <WorkstationEditor
+        v-if="showWorkstationEditor"
+        :workstationData="workstationData"
+        :departments="departments"
+        :months="months"
+        :editorPosition="editorPosition"
+        :editorStyle="editorStyle"
+        @close="showWorkstationEditor = false"
+        @reset-position="resetEditorPosition"
+        @update-costs="calculateCosts"
+        ref="workstationEditor"
+        class="draggable-panel"
+      />
     </v-main>
   </v-app>
 </template>
@@ -2114,6 +2114,18 @@ export default {
       this.editorStyle = { top: '150px', left: '20px' };
     },
     
+    handleGlobalMouseDown(event) {
+      // Check if we're clicking on a draggable panel's title
+      const facilitiesPanel = event.target.closest('.facilities-editor .v-card-title');
+      const workstationPanel = event.target.closest('.workstation-editor .v-card-title');
+      
+      if (facilitiesPanel && !event.target.closest('.v-btn')) {
+        this.startDrag(event, 'facilities');
+      } else if (workstationPanel && !event.target.closest('.v-btn')) {
+        this.startDrag(event, 'workstation');
+      }
+    },
+    
     startDrag(event, editorType) {
       console.log(`App: startDrag called for ${editorType}`);
       // Only start drag if clicking on the header (either old style or Vuetify)
@@ -3030,12 +3042,29 @@ main {
   overflow: hidden;
 }
 
-.department-editor .v-card {
+.department-editor {
+  border: 2px solid #1976D2; /* Primary color */
+}
+
+.phase-editor {
+  border: 2px solid #424242; /* Secondary color */
+}
+
+.facilities-editor {
+  border: 2px solid #2196F3; /* Info color */
+}
+
+.workstation-editor {
+  border: 2px solid #4CAF50; /* Success color */
+}
+
+.department-editor .v-card, .phase-editor .v-card, 
+.facilities-editor .v-card, .workstation-editor .v-card {
   border-radius: 8px;
 }
 
-.phase-editor .v-card {
-  border-radius: 8px;
+.draggable-panel .v-card-title {
+  cursor: move !important;
 }
 
 .position-left {
