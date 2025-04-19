@@ -14,61 +14,80 @@
       <v-container fluid>
         <v-row>
           <v-col cols="12">
-            <v-card>
-              <v-card-title class="text-h5">Crew Planning Visualization</v-card-title>
-              <v-card-text>
-                <v-row>
-                  <v-col cols="12" md="4">
-                    <v-card variant="outlined">
-                      <v-card-title class="text-subtitle-1">Total Project Cost</v-card-title>
-                      <v-card-text class="text-h6">${{ formatCurrency(totalProjectCost).replace('$', '') }}</v-card-text>
-                    </v-card>
+            <v-card class="pa-2">
+              <v-card-title class="text-h6 py-1">Crew Planning Visualization</v-card-title>
+              <v-divider></v-divider>
+              <v-card-text class="py-2">
+                <v-row dense>
+                  <v-col cols="12" md="4" class="py-1">
+                    <div class="d-flex align-center">
+                      <div class="text-subtitle-2 mr-2">Total Project Cost:</div>
+                      <div class="text-h6 font-weight-bold text-primary">${{ formatCurrency(totalProjectCost).replace('$', '') }}</div>
+                    </div>
                   </v-col>
-                  <v-col cols="12" md="4">
-                    <v-card variant="outlined">
-                      <v-card-title class="text-subtitle-1">Peak Monthly Cost</v-card-title>
-                      <v-card-text class="text-h6">${{ formatCurrency(peakMonthlyCost).replace('$', '') }}</v-card-text>
-                    </v-card>
+                  <v-col cols="12" md="4" class="py-1">
+                    <div class="d-flex align-center">
+                      <div class="text-subtitle-2 mr-2">Peak Monthly Cost:</div>
+                      <div class="text-h6 font-weight-bold text-secondary">${{ formatCurrency(peakMonthlyCost).replace('$', '') }}</div>
+                    </div>
                   </v-col>
-                  <v-col cols="12" md="4">
-                    <v-card variant="outlined">
-                      <v-card-title class="text-subtitle-1">Peak Crew Size</v-card-title>
-                      <v-card-text class="text-h6">{{ peakCrewSize }} crew members</v-card-text>
-                    </v-card>
+                  <v-col cols="12" md="4" class="py-1">
+                    <div class="d-flex align-center">
+                      <div class="text-subtitle-2 mr-2">Peak Crew Size:</div>
+                      <div class="text-h6 font-weight-bold text-info">{{ peakCrewSize }} crew members</div>
+                    </div>
                   </v-col>
                 </v-row>
               </v-card-text>
             </v-card>
           </v-col>
         </v-row>
+        <v-row class="mt-2">
+          <v-col cols="12">
+            <v-card class="pa-2">
+              <v-card-text class="py-2">
+                <div class="d-flex flex-wrap align-center">
+                  <v-btn-group class="mr-4 mb-2">
+                    <v-btn color="primary" prepend-icon="mdi-plus" @click="addNewDepartment" size="small">Dept</v-btn>
+                    <v-btn color="secondary" prepend-icon="mdi-plus" @click="addNewPhase" size="small">Phase</v-btn>
+                  </v-btn-group>
+                  
+                  <v-divider vertical class="mx-2 my-2" style="height: 32px;"></v-divider>
+                  
+                  <v-btn-group class="mr-4 mb-2">
+                    <v-btn color="info" prepend-icon="mdi-office-building" @click="toggleFacilitiesEditor" size="small">Facilities</v-btn>
+                    <v-btn color="success" prepend-icon="mdi-laptop" @click="toggleWorkstationEditor" size="small">Workstations</v-btn>
+                  </v-btn-group>
+                  
+                  <v-divider vertical class="mx-2 my-2" style="height: 32px;"></v-divider>
+                  
+                  <div class="d-flex align-center mb-2">
+                    <v-checkbox
+                      v-model="facilitiesIncludedInTotals"
+                      @update:model-value="calculateCosts"
+                      label="Facilities"
+                      hide-details
+                      density="compact"
+                      class="mr-2"
+                    ></v-checkbox>
+                    
+                    <v-checkbox
+                      v-model="workstationsIncludedInTotals"
+                      @update:model-value="calculateCosts"
+                      label="Workstations"
+                      hide-details
+                      density="compact"
+                    ></v-checkbox>
+                  </div>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+        
         <div class="actions">
           <div class="action-toolbar">
-            <div class="toolbar-section">
-              <button @click="addNewDepartment" class="action-button add-button">
-                <span class="icon">+</span> Dept
-              </button>
-              <button @click="addNewPhase" class="action-button phase-button">
-                <span class="icon">+</span> Phase
-              </button>
-              <div class="divider"></div>
-              <button @click="toggleFacilitiesEditor" class="action-button facilities-button">
-                <span class="icon">🏢</span> Facilities
-              </button>
-              <button @click="toggleWorkstationEditor" class="action-button workstation-button">
-                <span class="icon">💻</span> Workstations
-              </button>
-              <div class="divider"></div>
-              <div class="cost-toggles">
-                <div class="toggle-item">
-                  <input type="checkbox" id="facilities-toggle" v-model="facilitiesIncludedInTotals" @change="calculateCosts">
-                  <label for="facilities-toggle">Facilities</label>
-                </div>
-                <div class="toggle-item">
-                  <input type="checkbox" id="workstations-toggle" v-model="workstationsIncludedInTotals" @change="calculateCosts">
-                  <label for="workstations-toggle">Workstations</label>
-                </div>
-              </div>
-            </div>
+            <div class="toolbar-section" style="display: none;">
             
             <div class="toolbar-section">
               <button @click="exportProjectJSON" class="action-button json-button" title="Export Project as JSON">
