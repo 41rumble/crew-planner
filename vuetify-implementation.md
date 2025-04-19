@@ -242,21 +242,26 @@ createApp(App)
 </v-row>
 ```
 
-### Department Editor
+### Draggable Department Editor
 
 ```vue
-<v-dialog
-  v-model="selectedDepartmentIndex !== null"
-  max-width="500"
-  persistent
+<div 
+  v-if="selectedDepartmentIndex !== null" 
+  class="floating-editor department-editor"
+  :style="editorStyle"
+  ref="departmentEditor"
+  @mousedown="startDrag($event, 'department')"
 >
-  <v-card>
-    <v-card-title class="d-flex justify-space-between align-center">
+  <v-card color="primary" class="draggable-card">
+    <v-card-title class="d-flex justify-space-between align-center text-white">
       <span>Department Editor</span>
-      <v-btn icon="mdi-close" @click="closeDepartmentEditor" variant="text"></v-btn>
+      <div>
+        <v-btn icon="mdi-refresh" @click="resetEditorPosition" variant="text" color="white" density="compact"></v-btn>
+        <v-btn icon="mdi-close" @click="closeDepartmentEditor" variant="text" color="white" density="compact"></v-btn>
+      </div>
     </v-card-title>
     
-    <v-card-text v-if="selectedDepartmentIndex !== null">
+    <v-card-text class="bg-white" v-if="selectedDepartmentIndex !== null">
       <v-text-field
         v-model="departments[selectedDepartmentIndex].name"
         label="Department Name"
@@ -331,7 +336,7 @@ createApp(App)
       ></v-text-field>
     </v-card-text>
     
-    <v-card-actions>
+    <v-card-actions class="bg-white">
       <v-btn color="primary" @click="moveDepartmentUp" :disabled="selectedDepartmentIndex === 0">
         Move Up
       </v-btn>
@@ -344,24 +349,29 @@ createApp(App)
       </v-btn>
     </v-card-actions>
   </v-card>
-</v-dialog>
+</div>
 ```
 
-### Phase Editor
+### Draggable Phase Editor
 
 ```vue
-<v-dialog
-  v-model="selectedPhaseIndex !== null"
-  max-width="500"
-  persistent
+<div 
+  v-if="selectedPhaseIndex !== null" 
+  class="floating-editor phase-editor"
+  :style="editorStyle"
+  ref="phaseEditor"
+  @mousedown="startDrag($event, 'phase')"
 >
-  <v-card>
-    <v-card-title class="d-flex justify-space-between align-center">
+  <v-card color="secondary" class="draggable-card">
+    <v-card-title class="d-flex justify-space-between align-center text-white">
       <span>Phase Editor</span>
-      <v-btn icon="mdi-close" @click="closePhaseEditor" variant="text"></v-btn>
+      <div>
+        <v-btn icon="mdi-refresh" @click="resetEditorPosition" variant="text" color="white" density="compact"></v-btn>
+        <v-btn icon="mdi-close" @click="closePhaseEditor" variant="text" color="white" density="compact"></v-btn>
+      </div>
     </v-card-title>
     
-    <v-card-text v-if="selectedPhaseIndex !== null">
+    <v-card-text class="bg-white" v-if="selectedPhaseIndex !== null">
       <v-text-field
         v-model="phases[selectedPhaseIndex].name"
         label="Phase Name"
@@ -386,11 +396,11 @@ createApp(App)
       ></v-slider>
     </v-card-text>
     
-    <v-card-actions>
-      <v-btn color="primary" @click="movePhaseUp" :disabled="selectedPhaseIndex === 0">
+    <v-card-actions class="bg-white">
+      <v-btn color="secondary" @click="movePhaseUp" :disabled="selectedPhaseIndex === 0">
         Move Up
       </v-btn>
-      <v-btn color="primary" @click="movePhaseDown" :disabled="selectedPhaseIndex === phases.length - 1">
+      <v-btn color="secondary" @click="movePhaseDown" :disabled="selectedPhaseIndex === phases.length - 1">
         Move Down
       </v-btn>
       <v-spacer></v-spacer>
@@ -399,7 +409,65 @@ createApp(App)
       </v-btn>
     </v-card-actions>
   </v-card>
-</v-dialog>
+</div>
+```
+
+### Draggable Facilities Editor
+
+```vue
+<div 
+  v-if="showFacilitiesEditor" 
+  class="floating-editor facilities-editor"
+  :style="editorStyle"
+  ref="facilitiesEditor"
+  @mousedown="startDrag($event, 'facilities')"
+>
+  <v-card color="info" class="draggable-card">
+    <v-card-title class="d-flex justify-space-between align-center text-white">
+      <span>Facilities Editor</span>
+      <div>
+        <v-btn icon="mdi-refresh" @click="resetEditorPosition" variant="text" color="white" density="compact"></v-btn>
+        <v-btn icon="mdi-close" @click="closeFacilitiesEditor" variant="text" color="white" density="compact"></v-btn>
+      </div>
+    </v-card-title>
+    
+    <FacilitiesCostEditor
+      :facilitiesData="facilitiesData"
+      :departments="departments"
+      @update:facilities="updateFacilities"
+      embedded
+    />
+  </v-card>
+</div>
+```
+
+### Draggable Workstation Editor
+
+```vue
+<div 
+  v-if="showWorkstationEditor" 
+  class="floating-editor workstation-editor"
+  :style="editorStyle"
+  ref="workstationEditor"
+  @mousedown="startDrag($event, 'workstation')"
+>
+  <v-card color="success" class="draggable-card">
+    <v-card-title class="d-flex justify-space-between align-center text-white">
+      <span>Workstation Editor</span>
+      <div>
+        <v-btn icon="mdi-refresh" @click="resetEditorPosition" variant="text" color="white" density="compact"></v-btn>
+        <v-btn icon="mdi-close" @click="closeWorkstationEditor" variant="text" color="white" density="compact"></v-btn>
+      </div>
+    </v-card-title>
+    
+    <WorkstationEditor
+      :workstationData="workstationData"
+      :departments="departments"
+      @update:workstations="updateWorkstations"
+      embedded
+    />
+  </v-card>
+</div>
 ```
 
 ## 4. Update FileUploader Component
@@ -445,7 +513,7 @@ export default {
 
 ## 5. Update CSS
 
-Most of the custom CSS can be removed as Vuetify will handle styling. However, some custom CSS will still be needed for the specialized table visualization:
+Most of the custom CSS can be removed as Vuetify will handle styling. However, some custom CSS will still be needed for the specialized table visualization and draggable editors:
 
 ```css
 <style>
@@ -458,6 +526,9 @@ Most of the custom CSS can be removed as Vuetify will handle styling. However, s
 .table-scroll-container {
   overflow: auto;
   max-height: calc(100vh - 350px);
+  /* Ensure vertical scrolling works properly */
+  overflow-y: scroll;
+  overflow-x: auto;
 }
 
 .table-wrapper {
@@ -468,8 +539,6 @@ Most of the custom CSS can be removed as Vuetify will handle styling. However, s
   border-collapse: collapse;
   width: auto;
 }
-
-/* Add other specialized table styles as needed */
 
 /* Custom styles for timeline visualization */
 .dept-cell {
@@ -492,7 +561,51 @@ Most of the custom CSS can be removed as Vuetify will handle styling. However, s
   right: 0;
 }
 
-/* Other specialized styles that can't be handled by Vuetify */
+/* Draggable editor panels */
+.floating-editor {
+  position: fixed;
+  z-index: 1000;
+  top: 100px;
+  left: 100px;
+  width: 500px;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.draggable-card {
+  cursor: move;
+}
+
+.department-editor {
+  border: 2px solid var(--v-primary-base);
+}
+
+.phase-editor {
+  border: 2px solid var(--v-secondary-base);
+}
+
+.facilities-editor {
+  border: 2px solid var(--v-info-base);
+}
+
+.workstation-editor {
+  border: 2px solid var(--v-success-base);
+}
+
+/* Media queries for responsive design */
+@media (max-width: 1200px) {
+  .floating-editor {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: auto;
+    width: 90%;
+    max-width: 500px;
+  }
+}
 </style>
 ```
 
