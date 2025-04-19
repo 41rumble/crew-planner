@@ -329,7 +329,7 @@
                 </tr>
               </tbody>
               </table>
-              <div class="bottom-spacer"></div>
+              <!-- Removed bottom-spacer div to show more of the grid -->
             </div>
           </div>
         </div>
@@ -2313,7 +2313,7 @@ body, html {
   height: 100vh;
   margin: 0 auto;
   padding: 10px;
-  padding-bottom: 20px; /* Extra padding at the bottom */
+  padding-bottom: 10px; /* Minimal padding at the bottom */
   position: relative;
   overflow: hidden; /* Prevent scrolling at the page level */
   display: flex;
@@ -2743,7 +2743,7 @@ main {
   /* Force vertical scrolling to be always visible */
   overflow-y: scroll !important;
   overflow-x: auto !important;
-  max-height: calc(100vh - 350px);
+  max-height: calc(100vh - 250px); /* Increased max-height to show more of the grid */
   scrollbar-width: thin; /* For Firefox */
 }
 
@@ -2764,14 +2764,11 @@ main {
 
 .table-wrapper {
   position: relative;
-  padding-bottom: 100px; /* Reduced padding at the bottom */
+  padding-bottom: 20px; /* Minimal padding at the bottom */
   padding-right: 50px; /* Add padding on the right side */
 }
 
-.bottom-spacer {
-  height: 100px; /* Reduced extra space at the bottom */
-  width: 100%;
-}
+/* Bottom spacer removed to show more of the grid */
 
 .crew-table {
   width: auto;
