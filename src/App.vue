@@ -440,15 +440,16 @@
               ></v-text-field>
             </div>
           
-            <div class="d-flex">
-              <v-btn color="primary" @click="moveDepartmentUp" :disabled="selectedDepartmentIndex === 0" class="mr-2">
-                Move Up
-              </v-btn>
-              <v-btn color="primary" @click="moveDepartmentDown" :disabled="selectedDepartmentIndex === departments.length - 1" class="mr-2">
-                Move Down
-              </v-btn>
-              <v-spacer></v-spacer>
-              <v-btn color="error" @click="removeDepartment">
+            <div class="d-flex flex-column">
+              <div class="d-flex mb-2">
+                <v-btn color="primary" @click="moveDepartmentUp" :disabled="selectedDepartmentIndex === 0" class="mr-2" block>
+                  Move Up
+                </v-btn>
+                <v-btn color="primary" @click="moveDepartmentDown" :disabled="selectedDepartmentIndex === departments.length - 1" block>
+                  Move Down
+                </v-btn>
+              </div>
+              <v-btn color="error" @click="removeDepartment" block>
                 Remove Department
               </v-btn>
             </div>
@@ -501,15 +502,16 @@
               ></v-slider>
             </div>
           
-            <div class="d-flex">
-              <v-btn color="secondary" @click="movePhaseUp" :disabled="selectedPhaseIndex === 0" class="mr-2">
-                Move Up
-              </v-btn>
-              <v-btn color="secondary" @click="movePhaseDown" :disabled="selectedPhaseIndex === phases.length - 1" class="mr-2">
-                Move Down
-              </v-btn>
-              <v-spacer></v-spacer>
-              <v-btn color="error" @click="removePhase">
+            <div class="d-flex flex-column">
+              <div class="d-flex mb-2">
+                <v-btn color="secondary" @click="movePhaseUp" :disabled="selectedPhaseIndex === 0" class="mr-2" block>
+                  Move Up
+                </v-btn>
+                <v-btn color="secondary" @click="movePhaseDown" :disabled="selectedPhaseIndex === phases.length - 1" block>
+                  Move Down
+                </v-btn>
+              </div>
+              <v-btn color="error" @click="removePhase" block>
                 Remove Phase
               </v-btn>
             </div>
