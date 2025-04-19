@@ -1713,7 +1713,7 @@ export default {
         console.log('Starting enhanced Excel export...');
         
         // Use the enhanced Excel export with formatting
-        const { createFormattedExcel } = await import('./excel-export-new.js');
+        const { createFormattedExcel } = await import('./excel-export-fixed.js');
         console.log('Successfully imported createFormattedExcel function');
         
         const blob = await createFormattedExcel(appState);
