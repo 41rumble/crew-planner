@@ -1,18 +1,17 @@
 <template>
   <v-btn
     color="primary"
-    prepend-icon="mdi-upload"
+    prepend-icon="mdi-file-delimited"
     size="small"
     density="compact"
-    class="mr-2"
     @click="$refs.fileInput.click()"
   >
-    Upload
+    CSV
   </v-btn>
   <input 
     type="file" 
     ref="fileInput"
-    accept=".csv,.xlsx,.json" 
+    accept=".csv" 
     @change="handleFileUpload" 
     style="display: none;"
   >

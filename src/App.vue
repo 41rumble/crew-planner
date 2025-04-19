@@ -90,17 +90,17 @@
                   <v-col cols="12" md="3" class="py-0">
                     <div class="d-flex align-center">
                       <v-btn-group class="mr-2">
-                        <v-btn color="primary" prepend-icon="mdi-file-export" @click="exportProjectJSON" size="small" density="compact">JSON</v-btn>
-                        <v-btn color="primary" prepend-icon="mdi-file-delimited" @click="exportCSV" size="small" density="compact">CSV</v-btn>
+                        <v-btn color="primary" prepend-icon="mdi-content-save" @click="exportProjectJSON" size="small" density="compact">Save</v-btn>
                         <v-btn color="primary" prepend-icon="mdi-microsoft-excel" @click="exportExcel" size="small" density="compact">Excel</v-btn>
                       </v-btn-group>
                       
-                      <v-btn color="primary" prepend-icon="mdi-file-import" size="small" density="compact" class="mr-2" @click="$refs.jsonFileInput.click()">
-                        Import
-                      </v-btn>
+                      <v-btn-group>
+                        <v-btn color="primary" prepend-icon="mdi-folder-open" size="small" density="compact" @click="$refs.jsonFileInput.click()">
+                          Load
+                        </v-btn>
+                        <FileUploader @file-loaded="loadFile" />
+                      </v-btn-group>
                       <input type="file" ref="jsonFileInput" accept=".json" @change="importProjectJSON" style="display: none;">
-                      
-                      <FileUploader @file-loaded="loadFile" />
                     </div>
                   </v-col>
                   
