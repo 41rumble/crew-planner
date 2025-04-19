@@ -89,7 +89,9 @@
                   <!-- Export Controls -->
                   <v-col cols="12" md="3" class="py-0">
                     <div class="d-flex align-center">
-                      <FileUploader @file-loaded="loadCSV" class="mr-4" />
+                      <v-btn-group class="mr-4">
+                        <FileUploader @file-loaded="loadCSV" />
+                      </v-btn-group>
                       
                       <v-btn-group class="mr-4">
                         <v-btn color="primary" prepend-icon="mdi-folder-open" size="small" height="32px" @click="$refs.jsonFileInput.click()">
@@ -101,15 +103,17 @@
                       </v-btn-group>
                       <input type="file" ref="jsonFileInput" accept=".json" @change="importProjectJSON" style="display: none;">
                       
-                      <v-btn 
-                        color="primary" 
-                        prepend-icon="mdi-microsoft-excel" 
-                        size="small" 
-                        height="32px"
-                        @click="exportExcel"
-                      >
-                        Excel
-                      </v-btn>
+                      <v-btn-group>
+                        <v-btn 
+                          color="primary" 
+                          prepend-icon="mdi-microsoft-excel" 
+                          size="small" 
+                          height="32px"
+                          @click="exportExcel"
+                        >
+                          Excel
+                        </v-btn>
+                      </v-btn-group>
                     </div>
                   </v-col>
                   
