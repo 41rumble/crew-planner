@@ -39,31 +39,48 @@
                 <div class="cost-actions"></div>
               </div>
               <div 
-                v-for="(item, index) in facilitiesData.fixedCosts" 
-                :key="index"
-                class="cost-item"
+                v-for="(category, catIndex) in facilitiesData.fixedFacilityCosts" 
+                :key="'cat-' + catIndex"
+                class="cost-category"
               >
-                <input 
-                  type="text" 
-                  v-model="item.name" 
-                  @input="updateFacilitiesData"
-                  class="cost-name-input"
-                  placeholder="Cost item name"
-                >
-                <div class="cost-amount-wrapper">
-                  <span class="currency-symbol">$</span>
+                <div class="category-header">
                   <input 
-                    type="number" 
-                    v-model.number="item.monthlyCost" 
+                    type="text" 
+                    v-model="category.category" 
                     @input="updateFacilitiesData"
-                    class="cost-amount-input"
-                    min="0"
-                    step="100"
+                    class="category-name-input"
+                    placeholder="Category name"
                   >
+                  <button @click="removeFixedCostCategory(catIndex)" class="remove-button">×</button>
                 </div>
-                <button @click="removeFixedCost(index)" class="remove-button">×</button>
+                <div 
+                  v-for="(item, itemIndex) in category.items" 
+                  :key="'item-' + catIndex + '-' + itemIndex"
+                  class="cost-item"
+                >
+                  <input 
+                    type="text" 
+                    v-model="item.name" 
+                    @input="updateFacilitiesData"
+                    class="cost-name-input"
+                    placeholder="Cost item name"
+                  >
+                  <div class="cost-amount-wrapper">
+                    <span class="currency-symbol">$</span>
+                    <input 
+                      type="number" 
+                      v-model.number="item.cost" 
+                      @input="updateFacilitiesData"
+                      class="cost-amount-input"
+                      min="0"
+                      step="100"
+                    >
+                  </div>
+                  <button @click="removeFixedCostItem(catIndex, itemIndex)" class="remove-button">×</button>
+                </div>
+                <button @click="addFixedCostItem(catIndex)" class="add-item-button">+ Add Item</button>
               </div>
-              <button @click="addFixedCost" class="add-cost-button">+ Add Fixed Cost</button>
+              <button @click="addFixedCostCategory" class="add-category-button">+ Add Category</button>
             </div>
             <div class="cost-summary">
               <div class="summary-label">Total Monthly Fixed Costs:</div>
@@ -79,31 +96,48 @@
                 <div class="cost-actions"></div>
               </div>
               <div 
-                v-for="(item, index) in facilitiesData.variableCosts" 
-                :key="index"
-                class="cost-item"
+                v-for="(category, catIndex) in facilitiesData.variableFacilityCosts" 
+                :key="'cat-' + catIndex"
+                class="cost-category"
               >
-                <input 
-                  type="text" 
-                  v-model="item.name" 
-                  @input="updateFacilitiesData"
-                  class="cost-name-input"
-                  placeholder="Cost item name"
-                >
-                <div class="cost-amount-wrapper">
-                  <span class="currency-symbol">$</span>
+                <div class="category-header">
                   <input 
-                    type="number" 
-                    v-model.number="item.costPerPerson" 
+                    type="text" 
+                    v-model="category.category" 
                     @input="updateFacilitiesData"
-                    class="cost-amount-input"
-                    min="0"
-                    step="10"
+                    class="category-name-input"
+                    placeholder="Category name"
                   >
+                  <button @click="removeVariableCostCategory(catIndex)" class="remove-button">×</button>
                 </div>
-                <button @click="removeVariableCost(index)" class="remove-button">×</button>
+                <div 
+                  v-for="(item, itemIndex) in category.items" 
+                  :key="'item-' + catIndex + '-' + itemIndex"
+                  class="cost-item"
+                >
+                  <input 
+                    type="text" 
+                    v-model="item.name" 
+                    @input="updateFacilitiesData"
+                    class="cost-name-input"
+                    placeholder="Cost item name"
+                  >
+                  <div class="cost-amount-wrapper">
+                    <span class="currency-symbol">$</span>
+                    <input 
+                      type="number" 
+                      v-model.number="item.cost" 
+                      @input="updateFacilitiesData"
+                      class="cost-amount-input"
+                      min="0"
+                      step="5"
+                    >
+                  </div>
+                  <button @click="removeVariableCostItem(catIndex, itemIndex)" class="remove-button">×</button>
+                </div>
+                <button @click="addVariableCostItem(catIndex)" class="add-item-button">+ Add Item</button>
               </div>
-              <button @click="addVariableCost" class="add-cost-button">+ Add Variable Cost</button>
+              <button @click="addVariableCostCategory" class="add-category-button">+ Add Category</button>
             </div>
             <div class="cost-summary">
               <div class="summary-label">Total Variable Costs Per Person:</div>
@@ -150,7 +184,11 @@
 </template>
 
 <script>
-import { calculateTotalFixedFacilityCosts, calculateTotalVariableFacilityCostsPerPerson } from '../facilities-data.js';
+import { 
+  calculateTotalFixedFacilityCosts, 
+  calculateTotalVariableFacilityCostsPerPerson,
+  calculateFacilityCostsForMonth
+} from '../facilities-data.js';
 
 
 export default {
@@ -204,29 +242,65 @@ export default {
       this.$emit('update-costs');
     },
     
-    addFixedCost() {
-      this.facilitiesData.fixedCosts.push({
-        name: '',
-        monthlyCost: 0
+    addFixedCostCategory() {
+      this.facilitiesData.fixedFacilityCosts.push({
+        category: 'New Category',
+        items: []
       });
       this.updateFacilitiesData();
     },
     
-    removeFixedCost(index) {
-      this.facilitiesData.fixedCosts.splice(index, 1);
+    removeFixedCostCategory(catIndex) {
+      if (this.facilitiesData.fixedFacilityCosts[catIndex].items.length > 0) {
+        if (!confirm('This will remove all items in this category. Continue?')) {
+          return;
+        }
+      }
+      this.facilitiesData.fixedFacilityCosts.splice(catIndex, 1);
       this.updateFacilitiesData();
     },
     
-    addVariableCost() {
-      this.facilitiesData.variableCosts.push({
+    addFixedCostItem(catIndex) {
+      this.facilitiesData.fixedFacilityCosts[catIndex].items.push({
         name: '',
-        costPerPerson: 0
+        cost: 0
       });
       this.updateFacilitiesData();
     },
     
-    removeVariableCost(index) {
-      this.facilitiesData.variableCosts.splice(index, 1);
+    removeFixedCostItem(catIndex, itemIndex) {
+      this.facilitiesData.fixedFacilityCosts[catIndex].items.splice(itemIndex, 1);
+      this.updateFacilitiesData();
+    },
+    
+    addVariableCostCategory() {
+      this.facilitiesData.variableFacilityCosts.push({
+        category: 'New Category',
+        items: []
+      });
+      this.updateFacilitiesData();
+    },
+    
+    removeVariableCostCategory(catIndex) {
+      if (this.facilitiesData.variableFacilityCosts[catIndex].items.length > 0) {
+        if (!confirm('This will remove all items in this category. Continue?')) {
+          return;
+        }
+      }
+      this.facilitiesData.variableFacilityCosts.splice(catIndex, 1);
+      this.updateFacilitiesData();
+    },
+    
+    addVariableCostItem(catIndex) {
+      this.facilitiesData.variableFacilityCosts[catIndex].items.push({
+        name: '',
+        cost: 0
+      });
+      this.updateFacilitiesData();
+    },
+    
+    removeVariableCostItem(catIndex, itemIndex) {
+      this.facilitiesData.variableFacilityCosts[catIndex].items.splice(itemIndex, 1);
       this.updateFacilitiesData();
     },
     
@@ -402,8 +476,60 @@ export default {
   align-items: center;
 }
 
+.cost-category {
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.category-name-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-weight: 500;
+  background-color: white;
+}
+
 .cost-item {
   grid-template-columns: 2fr 1fr 0.5fr;
+  margin: 8px;
+}
+
+.add-item-button {
+  margin: 8px;
+  width: calc(100% - 16px);
+  padding: 6px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 4px;
+  background-color: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.add-category-button {
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  background-color: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 16px;
 }
 
 .allocation-item {

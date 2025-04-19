@@ -23,6 +23,12 @@
             >
               Department Assignments
             </button>
+            <button 
+              :class="{ active: activeTab === 'backend' }" 
+              @click="activeTab = 'backend'"
+            >
+              Backend Infrastructure
+            </button>
           </div>
           
           <div v-if="activeTab === 'bundles'" class="tab-content">
@@ -147,6 +153,91 @@
               <button @click="addAssignment" class="add-assignment-button">+ Add Assignment</button>
             </div>
           </div>
+          
+          <div v-if="activeTab === 'backend'" class="tab-content">
+            <div class="backend-list">
+              <div 
+                v-for="(category, catIndex) in workstationData.backendInfrastructure" 
+                :key="'cat-' + catIndex"
+                class="backend-category"
+              >
+                <div class="category-header">
+                  <input 
+                    type="text" 
+                    v-model="category.category" 
+                    @input="updateWorkstationData"
+                    class="category-name-input"
+                    placeholder="Category name"
+                  >
+                  <button @click="removeBackendCategory(catIndex)" class="remove-button">×</button>
+                </div>
+                <div class="backend-items">
+                  <div class="backend-header">
+                    <div class="backend-name">Item</div>
+                    <div class="backend-cost">Cost</div>
+                    <div class="backend-quantity">Qty</div>
+                    <div class="backend-type">Type</div>
+                    <div class="backend-month">Month</div>
+                    <div class="backend-actions"></div>
+                  </div>
+                  <div 
+                    v-for="(item, itemIndex) in category.items" 
+                    :key="'item-' + catIndex + '-' + itemIndex"
+                    class="backend-item"
+                  >
+                    <input 
+                      type="text" 
+                      v-model="item.name" 
+                      @input="updateWorkstationData"
+                      class="backend-name-input"
+                      placeholder="Item name"
+                    >
+                    <div class="cost-amount-wrapper">
+                      <span class="currency-symbol">$</span>
+                      <input 
+                        type="number" 
+                        v-model.number="item.cost" 
+                        @input="updateWorkstationData"
+                        class="backend-cost-input"
+                        min="0"
+                        step="100"
+                      >
+                    </div>
+                    <input 
+                      type="number" 
+                      v-model.number="item.quantity" 
+                      @input="updateWorkstationData"
+                      class="backend-quantity-input"
+                      min="1"
+                      step="1"
+                    >
+                    <select 
+                      v-model="item.costType" 
+                      @change="updateWorkstationData"
+                      class="backend-type-select"
+                    >
+                      <option value="one-time">One-time</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                    <input 
+                      v-if="item.costType === 'one-time'"
+                      type="number" 
+                      v-model.number="item.purchaseMonth" 
+                      @input="updateWorkstationData"
+                      class="backend-month-input"
+                      min="0"
+                      :max="months.length - 1"
+                      step="1"
+                    >
+                    <div v-else class="backend-month-input disabled">-</div>
+                    <button @click="removeBackendItem(catIndex, itemIndex)" class="remove-button">×</button>
+                  </div>
+                  <button @click="addBackendItem(catIndex)" class="add-item-button">+ Add Item</button>
+                </div>
+              </div>
+              <button @click="addBackendCategory" class="add-category-button">+ Add Category</button>
+            </div>
+          </div>
         </div>
       </v-card-text>
     </v-card>
@@ -185,7 +276,7 @@ export default {
   },
   data() {
     return {
-      activeTab: 'bundles'
+      activeTab: 'bundles' // Default tab is 'bundles', other options are 'assignments' and 'backend'
     };
   },
   methods: {
@@ -306,6 +397,40 @@ export default {
     
     closeWorkstationEditor() {
       this.$emit('close');
+    },
+    
+    addBackendCategory() {
+      this.workstationData.backendInfrastructure.push({
+        category: 'New Category',
+        items: []
+      });
+      this.updateWorkstationData();
+    },
+    
+    removeBackendCategory(catIndex) {
+      if (this.workstationData.backendInfrastructure[catIndex].items.length > 0) {
+        if (!confirm('This will remove all items in this category. Continue?')) {
+          return;
+        }
+      }
+      this.workstationData.backendInfrastructure.splice(catIndex, 1);
+      this.updateWorkstationData();
+    },
+    
+    addBackendItem(catIndex) {
+      this.workstationData.backendInfrastructure[catIndex].items.push({
+        name: '',
+        cost: 0,
+        quantity: 1,
+        costType: 'one-time',
+        purchaseMonth: 0
+      });
+      this.updateWorkstationData();
+    },
+    
+    removeBackendItem(catIndex, itemIndex) {
+      this.workstationData.backendInfrastructure[catIndex].items.splice(itemIndex, 1);
+      this.updateWorkstationData();
     },
     
     getDepartmentIndexById(departmentId) {
@@ -577,6 +702,100 @@ export default {
 .assignment-total {
   font-weight: 500;
   color: #4CAF50;
+}
+
+/* Backend infrastructure styles */
+.backend-category {
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.category-name-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-weight: 500;
+  background-color: white;
+}
+
+.backend-items {
+  padding: 12px;
+}
+
+.backend-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.5fr 1fr 0.5fr 0.5fr;
+  gap: 8px;
+  padding: 8px 0;
+  font-weight: 500;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.backend-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.5fr 1fr 0.5fr 0.5fr;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #f8fafc;
+  align-items: center;
+}
+
+.backend-name-input, .backend-cost-input, .backend-quantity-input, .backend-type-select, .backend-month-input {
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.backend-month-input.disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.add-item-button {
+  width: 100%;
+  padding: 6px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 4px;
+  background-color: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+.add-category-button {
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  background-color: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 768px) {
