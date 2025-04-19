@@ -1710,9 +1710,14 @@ export default {
       const appState = this.getExportAppState();
       
       try {
+        console.log('Starting enhanced Excel export...');
+        
         // Use the enhanced Excel export with formatting
-        const { createFormattedExcel } = await import('./excel-export.js');
+        const { createFormattedExcel } = await import('./excel-export-new.js');
+        console.log('Successfully imported createFormattedExcel function');
+        
         const blob = await createFormattedExcel(appState);
+        console.log('Successfully created formatted Excel blob');
         
         // Create download link
         const url = URL.createObjectURL(blob);
@@ -1728,6 +1733,7 @@ export default {
         alert('Excel file exported successfully with formatting!');
       } catch (error) {
         console.error('Error exporting formatted Excel:', error);
+        alert('Error creating formatted Excel: ' + error.message + '\nFalling back to basic Excel export.');
         
         // Fall back to the original Excel export if the enhanced one fails
         exportToExcel(appState);
