@@ -2116,12 +2116,16 @@ export default {
     
     handleGlobalMouseDown(event) {
       // Check if we're clicking on a draggable panel's title
-      const facilitiesPanel = event.target.closest('.facilities-editor .v-card-title');
-      const workstationPanel = event.target.closest('.workstation-editor .v-card-title');
+      const facilitiesPanel = event.target.closest('.facilities-editor');
+      const workstationPanel = event.target.closest('.workstation-editor');
       
-      if (facilitiesPanel && !event.target.closest('.v-btn')) {
+      if (facilitiesPanel && event.target.closest('.v-card-title') && !event.target.closest('.v-btn')) {
+        console.log('Dragging facilities editor');
+        event.preventDefault(); // Prevent text selection
         this.startDrag(event, 'facilities');
-      } else if (workstationPanel && !event.target.closest('.v-btn')) {
+      } else if (workstationPanel && event.target.closest('.v-card-title') && !event.target.closest('.v-btn')) {
+        console.log('Dragging workstation editor');
+        event.preventDefault(); // Prevent text selection
         this.startDrag(event, 'workstation');
       }
     },
@@ -3113,6 +3117,11 @@ main {
 
 .close-button:hover, .reset-button:hover {
   background-color: #eee;
+}
+
+.v-card-text {
+  max-height: calc(80vh - 60px);
+  overflow-y: auto;
 }
 
 .editor-content {

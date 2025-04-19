@@ -412,10 +412,13 @@ export default {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+.v-card-text {
+  max-height: calc(80vh - 60px);
+  overflow-y: auto;
+}
+
 .editor-content {
   padding: 16px;
-  overflow-y: auto;
-  max-height: calc(80vh - 60px);
 }
 
 .tabs {
