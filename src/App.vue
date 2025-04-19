@@ -89,17 +89,27 @@
                   <!-- Export Controls -->
                   <v-col cols="12" md="3" class="py-0">
                     <div class="d-flex align-center">
-                      <FileUploader @file-loaded="loadFile" class="mr-2" />
+                      <FileUploader @file-loaded="loadCSV" class="mr-4" />
                       
-                      <v-btn-group class="mr-2">
-                        <v-btn color="primary" prepend-icon="mdi-folder-open" size="small" density="compact" @click="$refs.jsonFileInput.click()">
+                      <v-btn-group class="mr-4">
+                        <v-btn color="primary" prepend-icon="mdi-folder-open" size="small" height="32px" @click="$refs.jsonFileInput.click()">
                           Load
                         </v-btn>
-                        <v-btn color="primary" prepend-icon="mdi-content-save" @click="exportProjectJSON" size="small" density="compact">Save</v-btn>
+                        <v-btn color="primary" prepend-icon="mdi-content-save" size="small" height="32px" @click="exportProjectJSON">
+                          Save
+                        </v-btn>
                       </v-btn-group>
                       <input type="file" ref="jsonFileInput" accept=".json" @change="importProjectJSON" style="display: none;">
                       
-                      <v-btn color="primary" prepend-icon="mdi-microsoft-excel" @click="exportExcel" size="small" density="compact">Excel</v-btn>
+                      <v-btn 
+                        color="primary" 
+                        prepend-icon="mdi-microsoft-excel" 
+                        size="small" 
+                        height="32px"
+                        @click="exportExcel"
+                      >
+                        Excel
+                      </v-btn>
                     </div>
                   </v-col>
                   
@@ -107,10 +117,10 @@
                   <v-col cols="12" md="3" class="py-0">
                     <div class="d-flex align-center">
                       <v-btn-group variant="outlined" class="mr-2">
-                        <v-btn icon="mdi-minus" @click="zoomOut" title="Zoom Out" size="small" density="compact"></v-btn>
-                        <v-btn disabled size="small" density="compact">{{ Math.round(zoomLevel * 100) }}%</v-btn>
-                        <v-btn icon="mdi-plus" @click="zoomIn" title="Zoom In" size="small" density="compact"></v-btn>
-                        <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="small" density="compact"></v-btn>
+                        <v-btn icon="mdi-minus" @click="zoomOut" title="Zoom Out" size="small" height="32px"></v-btn>
+                        <v-btn disabled size="small" height="32px">{{ Math.round(zoomLevel * 100) }}%</v-btn>
+                        <v-btn icon="mdi-plus" @click="zoomIn" title="Zoom In" size="small" height="32px"></v-btn>
+                        <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="small" height="32px"></v-btn>
                       </v-btn-group>
                       
                       <v-select
@@ -126,11 +136,11 @@
                         ]"
                         label="Years"
                         variant="outlined"
-                        density="compact"
+                        height="32px"
                         style="max-width: 100px;"
                       ></v-select>
                       
-                      <v-btn variant="text" color="primary" href="/sample_crew_plan.csv" download class="ml-2" size="small" density="compact">
+                      <v-btn variant="text" color="primary" href="/sample_crew_plan.csv" download class="ml-2" size="small" height="32px">
                         Sample
                       </v-btn>
                     </div>

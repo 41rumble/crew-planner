@@ -3,7 +3,7 @@
     color="primary"
     prepend-icon="mdi-file-delimited"
     size="small"
-    density="compact"
+    height="32px"
     @click="$refs.fileInput.click()"
   >
     CSV
