@@ -212,6 +212,17 @@ export default {
       activeTab: 'fixed'
     };
   },
+  created() {
+    // Initialize departmentAllocation if it doesn't exist
+    if (!this.facilitiesData.departmentAllocation) {
+      this.facilitiesData.departmentAllocation = Array(this.departments.length).fill(0);
+    }
+    
+    // Ensure array length matches departments length
+    while (this.facilitiesData.departmentAllocation.length < this.departments.length) {
+      this.facilitiesData.departmentAllocation.push(0);
+    }
+  },
   methods: {
     formatCurrency(value) {
       return new Intl.NumberFormat('en-US', {
@@ -307,6 +318,11 @@ export default {
     getAllocationAmount(dept) {
       const index = this.departments.indexOf(dept);
       if (index === -1) return 0;
+      
+      // Ensure departmentAllocation exists
+      if (!this.facilitiesData.departmentAllocation) {
+        this.facilitiesData.departmentAllocation = Array(this.departments.length).fill(0);
+      }
       
       const percentage = this.facilitiesData.departmentAllocation[index] || 0;
       const totalCost = this.getTotalFixedCosts() + (this.getTotalVariableCostsPerPerson() * this.peakCrewSize);
