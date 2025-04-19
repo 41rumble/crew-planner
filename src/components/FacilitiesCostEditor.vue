@@ -1,12 +1,14 @@
 <template>
-  <div class="facilities-editor" :class="editorPosition" :style="editorStyle" ref="facilitiesEditor" @mousedown="startDrag($event)">
-    <div class="editor-header">
-      <h2>Facilities Cost Editor</h2>
-      <div class="editor-controls">
-        <button @click="resetEditorPosition" class="reset-button" title="Reset Position">⟲</button>
-        <button @click="closeFacilitiesEditor" class="close-button">X</button>
-      </div>
-    </div>
+  <div class="floating-editor facilities-editor" :class="editorPosition" :style="editorStyle" ref="facilitiesEditor" @mousedown="startDrag($event)">
+    <v-card color="info" class="draggable-card">
+      <v-card-title class="d-flex justify-space-between align-center text-white">
+        <span>Facilities Cost Editor</span>
+        <div>
+          <v-btn icon="mdi-refresh" @click="resetEditorPosition" variant="text" color="white" density="compact"></v-btn>
+          <v-btn icon="mdi-close" @click="closeFacilitiesEditor" variant="text" color="white" density="compact"></v-btn>
+        </div>
+      </v-card-title>
+      <v-card-text class="bg-white">
     <div class="editor-content">
       <div class="tabs">
         <button 
@@ -285,7 +287,8 @@
           </div>
         </div>
       </div>
-    </div>
+    </v-card-text>
+    </v-card>
   </div>
 </template>
 
@@ -531,6 +534,29 @@ export default {
 </script>
 
 <style scoped>
+/* Draggable editor panels */
+.floating-editor {
+  position: fixed !important;
+  z-index: 1000 !important;
+  width: 500px;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: none !important; /* Disable transitions for smooth dragging */
+  user-select: none; /* Prevent text selection during drag */
+}
+
+.draggable-card {
+  cursor: move !important;
+}
+
+.draggable-card .v-card-title {
+  cursor: move !important;
+  user-select: none !important;
+  touch-action: none !important;
+}
+
 .facilities-editor {
   position: absolute;
   width: 600px;

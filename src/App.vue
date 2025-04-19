@@ -59,7 +59,7 @@
                       
                       <v-btn-group class="mr-2">
                         <v-btn color="info" prepend-icon="mdi-office-building" @click="toggleFacilitiesEditor" size="small" density="compact">Facilities</v-btn>
-                        <v-btn color="success" prepend-icon="mdi-laptop" @click="toggleWorkstationEditor" size="small" density="compact">Workstations</v-btn>
+                        <v-btn color="success" prepend-icon="mdi-laptop" @click="toggleWorkstationEditor" size="small" density="compact">Hardware</v-btn>
                       </v-btn-group>
                     </div>
                   </v-col>
@@ -79,7 +79,7 @@
                       <v-checkbox
                         v-model="workstationsIncludedInTotals"
                         @update:model-value="calculateCosts"
-                        label="Workstations"
+                        label="Hardware"
                         hide-details
                         density="compact"
                       ></v-checkbox>

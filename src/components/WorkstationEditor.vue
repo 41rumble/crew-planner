@@ -1,19 +1,21 @@
 <template>
-  <div class="workstation-editor" :class="editorPosition" :style="editorStyle" ref="workstationEditor" @mousedown="startDrag($event)">
-    <div class="editor-header">
-      <h2>Workstation Editor</h2>
-      <div class="editor-controls">
-        <button @click="resetEditorPosition" class="reset-button" title="Reset Position">⟲</button>
-        <button @click="closeWorkstationEditor" class="close-button">X</button>
-      </div>
-    </div>
+  <div class="floating-editor workstation-editor" :class="editorPosition" :style="editorStyle" ref="workstationEditor" @mousedown="startDrag($event)">
+    <v-card color="success" class="draggable-card">
+      <v-card-title class="d-flex justify-space-between align-center text-white">
+        <span>Hardware Editor</span>
+        <div>
+          <v-btn icon="mdi-refresh" @click="resetEditorPosition" variant="text" color="white" density="compact"></v-btn>
+          <v-btn icon="mdi-close" @click="closeWorkstationEditor" variant="text" color="white" density="compact"></v-btn>
+        </div>
+      </v-card-title>
+      <v-card-text class="bg-white">
     <div class="editor-content">
       <div class="tabs">
         <button 
           :class="{ active: activeTab === 'bundles' }" 
           @click="activeTab = 'bundles'"
         >
-          Workstation Bundles
+          Hardware Bundles
         </button>
         <button 
           :class="{ active: activeTab === 'assignments' }" 
@@ -411,7 +413,8 @@
           </div>
         </div>
       </div>
-    </div>
+    </v-card-text>
+    </v-card>
   </div>
 </template>
 
@@ -661,6 +664,29 @@ export default {
 </script>
 
 <style scoped>
+/* Draggable editor panels */
+.floating-editor {
+  position: fixed !important;
+  z-index: 1000 !important;
+  width: 500px;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: none !important; /* Disable transitions for smooth dragging */
+  user-select: none; /* Prevent text selection during drag */
+}
+
+.draggable-card {
+  cursor: move !important;
+}
+
+.draggable-card .v-card-title {
+  cursor: move !important;
+  user-select: none !important;
+  touch-action: none !important;
+}
+
 .workstation-editor {
   position: absolute;
   width: 800px;
