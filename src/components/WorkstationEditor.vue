@@ -28,7 +28,7 @@
           <div v-if="activeTab === 'bundles'" class="tab-content">
             <div class="bundle-list">
               <div 
-                v-for="(bundle, index) in workstationData.bundles" 
+                v-for="(bundle, index) in workstationData.workstationBundles" 
                 :key="index"
                 class="bundle-item"
               >
@@ -103,14 +103,14 @@
                 <div class="assignment-actions"></div>
               </div>
               <div 
-                v-for="(assignment, index) in workstationData.assignments" 
+                v-for="(assignment, index) in workstationData.departmentAssignments" 
                 :key="index"
                 class="assignment-item"
               >
                 <select 
-                  v-model="assignment.departmentIndex" 
-                  @change="updateWorkstationData"
+                  @change="updateDepartmentAssignment(index, $event.target.value)"
                   class="assignment-department-select"
+                  :value="getDepartmentIndexById(assignment.departmentId)"
                 >
                   <option 
                     v-for="(dept, deptIndex) in departments" 
@@ -121,12 +121,12 @@
                   </option>
                 </select>
                 <select 
-                  v-model="assignment.bundleIndex" 
-                  @change="updateWorkstationData"
+                  @change="updateBundleAssignment(index, $event.target.value)"
                   class="assignment-bundle-select"
+                  :value="getBundleIndexById(assignment.workstationId)"
                 >
                   <option 
-                    v-for="(bundle, bundleIndex) in workstationData.bundles" 
+                    v-for="(bundle, bundleIndex) in workstationData.workstationBundles" 
                     :key="bundleIndex" 
                     :value="bundleIndex"
                   >
@@ -198,7 +198,7 @@ export default {
     
     updateWorkstationData() {
       // Recalculate costs
-      this.workstationData.bundles.forEach(bundle => {
+      this.workstationData.workstationBundles.forEach(bundle => {
         bundle.cost = calculateWorkstationBundleCost(bundle);
       });
       
@@ -206,7 +206,8 @@ export default {
     },
     
     addBundle() {
-      this.workstationData.bundles.push({
+      this.workstationData.workstationBundles.push({
+        id: "NEW" + Date.now().toString().slice(-4),
         name: 'New Hardware Bundle',
         cost: 0,
         components: []
@@ -216,8 +217,9 @@ export default {
     
     removeBundle(index) {
       // Check if this bundle is used in any assignments
-      const isUsed = this.workstationData.assignments.some(
-        assignment => assignment.bundleIndex === index
+      const bundleId = this.workstationData.workstationBundles[index].id;
+      const isUsed = this.workstationData.departmentAssignments.some(
+        assignment => assignment.workstationId === bundleId
       );
       
       if (isUsed) {
@@ -225,12 +227,14 @@ export default {
         return;
       }
       
-      this.workstationData.bundles.splice(index, 1);
+      this.workstationData.workstationBundles.splice(index, 1);
       
       // Update any assignments that reference bundles with higher indices
-      this.workstationData.assignments.forEach(assignment => {
-        if (assignment.bundleIndex > index) {
-          assignment.bundleIndex--;
+      this.workstationData.departmentAssignments.forEach(assignment => {
+        const bundleIndex = this.workstationData.workstationBundles.findIndex(b => b.id === assignment.workstationId);
+        if (bundleIndex === -1) {
+          // If the bundle was removed, assign to the first available bundle
+          assignment.workstationId = this.workstationData.workstationBundles[0]?.id || '';
         }
       });
       
@@ -238,7 +242,7 @@ export default {
     },
     
     addComponent(bundleIndex) {
-      this.workstationData.bundles[bundleIndex].components.push({
+      this.workstationData.workstationBundles[bundleIndex].components.push({
         name: '',
         type: 'hardware',
         cost: 0,
@@ -248,12 +252,12 @@ export default {
     },
     
     removeComponent(bundleIndex, componentIndex) {
-      this.workstationData.bundles[bundleIndex].components.splice(componentIndex, 1);
+      this.workstationData.workstationBundles[bundleIndex].components.splice(componentIndex, 1);
       this.updateWorkstationData();
     },
     
     addAssignment() {
-      if (this.workstationData.bundles.length === 0) {
+      if (this.workstationData.workstationBundles.length === 0) {
         alert('Please create at least one hardware bundle first.');
         this.activeTab = 'bundles';
         return;
@@ -264,21 +268,27 @@ export default {
         return;
       }
       
-      this.workstationData.assignments.push({
-        departmentIndex: 0,
-        bundleIndex: 0,
-        quantity: 1
-      });
+      const newAssignment = {
+        departmentId: this.departments[0].name.toLowerCase().replace(/\s+/g, '-'),
+        departmentName: this.departments[0].name,
+        workstationId: this.workstationData.workstationBundles[0].id,
+        quantity: 1,
+        purchaseMonth: 0,
+        notes: 'New assignment'
+      };
+      
+      this.workstationData.departmentAssignments.push(newAssignment);
       this.updateWorkstationData();
     },
     
     removeAssignment(index) {
-      this.workstationData.assignments.splice(index, 1);
+      this.workstationData.departmentAssignments.splice(index, 1);
       this.updateWorkstationData();
     },
     
     getAssignmentCost(assignment) {
-      const bundle = this.workstationData.bundles[assignment.bundleIndex];
+      const bundleIndex = this.workstationData.workstationBundles.findIndex(b => b.id === assignment.workstationId);
+      const bundle = this.workstationData.workstationBundles[bundleIndex];
       if (!bundle) return 0;
       return bundle.cost * assignment.quantity;
     },
@@ -296,6 +306,34 @@ export default {
     
     closeWorkstationEditor() {
       this.$emit('close');
+    },
+    
+    getDepartmentIndexById(departmentId) {
+      return this.departments.findIndex(d => 
+        d.name.toLowerCase().replace(/\s+/g, '-') === departmentId
+      );
+    },
+    
+    getBundleIndexById(workstationId) {
+      return this.workstationData.workstationBundles.findIndex(b => b.id === workstationId);
+    },
+    
+    updateDepartmentAssignment(assignmentIndex, departmentIndex) {
+      const dept = this.departments[departmentIndex];
+      if (dept) {
+        this.workstationData.departmentAssignments[assignmentIndex].departmentId = 
+          dept.name.toLowerCase().replace(/\s+/g, '-');
+        this.workstationData.departmentAssignments[assignmentIndex].departmentName = dept.name;
+        this.updateWorkstationData();
+      }
+    },
+    
+    updateBundleAssignment(assignmentIndex, bundleIndex) {
+      const bundle = this.workstationData.workstationBundles[bundleIndex];
+      if (bundle) {
+        this.workstationData.departmentAssignments[assignmentIndex].workstationId = bundle.id;
+        this.updateWorkstationData();
+      }
     }
   }
 };
