@@ -152,6 +152,9 @@ export function createProjectData(appState) {
     phases: appState.phases,
     crewMatrix: appState.crewMatrix,
     
+    // Item order for display
+    itemOrder: appState.itemOrder,
+    
     // Facilities data
     facilitiesData: appState.facilitiesData,
     
@@ -186,6 +189,14 @@ export function applyProjectData(projectData, appState) {
   
   // Update workstation data
   if (projectData.workstationData) appState.workstationData = projectData.workstationData;
+  
+  // Update itemOrder or reinitialize it
+  if (projectData.itemOrder) {
+    appState.itemOrder = projectData.itemOrder;
+  } else {
+    // Reinitialize itemOrder based on the loaded departments and phases
+    appState.initializeItemOrder();
+  }
   
   // Update settings
   if (projectData.facilitiesIncludedInTotals !== undefined) {

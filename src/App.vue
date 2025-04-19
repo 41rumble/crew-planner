@@ -233,10 +233,10 @@
                         :style="getDepartmentColumnStyle()"
                         @click="editPhase(item.index)">
                       <span class="drag-handle">:::</span>
-                      {{ phases[item.index].name }}
+                      {{ phases[item.index] ? phases[item.index].name : 'Loading...' }}
                     </td>
                     <td v-for="(month, mIndex) in months" :key="`phase-${item.index}-${mIndex}`" 
-                        :class="{ 'phase-active': isMonthInPhase(phases[item.index], mIndex) }"
+                        :class="{ 'phase-active': phases[item.index] && isMonthInPhase(phases[item.index], mIndex) }"
                         :style="getCellStyle()">
                     </td>
                   </tr>
@@ -251,15 +251,15 @@
                       @drop="handleDrop($event, 'mixed', index)">
                     <td class="fixed-column" :style="getDepartmentColumnStyle()" @click="selectDepartment(item.index)">
                       <span class="drag-handle">:::</span>
-                      {{ departments[item.index].name }}
+                      {{ departments[item.index] ? departments[item.index].name : 'Loading...' }}
                     </td>
                     <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`" 
                         :class="{ 
-                          active: crewMatrix[item.index][mIndex] > 0,
-                          'start-handle': mIndex === departments[item.index].startMonth,
-                          'end-handle': mIndex === departments[item.index].endMonth,
+                          active: crewMatrix[item.index] && crewMatrix[item.index][mIndex] > 0,
+                          'start-handle': departments[item.index] && mIndex === departments[item.index].startMonth,
+                          'end-handle': departments[item.index] && mIndex === departments[item.index].endMonth,
                           'dept-cell': true,
-                          'in-range': mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
+                          'in-range': departments[item.index] && mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
                         }"
                         :style="getCellStyle()"
                         @mousedown="handleCellMouseDown($event, item.index, mIndex)">
@@ -1522,6 +1522,7 @@ export default {
     },
     // Phase methods
     isMonthInPhase(phase, monthIndex) {
+      if (!phase) return false;
       return monthIndex >= phase.startMonth && monthIndex <= phase.endMonth;
     },
     editPhase(index) {
@@ -1580,6 +1581,11 @@ export default {
           
           // Apply project data to the current state
           applyProjectData(projectData, this);
+          
+          // Ensure itemOrder is initialized if it wasn't in the imported data
+          if (!this.itemOrder || this.itemOrder.length === 0) {
+            this.initializeItemOrder();
+          }
           
           // Update the crew matrix if needed
           this.updateCrewMatrix();
