@@ -508,34 +508,34 @@
       </div>
       
       <!-- Facilities Cost Editor -->
-      <FacilitiesCostEditor
-        v-if="showFacilitiesEditor"
-        :facilitiesData="facilitiesData"
-        :departments="departments"
-        :editorPosition="editorPosition"
-        :editorStyle="editorStyle"
-        :peakCrewSize="peakCrewSize"
-        @close="showFacilitiesEditor = false"
-        @reset-position="resetEditorPosition"
-        @start-drag="startDrag($event, 'facilities')"
-        @update-costs="calculateCosts"
-        ref="facilitiesEditor"
-      />
+      <div v-if="showFacilitiesEditor" @mousedown="startDrag($event, 'facilities')">
+        <FacilitiesCostEditor
+          :facilitiesData="facilitiesData"
+          :departments="departments"
+          :editorPosition="editorPosition"
+          :editorStyle="editorStyle"
+          :peakCrewSize="peakCrewSize"
+          @close="showFacilitiesEditor = false"
+          @reset-position="resetEditorPosition"
+          @update-costs="calculateCosts"
+          ref="facilitiesEditor"
+        />
+      </div>
       
       <!-- Workstation Editor -->
-      <WorkstationEditor
-        v-if="showWorkstationEditor"
-        :workstationData="workstationData"
-        :departments="departments"
-        :months="months"
-        :editorPosition="editorPosition"
-        :editorStyle="editorStyle"
-        @close="showWorkstationEditor = false"
-        @reset-position="resetEditorPosition"
-        @start-drag="startDrag($event, 'workstation')"
-        @update-costs="calculateCosts"
-        ref="workstationEditor"
-      />
+      <div v-if="showWorkstationEditor" @mousedown="startDrag($event, 'workstation')">
+        <WorkstationEditor
+          :workstationData="workstationData"
+          :departments="departments"
+          :months="months"
+          :editorPosition="editorPosition"
+          :editorStyle="editorStyle"
+          @close="showWorkstationEditor = false"
+          @reset-position="resetEditorPosition"
+          @update-costs="calculateCosts"
+          ref="workstationEditor"
+        />
+      </div>
     </v-main>
   </v-app>
 </template>
@@ -3025,20 +3025,17 @@ main {
   touch-action: none !important;
 }
 
-.department-editor {
-  border: 2px solid #1976D2; /* Primary color */
+.department-editor, .phase-editor, .facilities-editor, .workstation-editor {
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.phase-editor {
-  border: 2px solid #424242; /* Secondary color */
+.department-editor .v-card {
+  border-radius: 8px;
 }
 
-.facilities-editor {
-  border: 2px solid #2196F3; /* Info color */
-}
-
-.workstation-editor {
-  border: 2px solid #4CAF50; /* Success color */
+.phase-editor .v-card {
+  border-radius: 8px;
 }
 
 .position-left {

@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-editor facilities-editor" :class="editorPosition" :style="editorStyle" ref="facilitiesEditor" @mousedown="startDrag($event)">
+  <div class="floating-editor facilities-editor" :class="editorPosition" :style="editorStyle">
     <v-card color="info" class="draggable-card">
       <v-card-title class="d-flex justify-space-between align-center text-white">
         <span>Facilities Cost Editor</span>
@@ -322,13 +322,7 @@ export default {
       return (percentage / 100) * totalCost;
     },
     
-    startDrag(event) {
-      // Only start drag if clicking on the header (card title)
-      if (event.target.closest('.v-card-title')) {
-        console.log('FacilitiesCostEditor: startDrag');
-        this.$emit('start-drag', event);
-      }
-    },
+    // startDrag method removed as it's now handled by the parent component
     
     resetEditorPosition() {
       this.$emit('reset-position');

@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-editor workstation-editor" :class="editorPosition" :style="editorStyle" ref="workstationEditor" @mousedown="startDrag($event)">
+  <div class="floating-editor workstation-editor" :class="editorPosition" :style="editorStyle">
     <v-card color="success" class="draggable-card">
       <v-card-title class="d-flex justify-space-between align-center text-white">
         <span>Hardware Editor</span>
@@ -384,13 +384,7 @@ export default {
       return bundle.cost * assignment.quantity;
     },
     
-    startDrag(event) {
-      // Only start drag if clicking on the header (card title)
-      if (event.target.closest('.v-card-title')) {
-        console.log('WorkstationEditor: startDrag');
-        this.$emit('start-drag', event);
-      }
-    },
+    // startDrag method removed as it's now handled by the parent component
     
     resetEditorPosition() {
       this.$emit('reset-position');
