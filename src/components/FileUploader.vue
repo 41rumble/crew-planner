@@ -1,30 +1,39 @@
 <template>
-  <v-file-input
-    accept=".csv,.xlsx,.json"
-    label="Upload"
-    variant="outlined"
+  <v-btn
+    color="primary"
+    prepend-icon="mdi-upload"
+    size="small"
     density="compact"
-    hide-details
-    class="d-inline-block mr-2 mb-2"
-    style="max-width: 150px;"
-    @update:model-value="handleFileUpload"
-  ></v-file-input>
+    class="mr-2"
+    @click="$refs.fileInput.click()"
+  >
+    Upload
+  </v-btn>
+  <input 
+    type="file" 
+    ref="fileInput"
+    accept=".csv,.xlsx,.json" 
+    @change="handleFileUpload" 
+    style="display: none;"
+  >
 </template>
 
 <script>
 export default {
   name: 'FileUploader',
   methods: {
-    handleFileUpload(file) {
+    handleFileUpload(event) {
+      const file = event.target.files[0];
       if (!file) return;
       
       const reader = new FileReader();
-      
       reader.onload = (e) => {
         const fileContent = e.target.result;
         this.$emit('file-loaded', fileContent);
+        
+        // Reset the file input so the same file can be selected again
+        event.target.value = '';
       };
-      
       reader.readAsText(file);
     }
   }
