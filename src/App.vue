@@ -1706,9 +1706,33 @@ export default {
     },
     
     // Export to Excel file
-    exportExcel() {
+    async exportExcel() {
       const appState = this.getExportAppState();
-      exportToExcel(appState);
+      
+      try {
+        // Use the enhanced Excel export with formatting
+        const { createFormattedExcel } = await import('./excel-export.js');
+        const blob = await createFormattedExcel(appState);
+        
+        // Create download link
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "crew_planner_project.xlsx");
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        alert('Excel file exported successfully with formatting!');
+      } catch (error) {
+        console.error('Error exporting formatted Excel:', error);
+        
+        // Fall back to the original Excel export if the enhanced one fails
+        exportToExcel(appState);
+      }
+      
       return;
       
       // Legacy code below - no longer used
