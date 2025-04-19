@@ -1,33 +1,46 @@
 <template>
-  <div class="app-container" :style="{
-    '--cell-width': 60 * zoomLevel + 'px',
-    '--cell-height': 40 * zoomLevel + 'px',
-    '--cell-padding': 8 * zoomLevel + 'px',
-    '--font-size': 14 * zoomLevel + 'px',
-    '--header-height': 80 * zoomLevel + 'px'
-  }">
-    <header class="main-header">
-      <h1>Crew Planning Tool</h1>
-    </header>
-    <main>
-      <div class="visualization">
-        <div class="visualization-header">
-          <h2>Crew Planning Visualization</h2>
-          <div class="summary-header">
-            <div class="summary-stat">
-              <div class="stat-label">Total Project Cost</div>
-              <div class="stat-value">${{ formatCurrency(totalProjectCost).replace('$', '') }}</div>
-            </div>
-            <div class="summary-stat">
-              <div class="stat-label">Peak Monthly Cost</div>
-              <div class="stat-value">${{ formatCurrency(peakMonthlyCost).replace('$', '') }}</div>
-            </div>
-            <div class="summary-stat">
-              <div class="stat-label">Peak Crew Size</div>
-              <div class="stat-value">{{ peakCrewSize }} crew members</div>
-            </div>
-          </div>
-        </div>
+  <v-app>
+    <v-app-bar color="primary" density="compact">
+      <v-app-bar-title>Crew Planning Tool</v-app-bar-title>
+    </v-app-bar>
+    
+    <v-main :style="{
+      '--cell-width': 60 * zoomLevel + 'px',
+      '--cell-height': 40 * zoomLevel + 'px',
+      '--cell-padding': 8 * zoomLevel + 'px',
+      '--font-size': 14 * zoomLevel + 'px',
+      '--header-height': 80 * zoomLevel + 'px'
+    }">
+      <v-container fluid>
+        <v-row>
+          <v-col cols="12">
+            <v-card>
+              <v-card-title class="text-h5">Crew Planning Visualization</v-card-title>
+              <v-card-text>
+                <v-row>
+                  <v-col cols="12" md="4">
+                    <v-card variant="outlined">
+                      <v-card-title class="text-subtitle-1">Total Project Cost</v-card-title>
+                      <v-card-text class="text-h6">${{ formatCurrency(totalProjectCost).replace('$', '') }}</v-card-text>
+                    </v-card>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-card variant="outlined">
+                      <v-card-title class="text-subtitle-1">Peak Monthly Cost</v-card-title>
+                      <v-card-text class="text-h6">${{ formatCurrency(peakMonthlyCost).replace('$', '') }}</v-card-text>
+                    </v-card>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-card variant="outlined">
+                      <v-card-title class="text-subtitle-1">Peak Crew Size</v-card-title>
+                      <v-card-text class="text-h6">{{ peakCrewSize }} crew members</v-card-text>
+                    </v-card>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
         <div class="actions">
           <div class="action-toolbar">
             <div class="toolbar-section">
@@ -2612,6 +2625,26 @@ main {
   overflow: auto;
   height: 100%;
   width: 100%;
+  /* Force vertical scrolling to be always visible */
+  overflow-y: scroll !important;
+  overflow-x: auto !important;
+  max-height: calc(100vh - 350px);
+  scrollbar-width: thin; /* For Firefox */
+}
+
+/* For Webkit browsers like Chrome/Safari */
+.table-scroll-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
 }
 
 .table-wrapper {
@@ -2858,11 +2891,35 @@ main {
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  position: fixed;
-  z-index: 100;
+  position: fixed !important;
+  z-index: 1000 !important;
   max-height: 80vh;
   overflow-y: auto;
-  cursor: move;
+  cursor: move !important;
+  transition: none !important; /* Disable transitions for smooth dragging */
+  user-select: none; /* Prevent text selection during drag */
+}
+
+.editor-header {
+  cursor: move !important;
+  user-select: none !important;
+  touch-action: none !important;
+}
+
+.department-editor {
+  border: 2px solid #1976D2; /* Primary color */
+}
+
+.phase-editor {
+  border: 2px solid #424242; /* Secondary color */
+}
+
+.facilities-editor {
+  border: 2px solid #2196F3; /* Info color */
+}
+
+.workstation-editor {
+  border: 2px solid #4CAF50; /* Success color */
 }
 
 .position-left {
@@ -2977,11 +3034,11 @@ main {
   }
   
   .floating-editor {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    top: auto;
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: auto !important;
     width: 90%;
     max-width: 500px;
   }
