@@ -150,6 +150,11 @@
           </div>
           
           <div v-if="activeTab === 'allocation'" class="tab-content">
+            <div class="allocation-controls">
+              <button @click="allocateEvenly" class="allocation-button">Allocate Evenly</button>
+              <button @click="allocateByCrewSize" class="allocation-button">Allocate by Crew Size</button>
+              <button @click="clearAllocation" class="allocation-button">Clear Allocation</button>
+            </div>
             <div class="allocation-list">
               <div class="allocation-header">
                 <div class="allocation-department">Department</div>
@@ -331,6 +336,82 @@ export default {
     },
     
     // startDrag method removed as it's now handled by the parent component
+    
+    allocateEvenly() {
+      // Allocate facilities costs evenly among all departments
+      const departmentCount = this.departments.length;
+      if (departmentCount === 0) return;
+      
+      const evenPercentage = Math.floor(100 / departmentCount);
+      let remaining = 100 - (evenPercentage * departmentCount);
+      
+      // Initialize departmentAllocation if it doesn't exist
+      if (!this.facilitiesData.departmentAllocation) {
+        this.facilitiesData.departmentAllocation = [];
+      }
+      
+      // Set even percentages
+      this.facilitiesData.departmentAllocation = this.departments.map((_, index) => {
+        // Add the remainder to the first department
+        if (index === 0) {
+          return evenPercentage + remaining;
+        }
+        return evenPercentage;
+      });
+      
+      this.updateFacilitiesData();
+    },
+    
+    allocateByCrewSize() {
+      // Allocate facilities costs proportionally to crew size
+      const totalCrew = this.departments.reduce((sum, dept) => sum + dept.maxCrew, 0);
+      if (totalCrew === 0) {
+        this.allocateEvenly();
+        return;
+      }
+      
+      // Initialize departmentAllocation if it doesn't exist
+      if (!this.facilitiesData.departmentAllocation) {
+        this.facilitiesData.departmentAllocation = [];
+      }
+      
+      // Calculate percentages based on crew size
+      let totalPercentage = 0;
+      const rawPercentages = this.departments.map(dept => {
+        const percentage = Math.floor((dept.maxCrew / totalCrew) * 100);
+        totalPercentage += percentage;
+        return percentage;
+      });
+      
+      // Distribute any remaining percentage to the largest department
+      let remaining = 100 - totalPercentage;
+      if (remaining > 0) {
+        let maxCrewIndex = 0;
+        let maxCrew = 0;
+        
+        this.departments.forEach((dept, index) => {
+          if (dept.maxCrew > maxCrew) {
+            maxCrew = dept.maxCrew;
+            maxCrewIndex = index;
+          }
+        });
+        
+        rawPercentages[maxCrewIndex] += remaining;
+      }
+      
+      this.facilitiesData.departmentAllocation = rawPercentages;
+      this.updateFacilitiesData();
+    },
+    
+    clearAllocation() {
+      // Clear all allocation percentages
+      if (!this.facilitiesData.departmentAllocation) {
+        this.facilitiesData.departmentAllocation = [];
+      }
+      
+      this.facilitiesData.departmentAllocation = Array(this.departments.length).fill(0);
+      this.updateFacilitiesData();
+    },
     
     resetEditorPosition() {
       this.$emit('reset-position');
@@ -640,5 +721,25 @@ export default {
 .allocation-cell {
   display: flex;
   align-items: center;
+}
+
+.allocation-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.allocation-button {
+  padding: 8px 12px;
+  background-color: #e2e8f0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.allocation-button:hover {
+  background-color: #cbd5e1;
 }
 </style>
