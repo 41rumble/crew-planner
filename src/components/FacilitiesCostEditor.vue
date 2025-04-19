@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-editor facilities-editor" :class="editorPosition" :style="editorStyle">
+  <div>
     <v-card color="info" class="draggable-card">
       <v-card-title class="d-flex justify-space-between align-center text-white">
         <span>Facilities Cost Editor</span>
@@ -201,14 +201,6 @@ export default {
     departments: {
       type: Array,
       required: true
-    },
-    editorPosition: {
-      type: String,
-      default: 'position-right'
-    },
-    editorStyle: {
-      type: Object,
-      default: () => ({})
     },
     peakCrewSize: {
       type: Number,

@@ -1,5 +1,5 @@
 <template>
-  <v-app @mousedown="handleGlobalMouseDown">
+  <v-app>
     <v-app-bar color="primary" density="compact">
       <v-app-bar-title>Crew Planning Tool</v-app-bar-title>
     </v-app-bar>
@@ -508,34 +508,36 @@
       </div>
       
       <!-- Facilities Cost Editor -->
-      <FacilitiesCostEditor
-        v-if="showFacilitiesEditor"
-        :facilitiesData="facilitiesData"
-        :departments="departments"
-        :editorPosition="editorPosition"
-        :editorStyle="editorStyle"
-        :peakCrewSize="peakCrewSize"
-        @close="showFacilitiesEditor = false"
-        @reset-position="resetEditorPosition"
-        @update-costs="calculateCosts"
-        ref="facilitiesEditor"
-        class="draggable-panel"
-      />
+      <div v-if="showFacilitiesEditor" class="floating-editor facilities-editor draggable-panel"
+           :class="editorPosition"
+           :style="editorStyle"
+           ref="facilitiesEditor"
+           @mousedown="startDrag($event, 'facilities')">
+        <FacilitiesCostEditor
+          :facilitiesData="facilitiesData"
+          :departments="departments"
+          :peakCrewSize="peakCrewSize"
+          @close="showFacilitiesEditor = false"
+          @reset-position="resetEditorPosition"
+          @update-costs="calculateCosts"
+        />
+      </div>
       
       <!-- Workstation Editor -->
-      <WorkstationEditor
-        v-if="showWorkstationEditor"
-        :workstationData="workstationData"
-        :departments="departments"
-        :months="months"
-        :editorPosition="editorPosition"
-        :editorStyle="editorStyle"
-        @close="showWorkstationEditor = false"
-        @reset-position="resetEditorPosition"
-        @update-costs="calculateCosts"
-        ref="workstationEditor"
-        class="draggable-panel"
-      />
+      <div v-if="showWorkstationEditor" class="floating-editor workstation-editor draggable-panel"
+           :class="editorPosition"
+           :style="editorStyle"
+           ref="workstationEditor"
+           @mousedown="startDrag($event, 'workstation')">
+        <WorkstationEditor
+          :workstationData="workstationData"
+          :departments="departments"
+          :months="months"
+          @close="showWorkstationEditor = false"
+          @reset-position="resetEditorPosition"
+          @update-costs="calculateCosts"
+        />
+      </div>
     </v-main>
   </v-app>
 </template>
@@ -2114,21 +2116,7 @@ export default {
       this.editorStyle = { top: '150px', left: '20px' };
     },
     
-    handleGlobalMouseDown(event) {
-      // Check if we're clicking on a draggable panel's title
-      const facilitiesPanel = event.target.closest('.facilities-editor');
-      const workstationPanel = event.target.closest('.workstation-editor');
-      
-      if (facilitiesPanel && event.target.closest('.v-card-title') && !event.target.closest('.v-btn')) {
-        console.log('Dragging facilities editor');
-        event.preventDefault(); // Prevent text selection
-        this.startDrag(event, 'facilities');
-      } else if (workstationPanel && event.target.closest('.v-card-title') && !event.target.closest('.v-btn')) {
-        console.log('Dragging workstation editor');
-        event.preventDefault(); // Prevent text selection
-        this.startDrag(event, 'workstation');
-      }
-    },
+    // handleGlobalMouseDown method removed as we're now using direct mousedown events
     
     startDrag(event, editorType) {
       console.log(`App: startDrag called for ${editorType}`);

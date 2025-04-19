@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-editor workstation-editor" :class="editorPosition" :style="editorStyle">
+  <div>
     <v-card color="success" class="draggable-card">
       <v-card-title class="d-flex justify-space-between align-center text-white">
         <span>Hardware Editor</span>
@@ -264,14 +264,6 @@ export default {
     months: {
       type: Array,
       required: true
-    },
-    editorPosition: {
-      type: String,
-      default: 'position-right'
-    },
-    editorStyle: {
-      type: Object,
-      default: () => ({})
     }
   },
   data() {
