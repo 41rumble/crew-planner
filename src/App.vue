@@ -244,8 +244,7 @@
             </div>
           </div>
         </div>
-
-      </div>
+      </v-container>
       
       <!-- Floating Editor Panel -->
       <div v-if="selectedDepartmentIndex !== null" class="floating-editor department-editor" 
