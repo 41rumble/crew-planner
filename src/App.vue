@@ -1949,8 +1949,8 @@ async exportExcel() {
       try {
         console.log('Starting colored Excel export...');
 
-        // Use the simple Excel formatter that preserves the exact data structure
-        const { exportToColoredExcel } = await import('./simple-excel-format.js');
+        // Use the fixed Excel formatter that ensures colors are properly applied
+        const { exportToColoredExcel } = await import('./fixed-excel-format.js');
         console.log('Successfully imported exportToColoredExcel function');
 
         const blob = await exportToColoredExcel(appState);
@@ -1967,6 +1967,7 @@ async exportExcel() {
         document.body.removeChild(link);
 
         // Show success message
+        alert('Excel file exported successfully with vibrant colors!');
         alert('Excel file exported successfully with vibrant colors!');
         alert('Excel file exported successfully with vibrant colors!');
         alert('Excel file exported successfully with vibrant colors!');
