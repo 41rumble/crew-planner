@@ -134,20 +134,22 @@
                       </v-btn-group>
                       
                       <v-select
-                        v-model="numberOfYears"
+                        v-model="numberOfMonths"
                         @update:model-value="updateTimeScale"
                         :items="[
-                          { title: '1 year', value: '1' },
-                          { title: '2 years', value: '2' },
-                          { title: '3 years', value: '3' },
-                          { title: '4 years', value: '4' },
-                          { title: '5 years', value: '5' },
-                          { title: '6 years', value: '6' }
+                          { title: '6 months', value: '6' },
+                          { title: '12 months (1 year)', value: '12' },
+                          { title: '18 months', value: '18' },
+                          { title: '24 months (2 years)', value: '24' },
+                          { title: '36 months (3 years)', value: '36' },
+                          { title: '48 months (4 years)', value: '48' },
+                          { title: '60 months (5 years)', value: '60' },
+                          { title: '72 months (6 years)', value: '72' }
                         ]"
-                        label="Years"
+                        label="Months"
                         variant="outlined"
                         height="32px"
-                        style="max-width: 100px;"
+                        style="max-width: 150px;"
                       ></v-select>
                       
                       <v-btn variant="text" color="primary" href="/sample_crew_plan.csv" download class="ml-2" size="small" height="32px">
@@ -188,14 +190,16 @@
                 <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
               </div>
               <div class="time-scale-control">
-                <label>Years:</label>
-                <select v-model="numberOfYears" @change="updateTimeScale">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
+                <label>Months:</label>
+                <select v-model="numberOfMonths" @change="updateTimeScale">
+                  <option value="6">6 months</option>
+                  <option value="12">12 months (1 year)</option>
+                  <option value="18">18 months</option>
+                  <option value="24">24 months (2 years)</option>
+                  <option value="36">36 months (3 years)</option>
+                  <option value="48">48 months (4 years)</option>
+                  <option value="60">60 months (5 years)</option>
+                  <option value="72">72 months (6 years)</option>
                 </select>
               </div>
             </div>
@@ -679,7 +683,7 @@ export default {
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
       zoomLevel: 1.0, // Start at 100% zoom
-      numberOfYears: 4, // Default number of years
+      numberOfMonths: 48, // Default number of months (4 years)
       // For timeline drag handles
       isDraggingTimelineHandle: false,
       draggedDepartmentIndex: null,
@@ -2356,29 +2360,48 @@ async exportExcel() {
     
     // Time scale controls
     updateTimeScale() {
-      // Convert numberOfYears to number
-      this.numberOfYears = parseInt(this.numberOfYears);
-      console.log(`Updating number of years to ${this.numberOfYears}`);
+      // Convert numberOfMonths to number
+      this.numberOfMonths = parseInt(this.numberOfMonths);
+      console.log(`Updating number of months to ${this.numberOfMonths}`);
       
-      // Generate years array based on the number of years
-      this.years = Array.from({ length: this.numberOfYears }, (_, i) => i + 1);
+      // Calculate the number of years needed to cover the months
+      const fullYears = Math.floor(this.numberOfMonths / 12);
+      const remainingMonths = this.numberOfMonths % 12;
+      
+      console.log(`Full years: ${fullYears}, Remaining months: ${remainingMonths}`);
+      
+      // Generate years array based on the calculated number of years
+      // We need at least 1 year, and add 1 more if there are remaining months
+      const yearsNeeded = fullYears + (remainingMonths > 0 ? 1 : 0);
+      this.years = Array.from({ length: yearsNeeded }, (_, i) => i + 1);
       console.log('Updated years array:', this.years);
       
-      // Regenerate months with the new years
+      // Regenerate months with the new scale
       this.generateMonthsWithTimeScale();
     },
     
-    // Generate months based on years
+    // Generate months based on the number of months setting
     generateMonthsWithTimeScale() {
       // Clear existing months
       this.months = [];
       
-      // Generate all months for each year
-      this.years.forEach(year => {
+      // Calculate how many full years and remaining months
+      const fullYears = Math.floor(this.numberOfMonths / 12);
+      const remainingMonths = this.numberOfMonths % 12;
+      
+      // Generate all months for each full year
+      for (let year = 1; year <= fullYears; year++) {
         this.monthsPerYear.forEach(month => {
           this.months.push(`${month} Y${year}`);
         });
-      });
+      }
+      
+      // Add the remaining months for the partial year if any
+      if (remainingMonths > 0) {
+        for (let month = 0; month < remainingMonths; month++) {
+          this.months.push(`${this.monthsPerYear[month]} Y${fullYears + 1}`);
+        }
+      }
       
       console.log(`Generated ${this.months.length} months for ${this.years.length} years`);
       
