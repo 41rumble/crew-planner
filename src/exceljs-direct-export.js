@@ -32,14 +32,47 @@ export async function exportToColoredExcel(appState) {
       const xlsxWorksheet = xlsxWorkbook.Sheets[sheetName];
       
       // Convert XLSX worksheet to array of arrays (rows and columns)
-      const data = XLSX.utils.sheet_to_json(xlsxWorksheet, { header: 1 });
+      let data = XLSX.utils.sheet_to_json(xlsxWorksheet, { header: 1 });
+      
+      // For Timeline sheet, filter out empty rows between departments
+      if (sheetName === 'Timeline') {
+        // Process the data to remove empty rows
+        const filteredData = [];
+        let isEmptyRow = false;
+        
+        for (let i = 0; i < data.length; i++) {
+          const row = data[i];
+          
+          // Check if this is an empty row (all cells are empty or undefined)
+          const isEmpty = row.every((cell, index) => 
+            cell === undefined || cell === "" || (index > 0 && cell === 0)
+          );
+          
+          if (isEmpty) {
+            // Only keep empty rows after phase headers (which end with ":")
+            if (i > 0 && 
+                data[i-1][0] && 
+                typeof data[i-1][0] === 'string' && 
+                data[i-1][0].endsWith(':')) {
+              filteredData.push(row);
+            }
+            // Skip other empty rows
+          } else {
+            filteredData.push(row);
+          }
+        }
+        
+        data = filteredData;
+      }
       
       // Create a new worksheet in the ExcelJS workbook
       const worksheet = workbook.addWorksheet(sheetName);
       
-      // Add the data to the worksheet
+      // Add the data to the worksheet, replacing zeros with empty cells
       data.forEach(row => {
-        worksheet.addRow(row);
+        // Replace zeros with null (empty cell) in the row
+        const processedRow = row.map(cell => (cell === 0 ? null : cell));
+        worksheet.addRow(processedRow);
       });
       
       // Apply styling based on sheet type
