@@ -30,14 +30,18 @@
           density="compact"
           hide-details
           class="month-input"
-          style="width: 90px; background-color: rgba(255,255,255,0.1); border-radius: 4px; font-size: 14px;"
-          bg-color="rgba(255,255,255,0.1)"
+          style="width: 90px; background-color: rgba(255,255,255,0.3); border-radius: 4px; font-size: 14px; font-weight: bold; border: 1px solid rgba(255,255,255,0.5);"
+          bg-color="rgba(255,255,255,0.3)"
           color="white"
         >
           <template v-slot:append>
-            <div class="d-flex flex-column" style="height: 32px;">
-              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="small" density="compact" style="margin-bottom: -8px;" color="white" variant="text"></v-btn>
-              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="small" density="compact" style="margin-top: -8px;" color="white" variant="text"></v-btn>
+            <div class="d-flex flex-column" style="height: 32px; margin-right: -8px;">
+              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="small" density="compact" 
+                style="margin-bottom: -8px; background-color: rgba(255,255,255,0.2);" 
+                color="white"></v-btn>
+              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="small" density="compact" 
+                style="margin-top: -8px; background-color: rgba(255,255,255,0.2);" 
+                color="white"></v-btn>
             </div>
           </template>
         </v-text-field>
@@ -2620,6 +2624,13 @@ async exportExcel() {
   --info-color: #2196F3;
   --success-color: #4CAF50;
   --warning-color: #FFC107;
+}
+
+/* Style for the month input in the app bar */
+.month-input input {
+  text-align: center !important;
+  font-weight: bold !important;
+  color: white !important;
 }
 
 /* Loading overlay */
