@@ -541,6 +541,20 @@
                 ]"
               ></v-color-picker>
             </div>
+            <div class="mb-4">
+              <label class="text-subtitle-2 mb-1 d-block">Phase Color:</label>
+              <v-color-picker
+                v-model="phases[selectedPhaseIndex].color"
+                hide-inputs
+                hide-canvas
+                show-swatches
+                swatches-max-height="150"
+                :swatches="[
+                  ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50'],
+                  ['#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B', '#9E9E9E', '#000000']
+                ]"
+              ></v-color-picker>
+            </div>
           
             <div class="d-flex flex-column">
               <div class="d-flex mb-2">
@@ -661,7 +675,8 @@ export default {
         {
           name: 'Concept Stage',
           startMonth: 0,
-          endMonth: 15
+          endMonth: 15,
+          color: '#1976D2'
         },
         {
           name: 'Previs Stage',
@@ -863,6 +878,26 @@ export default {
     }
   },
   methods: {
+    // Get the background color for a department cell based on its phase
+    getDepartmentCellStyle(department, mIndex) {
+      if (!department || department.phase === undefined || 
+          mIndex < department.startMonth || mIndex > department.endMonth) {
+        return {};
+      }
+      
+      // Find the phase for this department
+      const phase = this.phases.find((p, index) => index === department.phase);
+      if (!phase || !phase.color) return {};
+      
+      // Extract RGB components from hex color
+      const r = parseInt(phase.color.slice(1, 3), 16);
+      const g = parseInt(phase.color.slice(3, 5), 16);
+      const b = parseInt(phase.color.slice(5, 7), 16);
+      
+      return {
+        backgroundColor: `rgba(${r}, ${g}, ${b}, 0.1)`
+      };
+    },
     // Get the color for a department based on its phase with opacity
     getDepartmentPhaseColor(department, opacity = 0.2) {
       if (!department || department.phase === undefined) return 'transparent';
