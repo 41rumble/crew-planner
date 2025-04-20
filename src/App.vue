@@ -17,7 +17,7 @@
       </div>
       
       <!-- Month Controls -->
-      <div class="d-flex align-center">
+      <div class="d-flex align-center mr-4">
         <span class="text-white mr-2" style="font-size: 14px;">Months:</span>
         <div class="custom-month-input">
           <input
