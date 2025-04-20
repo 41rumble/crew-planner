@@ -75,6 +75,31 @@ export async function exportToColoredExcel(appState) {
         worksheet.addRow(processedRow);
       });
       
+      // For Timeline sheet, explicitly remove background colors from cost rows
+      if (sheetName === 'Timeline') {
+        // Find cost rows by their labels
+        const costRowLabels = [
+          'Monthly Labor Cost',
+          'Monthly Facility Cost',
+          'Workstation Cost (One-time)',
+          'Backend Infrastructure Cost',
+          'Total Monthly Cost',
+          'Cumulative Cost'
+        ];
+        
+        worksheet.eachRow((row, rowNumber) => {
+          const firstCell = row.getCell(1);
+          if (firstCell.value && costRowLabels.includes(firstCell.value)) {
+            // Remove background color from all cells in this row
+            row.eachCell((cell) => {
+              if (cell.fill) {
+                cell.fill = undefined;
+              }
+            });
+          }
+        });
+      }
+      
       // Apply styling based on sheet type
       if (sheetName === 'Timeline') {
         styleTimelineSheet(worksheet, data, appState);
@@ -224,6 +249,9 @@ function styleTimelineSheet(worksheet, data, appState) {
         for (let colIndex = 2; colIndex <= row.cellCount; colIndex++) {
           const cell = row.getCell(colIndex);
           if (cell.value !== null && cell.value !== undefined) {
+            // Explicitly remove any background fill
+            cell.fill = undefined;
+            
             cell.numFmt = '$#,##0';
             cell.border = {
               top: { style: 'thin' },
