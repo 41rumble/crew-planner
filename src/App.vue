@@ -240,7 +240,12 @@
                           'phase-cell': true,
                           'in-range': phases[item.index] && mIndex >= phases[item.index].startMonth && mIndex <= phases[item.index].endMonth
                         }"
-                        :style="{ ...getCellStyle(), '--phase-color': phases[item.index] && phases[item.index].color && mIndex >= phases[item.index].startMonth && mIndex <= phases[item.index].endMonth ? phases[item.index].color : 'transparent' }"
+                        :style="{
+                          ...getCellStyle(),
+                          '--phase-color': phases[item.index] && phases[item.index].color ? phases[item.index].color : '#4CAF50',
+                          backgroundColor: phases[item.index] && phases[item.index].color && mIndex >= phases[item.index].startMonth && mIndex <= phases[item.index].endMonth ? 
+                            `${phases[item.index].color}33` : 'transparent'
+                        }"
                         @mousedown="handlePhaseMouseDown($event, item.index, mIndex)">
                       <div class="phase-content">
                         <div v-if="phases[item.index] && mIndex === phases[item.index].startMonth"
@@ -273,7 +278,13 @@
                           'dept-cell': true,
                           'in-range': departments[item.index] && mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
                         }"
-                        :style="{ ...getCellStyle(), backgroundColor: departments[item.index] && mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth ? getDepartmentPhaseColor(departments[item.index]) : "transparent" }"
+                        :style="{
+                          ...getCellStyle(),
+                          backgroundColor: departments[item.index] && departments[item.index].phase !== undefined && 
+                                          mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth && 
+                                          phases[departments[item.index].phase] && phases[departments[item.index].phase].color ? 
+                                          `${phases[departments[item.index].phase].color}22` : 'transparent'
+                        }"
                         @mousedown="handleCellMouseDown($event, item.index, mIndex)">
                       <div class="cell-content">
                         {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
@@ -556,6 +567,21 @@
               ></v-color-picker>
             </div>
           
+            <div class="mb-4">
+              <label class="text-subtitle-2 mb-1 d-block">Phase Color:</label>
+              <v-color-picker
+                v-model="phases[selectedPhaseIndex].color"
+                hide-inputs
+                hide-canvas
+                show-swatches
+                swatches-max-height="150"
+                :swatches="[
+                  ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50'],
+                  ['#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B', '#9E9E9E', '#000000']
+                ]"
+              ></v-color-picker>
+            </div>
+
             <div class="d-flex flex-column">
               <div class="d-flex mb-2">
                 <v-btn color="secondary" @click="movePhaseUp" :disabled="selectedPhaseIndex === 0" class="mr-2" style="flex: 1;">
@@ -612,6 +638,7 @@
 import { simpleData } from './simple-data.js';
 import { parseCSV, generateCSV } from './csv-loader.js';
 import { timelineDragHandlers } from './timeline-drag-handlers.js';
+import { defaultPhaseColors, getPhaseColor, getDepartmentPhaseBackground } from './phaseColors.js';
 import { 
   facilitiesData, 
   calculateFacilityCostsForMonth, 
@@ -681,17 +708,20 @@ export default {
         {
           name: 'Previs Stage',
           startMonth: 6,
-          endMonth: 20
+          endMonth: 20,
+          color: defaultPhaseColors[1]
         },
         {
           name: 'Asset Build',
           startMonth: 11,
-          endMonth: 36
+          endMonth: 36,
+          color: defaultPhaseColors[2]
         },
         {
           name: 'Shot Production',
           startMonth: 20,
-          endMonth: 42
+          endMonth: 42,
+          color: defaultPhaseColors[3]
         }
       ],
       departments: [
@@ -1920,7 +1950,7 @@ export default {
         name: 'New Phase',
         startMonth: 0,
         endMonth: 12,
-        color: "#1976D2" // Default blue color
+        color: getPhaseColor(this.phases.length)
       };
       
       // Add the new phase to the phases array
