@@ -235,9 +235,25 @@
                       <span class="drag-handle">:::</span>
                       {{ phases[item.index] ? phases[item.index].name : 'Loading...' }}
                     </td>
-                    <td v-for="(month, mIndex) in months" :key="`phase-${item.index}-${mIndex}`" 
-                        :class="{ 'phase-active': phases[item.index] && isMonthInPhase(phases[item.index], mIndex) }"
-                        :style="getCellStyle()">
+                    <td v-for="(month, mIndex) in months" :key="`dept-${item.index}-${mIndex}`"
+                        :class="{
+                          active: crewMatrix[item.index] && crewMatrix[item.index][mIndex] > 0,
+                          'start-handle': departments[item.index] && typeof departments[item.index].startMonth === 'number' && mIndex === departments[item.index].startMonth,
+                          'end-handle': departments[item.index] && typeof departments[item.index].endMonth === 'number' && mIndex === departments[item.index].endMonth,
+                          'dept-cell': true,
+                          'in-range': departments[item.index] && mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
+                        }"
+                        :style="getCellStyle()"
+                        @mousedown="handleCellMouseDown($event, item.index, mIndex)">
+                      <div class="cell-content">
+                        {{ crewMatrix[item.index] && crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
+                        <div v-if="departments[item.index] && typeof departments[item.index].startMonth === 'number' && mIndex === departments[item.index].startMonth" 
+                             class="start-drag-handle" 
+                             title="Drag to adjust start month"></div>
+                        <div v-if="departments[item.index] && typeof departments[item.index].endMonth === 'number' && mIndex === departments[item.index].endMonth" 
+                             class="end-drag-handle" 
+                             title="Drag to adjust end month"></div>
+                      </div>
                     </td>
                   </tr>
                   
@@ -806,6 +822,8 @@ export default {
     
     // Initialize workstation department assignments
     initializeDepartmentAssignments(this.workstationData, this.departments);
+    // Validate all departments to ensure they have valid properties
+    this.validateAllDepartments();
     
     // Calculate costs
     this.calculateCosts();
@@ -818,6 +836,62 @@ export default {
     }
   },
   methods: {
+    // Validate all departments to ensure they have valid properties
+    validateAllDepartments() {
+      console.log('Validating all departments...');
+      for (let i = 0; i < this.departments.length; i++) {
+        const department = this.departments[i];
+        
+        // Ensure department has valid properties
+        if (!department) {
+          console.error(`Department at index ${i} is undefined`);
+          continue;
+        }
+        
+        // Ensure startMonth and endMonth are valid numbers
+        if (typeof department.startMonth !== 'number' || isNaN(department.startMonth)) {
+          department.startMonth = 0;
+          console.log(`Fixed invalid startMonth for department ${department.name}`);
+        }
+        
+        if (typeof department.endMonth !== 'number' || isNaN(department.endMonth)) {
+          department.endMonth = 12;
+          console.log(`Fixed invalid endMonth for department ${department.name}`);
+        }
+        
+        // Ensure endMonth is after startMonth
+        if (department.endMonth <= department.startMonth) {
+          department.endMonth = department.startMonth + 1;
+          console.log(`Fixed endMonth to be after startMonth for department ${department.name}`);
+        }
+        
+        // Ensure rampUpDuration and rampDownDuration are valid
+        if (typeof department.rampUpDuration !== 'number' || isNaN(department.rampUpDuration) || department.rampUpDuration < 0) {
+          department.rampUpDuration = 0;
+          console.log(`Fixed invalid rampUpDuration for department ${department.name}`);
+        }
+        
+        if (typeof department.rampDownDuration !== 'number' || isNaN(department.rampDownDuration) || department.rampDownDuration < 0) {
+          department.rampDownDuration = 0;
+          console.log(`Fixed invalid rampDownDuration for department ${department.name}`);
+        }
+        
+        // Ensure maxCrew is valid
+        if (typeof department.maxCrew !== 'number' || isNaN(department.maxCrew) || department.maxCrew < 0) {
+          department.maxCrew = 5;
+          console.log(`Fixed invalid maxCrew for department ${department.name}`);
+        }
+        
+        // Ensure rate is valid
+        if (typeof department.rate !== 'number' || isNaN(department.rate) || department.rate < 0) {
+          department.rate = 8000;
+          console.log(`Fixed invalid rate for department ${department.name}`);
+        }
+      }
+      
+      // Update all departments
+      this.updateAllDepartments();
+    },
     // Timeline drag handlers
     ...timelineDragHandlers,
     // Initialize the item order with phases first, then departments
@@ -1055,6 +1129,23 @@ export default {
       console.log('Final crew matrix after updates:', this.crewMatrix);
     },
     updateDepartmentDistribution(dIndex) {
+      // Ensure department has valid startMonth and endMonth properties
+      if (department && (typeof department.startMonth !== 'number' || isNaN(department.startMonth))) {
+        department.startMonth = 0;
+        console.log(`Fixed invalid startMonth for department ${department.name}`);
+      }
+      
+      if (department && (typeof department.endMonth !== 'number' || isNaN(department.endMonth))) {
+        department.endMonth = 12;
+        console.log(`Fixed invalid endMonth for department ${department.name}`);
+      }
+      
+      // Ensure endMonth is after startMonth
+      if (department && department.endMonth <= department.startMonth) {
+        department.endMonth = department.startMonth + 1;
+        console.log(`Fixed endMonth to be after startMonth for department ${department.name}`);
+      }
+
       console.log(`Updating department distribution for index ${dIndex}`);
       
       // Validate department index
