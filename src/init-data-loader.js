@@ -4,6 +4,8 @@
  */
 
 import { defaultPhaseColors } from './phaseColors';
+import { facilitiesData as defaultFacilitiesData } from './facilities-data';
+import { workstationData as defaultWorkstationData } from './workstation-data';
 
 /**
  * Load initialization data from a JSON file
@@ -18,8 +20,13 @@ export async function loadInitData() {
     
     const initData = await response.json();
     
-    // Generate crew matrix based on department data
-    initData.crewMatrix = generateCrewMatrix(initData.departments, initData.months.length);
+    // If crewMatrix is not provided in the JSON, generate it based on department data
+    if (!initData.crewMatrix || initData.crewMatrix.length === 0) {
+      initData.crewMatrix = generateCrewMatrix(initData.departments, initData.months.length);
+    }
+    
+    // Ensure all required properties are present
+    ensureRequiredProperties(initData);
     
     return initData;
   } catch (error) {
@@ -27,6 +34,68 @@ export async function loadInitData() {
     // Return fallback data in case of error
     return getFallbackData();
   }
+}
+
+/**
+ * Ensure all required properties are present in the initialization data
+ * @param {Object} initData - The initialization data
+ */
+function ensureRequiredProperties(initData) {
+  // Ensure itemOrder is present
+  if (!initData.itemOrder || initData.itemOrder.length === 0) {
+    initData.itemOrder = generateDefaultItemOrder(initData.phases, initData.departments);
+  }
+  
+  // Ensure facilitiesData is present
+  if (!initData.facilitiesData) {
+    initData.facilitiesData = JSON.parse(JSON.stringify(defaultFacilitiesData));
+  }
+  
+  // Ensure workstationData is present
+  if (!initData.workstationData) {
+    initData.workstationData = JSON.parse(JSON.stringify(defaultWorkstationData));
+  }
+  
+  // Ensure settings are present
+  if (initData.facilitiesIncludedInTotals === undefined) {
+    initData.facilitiesIncludedInTotals = true;
+  }
+  
+  if (initData.workstationsIncludedInTotals === undefined) {
+    initData.workstationsIncludedInTotals = true;
+  }
+  
+  if (initData.backendIncludedInTotals === undefined) {
+    initData.backendIncludedInTotals = true;
+  }
+}
+
+/**
+ * Generate default item order for phases and departments
+ * @param {Array} phases - The phases data
+ * @param {Array} departments - The departments data
+ * @returns {Array} - The item order
+ */
+function generateDefaultItemOrder(phases, departments) {
+  const itemOrder = [];
+  
+  // Add phases first
+  for (let i = 0; i < phases.length; i++) {
+    itemOrder.push({ type: 'phase', index: i });
+    
+    // Add departments that might belong to this phase
+    for (let j = 0; j < departments.length; j++) {
+      const dept = departments[j];
+      const phase = phases[i];
+      
+      // Simple heuristic: if department's time range overlaps significantly with phase's time range
+      if (dept.startMonth <= phase.endMonth && dept.endMonth >= phase.startMonth) {
+        itemOrder.push({ type: 'department', index: j });
+      }
+    }
+  }
+  
+  return itemOrder;
 }
 
 /**
@@ -125,11 +194,23 @@ function getFallbackData() {
   // Generate crew matrix
   const crewMatrix = generateCrewMatrix(departments, months.length);
   
+  // Generate item order
+  const itemOrder = generateDefaultItemOrder(phases, departments);
+  
+  // Create a complete fallback data object
   return {
     years,
     months,
     phases,
     departments,
-    crewMatrix
+    crewMatrix,
+    itemOrder,
+    facilitiesData: JSON.parse(JSON.stringify(defaultFacilitiesData)),
+    workstationData: JSON.parse(JSON.stringify(defaultWorkstationData)),
+    facilitiesIncludedInTotals: true,
+    workstationsIncludedInTotals: true,
+    backendIncludedInTotals: true,
+    version: '1.0',
+    exportDate: new Date().toISOString()
   };
 }

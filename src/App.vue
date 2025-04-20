@@ -695,6 +695,12 @@ export default {
       this.phases = initData.phases;
       this.departments = initData.departments;
       this.crewMatrix = initData.crewMatrix;
+      this.itemOrder = initData.itemOrder;
+      this.facilitiesData = initData.facilitiesData;
+      this.workstationData = initData.workstationData;
+      this.facilitiesIncludedInTotals = initData.facilitiesIncludedInTotals;
+      this.workstationsIncludedInTotals = initData.workstationsIncludedInTotals;
+      this.backendIncludedInTotals = initData.backendIncludedInTotals;
       
       console.log("Initialization data loaded successfully");
     } catch (error) {
@@ -702,23 +708,27 @@ export default {
       
       // Generate months with the current time scale as fallback
       this.generateMonthsWithTimeScale();
-    }
-    
-    // Make sure crewMatrix is initialized
-    if (!this.crewMatrix || this.crewMatrix.length === 0) {
-      this.initializeCrewMatrix();
       
-      // Update crew distribution for all departments
-      for (let i = 0; i < this.departments.length; i++) {
-        this.updateDepartmentDistribution(i);
+      // Make sure crewMatrix is initialized
+      if (!this.crewMatrix || this.crewMatrix.length === 0) {
+        this.initializeCrewMatrix();
+        
+        // Update crew distribution for all departments
+        for (let i = 0; i < this.departments.length; i++) {
+          this.updateDepartmentDistribution(i);
+        }
+      }
+      
+      // Initialize item order if needed
+      if (!this.itemOrder || this.itemOrder.length === 0) {
+        this.initializeItemOrder();
       }
     }
     
-    // Initialize item order
-    this.initializeItemOrder();
-    
-    // Initialize workstation department assignments
-    initializeDepartmentAssignments(this.workstationData, this.departments);
+    // Initialize workstation department assignments if they're empty
+    if (!this.workstationData.departmentAssignments || this.workstationData.departmentAssignments.length === 0) {
+      initializeDepartmentAssignments(this.workstationData, this.departments);
+    }
     
     // Ensure all numeric properties in departments and phases are stored as numbers
     this.ensureNumericProperties();
