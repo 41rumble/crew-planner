@@ -105,6 +105,8 @@ function styleTimelineSheet(worksheet, data, appState) {
   });
   
   // Process each row to identify phases and departments
+  let currentPhaseColor = null;
+  
   for (let rowIndex = 3; rowIndex <= worksheet.rowCount; rowIndex++) {
     const row = worksheet.getRow(rowIndex);
     const firstCell = row.getCell(1);
@@ -113,14 +115,14 @@ function styleTimelineSheet(worksheet, data, appState) {
     if (value && typeof value === 'string' && value.endsWith(':')) {
       // This is a phase header row
       const phaseName = value.slice(0, -1);
-      const phaseColor = getPhaseColor(phaseName);
+      currentPhaseColor = getPhaseColor(phaseName);
       
       // Apply color to the entire row
       row.eachCell((cell) => {
         cell.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'FF' + phaseColor }
+          fgColor: { argb: 'FF' + currentPhaseColor }
         };
       });
       
@@ -130,6 +132,15 @@ function styleTimelineSheet(worksheet, data, appState) {
       // This is a department row
       firstCell.font = { bold: true };
       
+      // Apply a lighter version of the phase color to the department name
+      if (currentPhaseColor) {
+        firstCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF' + lightenColor(currentPhaseColor, 0.7) }
+        };
+      }
+      
       // Apply color intensity to crew count cells
       for (let colIndex = 2; colIndex <= row.cellCount; colIndex++) {
         const cell = row.getCell(colIndex);
@@ -138,7 +149,9 @@ function styleTimelineSheet(worksheet, data, appState) {
         if (crewCount && typeof crewCount === 'number' && crewCount > 0) {
           // Calculate color intensity based on crew size
           const intensity = Math.min(1, crewCount / 10); // Scale based on crew size
-          const baseColor = 'D8E4BC'; // Light green
+          
+          // Use the phase color as the base color for crew cells
+          const baseColor = currentPhaseColor || 'D8E4BC';
           const colorRgb = adjustColorIntensity(baseColor, intensity);
           
           cell.fill = {
@@ -547,6 +560,31 @@ function adjustColorIntensity(hexColor, intensity) {
   const rr = Math.min(255, Math.max(0, newR)).toString(16).padStart(2, '0');
   const gg = Math.min(255, Math.max(0, newG)).toString(16).padStart(2, '0');
   const bb = Math.min(255, Math.max(0, newB)).toString(16).padStart(2, '0');
+  
+  return `${rr}${gg}${bb}`;
+}
+
+/**
+ * Lighten a color by a specified amount
+ * @param {string} hexColor - The color to lighten
+ * @param {number} factor - The lightening factor (0-1)
+ * @returns {string} - The lightened color
+ */
+function lightenColor(hexColor, factor) {
+  // Extract RGB components
+  const r = parseInt(hexColor.substring(0, 2), 16);
+  const g = parseInt(hexColor.substring(2, 4), 16);
+  const b = parseInt(hexColor.substring(4, 6), 16);
+  
+  // Lighten each component
+  const newR = Math.min(255, r + Math.floor((255 - r) * factor));
+  const newG = Math.min(255, g + Math.floor((255 - g) * factor));
+  const newB = Math.min(255, b + Math.floor((255 - b) * factor));
+  
+  // Convert back to hex
+  const rr = newR.toString(16).padStart(2, '0');
+  const gg = newG.toString(16).padStart(2, '0');
+  const bb = newB.toString(16).padStart(2, '0');
   
   return `${rr}${gg}${bb}`;
 }
