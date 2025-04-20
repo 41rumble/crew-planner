@@ -278,13 +278,7 @@
                           'dept-cell': true,
                           'in-range': departments[item.index] && mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
                         }"
-                        :style="{
-                          ...getCellStyle(),
-                          backgroundColor: departments[item.index] && departments[item.index].phase !== undefined && 
-                                          mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth && 
-                                          phases[departments[item.index].phase] && phases[departments[item.index].phase].color ? 
-                                          `${phases[departments[item.index].phase].color}22` : 'transparent'
-                        }"
+                        :style="{ ...getCellStyle(), ...getDepartmentCellStyle(departments[item.index], mIndex) }"
                         @mousedown="handleCellMouseDown($event, item.index, mIndex)">
                       <div class="cell-content">
                         {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
@@ -597,7 +591,7 @@
 import { simpleData } from './simple-data.js';
 import { parseCSV, generateCSV } from './csv-loader.js';
 import { timelineDragHandlers } from './timeline-drag-handlers.js';
-import { defaultPhaseColors, getPhaseColor, getDepartmentPhaseBackground } from './phaseColors.js';
+import { defaultPhaseColors, getPhaseColor, getDepartmentColor } from './phaseColors.js';
 import { 
   facilitiesData, 
   calculateFacilityCostsForMonth, 
@@ -877,79 +871,11 @@ export default {
       // Find the phase for this department
       const phase = this.phases.find((p, index) => index === department.phase);
       if (!phase || !phase.color) return {};
-      
-      // Extract RGB components from hex color
-      const r = parseInt(phase.color.slice(1, 3), 16);
-      const g = parseInt(phase.color.slice(3, 5), 16);
-      const b = parseInt(phase.color.slice(5, 7), 16);
-      
       return {
-        backgroundColor: `rgba(${r}, ${g}, ${b}, 0.1)`
+        backgroundColor: getDepartmentColor(phase.color, 0.2)
       };
     },
     // Get the color for a department based on its phase with opacity
-    getDepartmentPhaseColor(department, opacity = 0.2) {
-      if (!department || department.phase === undefined) return 'transparent';
-      
-      // Find the phase for this department
-      const phase = this.phases.find((p, index) => index === department.phase);
-      if (!phase || !phase.color) return 'transparent';
-      
-      // Convert hex color to rgba with opacity
-      let hex = phase.color;
-      if (hex.startsWith('#')) {
-        hex = hex.substring(1);
-      }
-      
-      // Parse the hex color
-      let r, g, b;
-      if (hex.length === 3) {
-        r = parseInt(hex.charAt(0) + hex.charAt(0), 16);
-        g = parseInt(hex.charAt(1) + hex.charAt(1), 16);
-        b = parseInt(hex.charAt(2) + hex.charAt(2), 16);
-      } else if (hex.length === 6) {
-        r = parseInt(hex.substring(0, 2), 16);
-        g = parseInt(hex.substring(2, 4), 16);
-        b = parseInt(hex.substring(4, 6), 16);
-      } else {
-        return 'transparent';
-      }
-      
-      // Return rgba color with opacity
-      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    },
-    // Get the color for a department based on its phase with opacity
-    getDepartmentPhaseColor(department, opacity = 0.2) {
-      if (!department || !department.phase) return 'transparent';
-      
-      // Find the phase for this department
-      const phase = this.phases.find((p, index) => index === department.phase);
-      if (!phase || !phase.color) return 'transparent';
-      
-      // Convert hex color to rgba with opacity
-      let hex = phase.color;
-      if (hex.startsWith('#')) {
-        hex = hex.substring(1);
-      }
-      
-      // Parse the hex color
-      let r, g, b;
-      if (hex.length === 3) {
-        r = parseInt(hex.charAt(0) + hex.charAt(0), 16);
-        g = parseInt(hex.charAt(1) + hex.charAt(1), 16);
-        b = parseInt(hex.charAt(2) + hex.charAt(2), 16);
-      } else if (hex.length === 6) {
-        r = parseInt(hex.substring(0, 2), 16);
-        g = parseInt(hex.substring(2, 4), 16);
-        b = parseInt(hex.substring(4, 6), 16);
-      } else {
-        return 'transparent';
-      }
-      
-      // Return rgba color with opacity
-      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    },
-    // Ensure all numeric properties in departments and phases are stored as numbers
     ensureNumericProperties() {
       console.log('Ensuring all numeric properties in departments and phases are stored as numbers...');
       
