@@ -531,53 +531,12 @@
                 hide-inputs
                 hide-canvas
                 show-swatches
-                swatches-max-height="150"
+                swatches-max-height="100"
+                mode="swatches"
                 :swatches="[
-                  ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50'],
-                  ['#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B', '#9E9E9E', '#000000']
-                ]"
-              ></v-color-picker>
-            </div>
-            <div class="mb-4">
-              <label class="text-subtitle-2 mb-1 d-block">Phase Color:</label>
-              <v-color-picker
-                v-model="phases[selectedPhaseIndex].color"
-                hide-inputs
-                hide-canvas
-                show-swatches
-                swatches-max-height="150"
-                :swatches="[
-                  ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50'],
-                  ['#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B', '#9E9E9E', '#000000']
-                ]"
-              ></v-color-picker>
-            </div>
-            <div class="mb-4">
-              <label class="text-subtitle-2 mb-1 d-block">Phase Color:</label>
-              <v-color-picker
-                v-model="phases[selectedPhaseIndex].color"
-                hide-inputs
-                hide-canvas
-                show-swatches
-                swatches-max-height="150"
-                :swatches="[
-                  ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50'],
-                  ['#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B', '#9E9E9E', '#000000']
-                ]"
-              ></v-color-picker>
-            </div>
-          
-            <div class="mb-4">
-              <label class="text-subtitle-2 mb-1 d-block">Phase Color:</label>
-              <v-color-picker
-                v-model="phases[selectedPhaseIndex].color"
-                hide-inputs
-                hide-canvas
-                show-swatches
-                swatches-max-height="150"
-                :swatches="[
-                  ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50'],
-                  ['#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B', '#9E9E9E', '#000000']
+                  ['#1976D2', '#4CAF50', '#FF9800', '#9C27B0', '#F44336'],
+                  ['#03A9F4', '#8BC34A', '#FFC107', '#E91E63', '#FF5722'],
+                  ['#00BCD4', '#CDDC39', '#FFEB3B', '#673AB7', '#795548']
                 ]"
               ></v-color-picker>
             </div>
