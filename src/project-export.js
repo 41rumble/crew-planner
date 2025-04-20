@@ -163,6 +163,11 @@ export function createProjectData(appState) {
     
     // Settings
     facilitiesIncludedInTotals: appState.facilitiesIncludedInTotals,
+    workstationsIncludedInTotals: appState.workstationsIncludedInTotals,
+    backendIncludedInTotals: appState.backendIncludedInTotals,
+    
+    // UI state
+    zoomLevel: appState.zoomLevel,
     
     // Version info
     version: '1.0',
@@ -201,6 +206,23 @@ export function applyProjectData(projectData, appState) {
   // Update settings
   if (projectData.facilitiesIncludedInTotals !== undefined) {
     appState.facilitiesIncludedInTotals = projectData.facilitiesIncludedInTotals;
+  }
+  
+  if (projectData.workstationsIncludedInTotals !== undefined) {
+    appState.workstationsIncludedInTotals = projectData.workstationsIncludedInTotals;
+  }
+  
+  if (projectData.backendIncludedInTotals !== undefined) {
+    appState.backendIncludedInTotals = projectData.backendIncludedInTotals;
+  }
+  
+  // Update UI state
+  if (projectData.zoomLevel !== undefined) {
+    // Ensure zoom level is within valid range
+    const zoomLevel = Number(projectData.zoomLevel);
+    if (!isNaN(zoomLevel) && zoomLevel >= 0.4 && zoomLevel <= 2) {
+      appState.zoomLevel = zoomLevel;
+    }
   }
   
   return appState;
