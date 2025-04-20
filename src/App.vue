@@ -1885,7 +1885,6 @@ export default {
         name: 'New Phase',
         startMonth: 0,
         endMonth: 12,
-        color: "#1976D2" // Default blue color,
         color: "#1976D2" // Default blue color
       };
       
