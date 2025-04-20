@@ -694,7 +694,6 @@ export default {
       this.months = initData.months;
       this.phases = initData.phases;
       this.departments = initData.departments;
-      this.crewMatrix = initData.crewMatrix;
       this.itemOrder = initData.itemOrder;
       this.facilitiesData = initData.facilitiesData;
       this.workstationData = initData.workstationData;
@@ -703,6 +702,18 @@ export default {
       this.backendIncludedInTotals = initData.backendIncludedInTotals;
       
       console.log("Initialization data loaded successfully");
+      
+      // Initialize crew matrix
+      this.initializeCrewMatrix();
+      
+      // Update crew distribution for all departments
+      for (let i = 0; i < this.departments.length; i++) {
+        this.updateDepartmentDistribution(i);
+      }
+      
+      console.log("Crew matrix initialized with dimensions:", 
+        this.crewMatrix.length, "x", 
+        this.crewMatrix.length > 0 ? this.crewMatrix[0].length : 0);
     } catch (error) {
       console.error("Error loading initialization data:", error);
       
@@ -1439,8 +1450,15 @@ export default {
         // Calculate monthly crew size for facility costs
         let monthlyCrewSize = 0;
         for (let d = 0; d < this.departments.length; d++) {
-          if (this.crewMatrix[d] && this.crewMatrix[d][m]) {
-            monthlyCrewSize += this.crewMatrix[d][m];
+          if (this.crewMatrix[d] && this.crewMatrix[d][m] !== undefined) {
+            // Ensure crew size is a valid number and within reasonable limits
+            const crewSize = this.crewMatrix[d][m];
+            if (!isNaN(crewSize) && crewSize >= 0 && crewSize <= 1000) {
+              monthlyCrewSize += crewSize;
+            } else {
+              console.error(`Invalid crew size at [${d}][${m}]: ${crewSize}, setting to 0`);
+              this.crewMatrix[d][m] = 0;
+            }
           }
         }
         
@@ -1503,18 +1521,20 @@ export default {
             continue;
           }
           
-          // Get crew size
-          let crewSize = this.crewMatrix[d][m];
-          
-          // Validate crew size
-          if (isNaN(crewSize) || crewSize < 0 || crewSize > 1000) {
-            console.error(`Invalid crew size at [${d}][${m}]: ${crewSize}`);
-            crewSize = 0;
-            this.crewMatrix[d][m] = 0; // Fix the value in the matrix
+          // Get crew size if the crew matrix is valid
+          if (this.crewMatrix[d] && this.crewMatrix[d][m] !== undefined) {
+            let crewSize = this.crewMatrix[d][m];
+            
+            // Validate crew size
+            if (isNaN(crewSize) || crewSize < 0 || crewSize > 1000) {
+              console.error(`Invalid crew size at [${d}][${m}]: ${crewSize}`);
+              crewSize = 0;
+              this.crewMatrix[d][m] = 0; // Fix the value in the matrix
+            }
+            
+            // Add to monthly crew size
+            monthlyCrewSize += crewSize;
           }
-          
-          // Add to monthly crew size
-          monthlyCrewSize += crewSize;
         }
         
         // Validate monthly crew size

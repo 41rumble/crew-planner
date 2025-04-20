@@ -180,30 +180,66 @@ function generateCrewMatrix(departments, monthsCount) {
     const plateauStart = startMonth + rampUpDuration;
     const plateauEnd = endMonth - rampDownDuration;
     
-    // Apply ramp up
-    for (let i = 0; i < rampUpDuration; i++) {
-      const month = startMonth + i;
-      // Ensure crew size is a whole number
-      const crewSize = Math.round((i + 1) * maxCrew / rampUpDuration);
-      if (month >= 0 && month < crewArray.length) {
-        crewArray[month] = crewSize;
+    // Validate the plateau
+    if (plateauStart > plateauEnd) {
+      // Invalid plateau, use a simplified approach
+      const midpoint = Math.floor((startMonth + endMonth) / 2);
+      
+      // Apply a simplified distribution
+      for (let month = startMonth; month <= endMonth; month++) {
+        if (month >= 0 && month < crewArray.length) {
+          // Use maxCrew at the midpoint, and ramp up/down from there
+          if (month === midpoint) {
+            crewArray[month] = maxCrew;
+          } else if (month < midpoint) {
+            // Ramp up to midpoint
+            const rampFactor = (month - startMonth + 1) / (midpoint - startMonth + 1);
+            crewArray[month] = Math.max(1, Math.round(maxCrew * rampFactor));
+          } else {
+            // Ramp down from midpoint
+            const rampFactor = (endMonth - month + 1) / (endMonth - midpoint + 1);
+            crewArray[month] = Math.max(1, Math.round(maxCrew * rampFactor));
+          }
+        }
+      }
+    } else {
+      // Normal case - plateau is valid
+      
+      // Apply ramp up
+      for (let i = 0; i < rampUpDuration; i++) {
+        const month = startMonth + i;
+        if (month >= 0 && month < crewArray.length) {
+          // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+          const rampFactor = (i + 1) / rampUpDuration;
+          const crewSize = maxCrew > 0 ? Math.max(1, Math.round(maxCrew * rampFactor)) : 0;
+          crewArray[month] = crewSize;
+        }
+      }
+      
+      // Apply plateau (full crew)
+      for (let month = plateauStart; month <= plateauEnd; month++) {
+        if (month >= 0 && month < crewArray.length) {
+          crewArray[month] = maxCrew;
+        }
+      }
+      
+      // Apply ramp down
+      for (let i = 0; i < rampDownDuration; i++) {
+        const month = plateauEnd + 1 + i;
+        if (month >= 0 && month < crewArray.length) {
+          // Calculate ramp value ensuring it's at least 1 if maxCrew > 0
+          const rampFactor = (rampDownDuration - i - 1) / rampDownDuration;
+          const crewSize = maxCrew > 0 ? Math.max(1, Math.round(maxCrew * rampFactor)) : 0;
+          crewArray[month] = crewSize;
+        }
       }
     }
     
-    // Apply plateau (full crew)
-    for (let month = plateauStart; month <= plateauEnd; month++) {
-      if (month >= 0 && month < crewArray.length) {
-        crewArray[month] = maxCrew;
-      }
-    }
-    
-    // Apply ramp down
-    for (let i = 0; i < rampDownDuration; i++) {
-      const month = plateauEnd + 1 + i;
-      // Ensure crew size is a whole number
-      const crewSize = Math.round(maxCrew * (rampDownDuration - i - 1) / rampDownDuration);
-      if (month >= 0 && month < crewArray.length) {
-        crewArray[month] = crewSize;
+    // Validate the crew matrix values
+    for (let i = 0; i < crewArray.length; i++) {
+      if (isNaN(crewArray[i]) || crewArray[i] < 0 || crewArray[i] > 1000) {
+        console.error(`Invalid crew size at month ${i}: ${crewArray[i]}`);
+        crewArray[i] = 0;
       }
     }
     
