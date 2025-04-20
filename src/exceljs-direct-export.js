@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
  */
 export async function exportToColoredExcel(appState) {
   try {
-    console.log('Starting ExcelJS direct export...');
+    console.log('Starting ExcelJS direct export with no background colors for cost rows...');
     
     // First, use the original export function to get the exact data
     const { exportToExcel } = await import('./export-excel.js');
