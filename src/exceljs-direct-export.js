@@ -239,9 +239,10 @@ function styleTimelineSheet(worksheet, data, appState) {
       // This is a department row
       firstCell.font = { bold: true };
       
-      // Apply a lighter version of the phase color to the department name
+      // Apply a much lighter version of the phase color to the department name
       if (currentPhaseColor) {
-        const lightColor = lightenColor(currentPhaseColor, 0.7);
+        // Use a higher lightening factor (0.85) for better readability
+        const lightColor = lightenColor(currentPhaseColor, 0.85);
         firstCell.fill = {
           type: 'pattern',
           pattern: 'solid',
@@ -258,11 +259,12 @@ function styleTimelineSheet(worksheet, data, appState) {
         const crewCount = cell.value;
         
         if (crewCount && typeof crewCount === 'number' && crewCount > 0) {
-          // Calculate color intensity based on crew size
-          const intensity = Math.min(1, crewCount / 10); // Scale based on crew size
+          // Calculate color intensity based on crew size, but limit the maximum intensity
+          // to ensure text remains readable
+          const intensity = Math.min(0.7, crewCount / 15); // Scale based on crew size with a max of 0.7
           
-          // Use the phase color as the base color for crew cells
-          const baseColor = currentPhaseColor || 'D8E4BC';
+          // Use the phase color as the base color for crew cells, but start with a lighter version
+          const baseColor = lightenColor(currentPhaseColor || 'D8E4BC', 0.7);
           const colorRgb = adjustColorIntensity(baseColor, intensity);
           
           cell.fill = {
