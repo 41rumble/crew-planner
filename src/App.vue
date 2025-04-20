@@ -30,17 +30,17 @@
           density="compact"
           hide-details
           class="month-input"
-          style="width: 90px; background-color: rgba(255,255,255,0.3); border-radius: 4px; font-size: 14px; font-weight: bold; border: 1px solid rgba(255,255,255,0.5);"
+          style="width: 120px; background-color: rgba(255,255,255,0.3); border-radius: 4px; font-size: 16px; font-weight: bold; border: 1px solid rgba(255,255,255,0.5);"
           bg-color="rgba(255,255,255,0.3)"
           color="white"
         >
           <template v-slot:append>
-            <div class="d-flex flex-column" style="height: 32px; margin-right: -8px;">
-              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="small" density="compact" 
-                style="margin-bottom: -8px; background-color: rgba(255,255,255,0.2);" 
+            <div class="d-flex flex-column" style="height: 36px; margin-right: -8px;">
+              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="small" 
+                style="margin-bottom: -8px; background-color: rgba(255,255,255,0.2); min-width: 36px; height: 18px;" 
                 color="white"></v-btn>
-              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="small" density="compact" 
-                style="margin-top: -8px; background-color: rgba(255,255,255,0.2);" 
+              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="small" 
+                style="margin-top: -8px; background-color: rgba(255,255,255,0.2); min-width: 36px; height: 18px;" 
                 color="white"></v-btn>
             </div>
           </template>
@@ -2631,6 +2631,9 @@ async exportExcel() {
   text-align: center !important;
   font-weight: bold !important;
   color: white !important;
+  font-size: 16px !important;
+  padding: 0 8px !important;
+  height: 36px !important;
 }
 
 /* Loading overlay */
