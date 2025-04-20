@@ -1943,19 +1943,19 @@ export default {
     },
     
     // Export to Excel file
-    async exportExcel() {
+async exportExcel() {
       const appState = this.getExportAppState();
-      
+
       try {
-        console.log('Starting formatted Excel export...');
-        
-        // Use the formatted Excel export
-        const { exportToFormattedExcel } = await import('./format-excel.js');
-        console.log('Successfully imported exportToFormattedExcel function');
-        
-        const blob = await exportToFormattedExcel(appState);
-        console.log('Successfully created formatted Excel blob');
-        
+        console.log('Starting enhanced Excel export...');
+
+        // Use the enhanced Excel export with improved formatting and phase coloring
+        const { exportToEnhancedExcel } = await import('./enhanced-format-excel.js');
+        console.log('Successfully imported exportToEnhancedExcel function');
+
+        const blob = await exportToEnhancedExcel(appState);
+        console.log('Successfully created enhanced Excel blob');
+
         // Create download link
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -1965,8 +1965,9 @@ export default {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Show success message
+        alert('Excel file exported successfully with enhanced formatting!');
         alert('Excel file exported successfully with formatting!');
       } catch (error) {
         console.error('Error exporting formatted Excel:', error);
