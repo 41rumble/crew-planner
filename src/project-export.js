@@ -168,6 +168,7 @@ export function createProjectData(appState) {
     
     // UI state
     zoomLevel: appState.zoomLevel,
+    numberOfMonths: appState.numberOfMonths,
     
     // Version info
     version: '1.0',
@@ -222,6 +223,16 @@ export function applyProjectData(projectData, appState) {
     const zoomLevel = Number(projectData.zoomLevel);
     if (!isNaN(zoomLevel) && zoomLevel >= 0.4 && zoomLevel <= 2) {
       appState.zoomLevel = zoomLevel;
+    }
+  }
+  
+  if (projectData.numberOfMonths !== undefined) {
+    // Ensure number of months is within valid range
+    const numberOfMonths = Number(projectData.numberOfMonths);
+    if (!isNaN(numberOfMonths) && numberOfMonths >= 6 && numberOfMonths <= 72) {
+      appState.numberOfMonths = numberOfMonths;
+      // Make sure to update the time scale
+      appState.updateTimeScale();
     }
   }
   
