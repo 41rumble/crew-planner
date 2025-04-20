@@ -40,17 +40,6 @@
             </button>
           </div>
         </div>
-        
-        <!-- Reset months button -->
-        <v-btn 
-          icon="mdi-refresh" 
-          @click="resetMonths" 
-          title="Reset to default months (48)" 
-          size="small" 
-          color="white" 
-          variant="text" 
-          class="ml-1"
-        ></v-btn>
       </div>
     </v-app-bar>
     
