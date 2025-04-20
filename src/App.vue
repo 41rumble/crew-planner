@@ -19,32 +19,25 @@
       <!-- Month Controls -->
       <div class="d-flex align-center">
         <span class="text-white mr-2" style="font-size: 14px;">Months:</span>
-        <v-text-field
-          v-model="numberOfMonths"
-          @update:model-value="updateTimeScale"
-          type="number"
-          min="1"
-          max="120"
-          step="1"
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="month-input"
-          style="width: 120px; background-color: rgba(255,255,255,0.3); border-radius: 4px; font-size: 16px; font-weight: bold; border: 1px solid rgba(255,255,255,0.5);"
-          bg-color="rgba(255,255,255,0.3)"
-          color="white"
-        >
-          <template v-slot:append>
-            <div class="d-flex flex-column" style="height: 36px; margin-right: -8px;">
-              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="small" 
-                style="margin-bottom: -8px; background-color: rgba(255,255,255,0.2); min-width: 36px; height: 18px;" 
-                color="white"></v-btn>
-              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="small" 
-                style="margin-top: -8px; background-color: rgba(255,255,255,0.2); min-width: 36px; height: 18px;" 
-                color="white"></v-btn>
-            </div>
-          </template>
-        </v-text-field>
+        <div class="custom-month-input">
+          <input
+            v-model="numberOfMonths"
+            @input="updateTimeScale"
+            type="number"
+            min="1"
+            max="120"
+            step="1"
+            class="month-number-input"
+          />
+          <div class="month-buttons">
+            <button @click="incrementMonths" class="month-btn up">
+              <v-icon icon="mdi-chevron-up" size="small" color="white"></v-icon>
+            </button>
+            <button @click="decrementMonths" class="month-btn down">
+              <v-icon icon="mdi-chevron-down" size="small" color="white"></v-icon>
+            </button>
+          </div>
+        </div>
         
         <!-- Reset months button -->
         <v-btn 
@@ -2643,14 +2636,65 @@ async exportExcel() {
   --warning-color: #FFC107;
 }
 
-/* Style for the month input in the app bar */
-.month-input input {
-  text-align: center !important;
-  font-weight: bold !important;
-  color: white !important;
-  font-size: 16px !important;
-  padding: 0 8px !important;
-  height: 36px !important;
+/* Custom month input in the app bar */
+.custom-month-input {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255,255,255,0.3);
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.5);
+  overflow: hidden;
+  height: 36px;
+  width: 80px;
+}
+
+.month-number-input {
+  width: 60px;
+  height: 100%;
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  padding: 0;
+}
+
+.month-number-input:focus {
+  outline: none;
+}
+
+.month-number-input::-webkit-inner-spin-button, 
+.month-number-input::-webkit-outer-spin-button { 
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.month-buttons {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-left: 1px solid rgba(255,255,255,0.3);
+}
+
+.month-btn {
+  background-color: rgba(255,255,255,0.2);
+  border: none;
+  cursor: pointer;
+  height: 18px;
+  width: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.month-btn.up {
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+
+.month-btn:hover {
+  background-color: rgba(255,255,255,0.3);
 }
 
 /* Loading overlay */
