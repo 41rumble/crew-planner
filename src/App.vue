@@ -783,39 +783,39 @@ export default {
     },
     // Get the color for a department based on its phase with opacity
     ensureNumericProperties() {
-      console.log('Ensuring all numeric properties in departments and phases are stored as numbers...');
+      console.log('Ensuring all numeric properties in departments and phases are stored as whole numbers...');
       
       // Ensure numeric properties for departments
       for (let i = 0; i < this.departments.length; i++) {
         const department = this.departments[i];
         
-        // Convert string values to numbers for numeric properties
-        if (department.startMonth !== undefined && typeof department.startMonth === 'string') {
-          department.startMonth = Number(department.startMonth);
-          console.log(`Converted startMonth to number for department ${department.name}`);
+        // Convert values to whole numbers for month-related properties
+        if (department.startMonth !== undefined) {
+          department.startMonth = Math.round(Number(department.startMonth));
+          console.log(`Ensured startMonth is a whole number for department ${department.name}`);
         }
         
-        if (department.endMonth !== undefined && typeof department.endMonth === 'string') {
-          department.endMonth = Number(department.endMonth);
-          console.log(`Converted endMonth to number for department ${department.name}`);
+        if (department.endMonth !== undefined) {
+          department.endMonth = Math.round(Number(department.endMonth));
+          console.log(`Ensured endMonth is a whole number for department ${department.name}`);
         }
         
-        if (department.rampUpDuration !== undefined && typeof department.rampUpDuration === 'string') {
-          department.rampUpDuration = Number(department.rampUpDuration);
-          console.log(`Converted rampUpDuration to number for department ${department.name}`);
+        if (department.rampUpDuration !== undefined) {
+          department.rampUpDuration = Math.round(Number(department.rampUpDuration));
+          console.log(`Ensured rampUpDuration is a whole number for department ${department.name}`);
         }
         
-        if (department.rampDownDuration !== undefined && typeof department.rampDownDuration === 'string') {
-          department.rampDownDuration = Number(department.rampDownDuration);
-          console.log(`Converted rampDownDuration to number for department ${department.name}`);
+        if (department.rampDownDuration !== undefined) {
+          department.rampDownDuration = Math.round(Number(department.rampDownDuration));
+          console.log(`Ensured rampDownDuration is a whole number for department ${department.name}`);
         }
         
-        if (department.maxCrew !== undefined && typeof department.maxCrew === 'string') {
-          department.maxCrew = Number(department.maxCrew);
-          console.log(`Converted maxCrew to number for department ${department.name}`);
+        if (department.maxCrew !== undefined) {
+          department.maxCrew = Math.round(Number(department.maxCrew));
+          console.log(`Ensured maxCrew is a whole number for department ${department.name}`);
         }
         
-        if (department.rate !== undefined && typeof department.rate === 'string') {
+        if (department.rate !== undefined) {
           department.rate = Number(department.rate);
           console.log(`Converted rate to number for department ${department.name}`);
         }
@@ -825,15 +825,15 @@ export default {
       for (let i = 0; i < this.phases.length; i++) {
         const phase = this.phases[i];
         
-        // Convert string values to numbers for numeric properties
-        if (phase.startMonth !== undefined && typeof phase.startMonth === 'string') {
-          phase.startMonth = Number(phase.startMonth);
-          console.log(`Converted startMonth to number for phase ${phase.name}`);
+        // Convert values to whole numbers for month-related properties
+        if (phase.startMonth !== undefined) {
+          phase.startMonth = Math.round(Number(phase.startMonth));
+          console.log(`Ensured startMonth is a whole number for phase ${phase.name}`);
         }
         
-        if (phase.endMonth !== undefined && typeof phase.endMonth === 'string') {
-          phase.endMonth = Number(phase.endMonth);
-          console.log(`Converted endMonth to number for phase ${phase.name}`);
+        if (phase.endMonth !== undefined) {
+          phase.endMonth = Math.round(Number(phase.endMonth));
+          console.log(`Ensured endMonth is a whole number for phase ${phase.name}`);
         }
         
         // Ensure phase has a color property
@@ -855,11 +855,40 @@ export default {
           console.log(`Added default color ${phase.color} to phase ${phase.name}`);
         }
         
-        if (phase.endMonth !== undefined && typeof phase.endMonth === 'string') {
-          phase.endMonth = Number(phase.endMonth);
-          console.log(`Converted endMonth to number for phase ${phase.name}`);
-        }
       }
+      
+      // Ensure numeric properties for workstation data
+      if (this.workstationData && this.workstationData.departmentAssignments) {
+        this.workstationData.departmentAssignments.forEach(assignment => {
+          if (assignment.purchaseMonth !== undefined) {
+            assignment.purchaseMonth = Math.round(Number(assignment.purchaseMonth));
+            console.log(`Ensured purchaseMonth is a whole number for workstation assignment ${assignment.departmentName}`);
+          }
+          if (assignment.quantity !== undefined) {
+            assignment.quantity = Math.round(Number(assignment.quantity));
+            console.log(`Ensured quantity is a whole number for workstation assignment ${assignment.departmentName}`);
+          }
+        });
+      }
+      
+      // Ensure numeric properties for backend infrastructure
+      if (this.workstationData && this.workstationData.backendInfrastructure) {
+        this.workstationData.backendInfrastructure.forEach(category => {
+          if (category.items) {
+            category.items.forEach(item => {
+              if (item.purchaseMonth !== undefined) {
+                item.purchaseMonth = Math.round(Number(item.purchaseMonth));
+                console.log(`Ensured purchaseMonth is a whole number for backend item ${item.name}`);
+              }
+              if (item.quantity !== undefined) {
+                item.quantity = Math.round(Number(item.quantity));
+                console.log(`Ensured quantity is a whole number for backend item ${item.name}`);
+              }
+            });
+          }
+        });
+      }
+    
     },
     // Handle mouse down on a phase cell
     handlePhaseMouseDown(event, phaseIndex, monthIndex) {

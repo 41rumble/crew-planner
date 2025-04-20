@@ -68,6 +68,67 @@ function ensureRequiredProperties(initData) {
   if (initData.backendIncludedInTotals === undefined) {
     initData.backendIncludedInTotals = true;
   }
+  
+  // Ensure all month values are whole numbers
+  ensureWholeNumberMonths(initData);
+}
+
+/**
+ * Ensure all month values in the initialization data are whole numbers
+ * @param {Object} initData - The initialization data
+ */
+function ensureWholeNumberMonths(initData) {
+  // Process phases
+  if (initData.phases) {
+    initData.phases.forEach(phase => {
+      if (phase.startMonth !== undefined) {
+        phase.startMonth = Math.round(Number(phase.startMonth));
+      }
+      if (phase.endMonth !== undefined) {
+        phase.endMonth = Math.round(Number(phase.endMonth));
+      }
+    });
+  }
+  
+  // Process departments
+  if (initData.departments) {
+    initData.departments.forEach(dept => {
+      if (dept.startMonth !== undefined) {
+        dept.startMonth = Math.round(Number(dept.startMonth));
+      }
+      if (dept.endMonth !== undefined) {
+        dept.endMonth = Math.round(Number(dept.endMonth));
+      }
+      if (dept.rampUpDuration !== undefined) {
+        dept.rampUpDuration = Math.round(Number(dept.rampUpDuration));
+      }
+      if (dept.rampDownDuration !== undefined) {
+        dept.rampDownDuration = Math.round(Number(dept.rampDownDuration));
+      }
+    });
+  }
+  
+  // Process workstation data
+  if (initData.workstationData && initData.workstationData.departmentAssignments) {
+    initData.workstationData.departmentAssignments.forEach(assignment => {
+      if (assignment.purchaseMonth !== undefined) {
+        assignment.purchaseMonth = Math.round(Number(assignment.purchaseMonth));
+      }
+    });
+  }
+  
+  // Process backend infrastructure
+  if (initData.workstationData && initData.workstationData.backendInfrastructure) {
+    initData.workstationData.backendInfrastructure.forEach(category => {
+      if (category.items) {
+        category.items.forEach(item => {
+          if (item.purchaseMonth !== undefined) {
+            item.purchaseMonth = Math.round(Number(item.purchaseMonth));
+          }
+        });
+      }
+    });
+  }
 }
 
 /**
@@ -106,7 +167,13 @@ function generateDefaultItemOrder(phases, departments) {
  */
 function generateCrewMatrix(departments, monthsCount) {
   return departments.map(dept => {
-    const { startMonth, endMonth, maxCrew, rampUpDuration, rampDownDuration } = dept;
+    // Ensure all values are numbers and whole numbers
+    const startMonth = Math.round(Number(dept.startMonth || 0));
+    const endMonth = Math.round(Number(dept.endMonth || 0));
+    const maxCrew = Math.round(Number(dept.maxCrew || 0));
+    const rampUpDuration = Math.round(Number(dept.rampUpDuration || 0));
+    const rampDownDuration = Math.round(Number(dept.rampDownDuration || 0));
+    
     const crewArray = new Array(monthsCount).fill(0);
     
     // Calculate the plateau duration (full crew period)
@@ -116,20 +183,28 @@ function generateCrewMatrix(departments, monthsCount) {
     // Apply ramp up
     for (let i = 0; i < rampUpDuration; i++) {
       const month = startMonth + i;
+      // Ensure crew size is a whole number
       const crewSize = Math.round((i + 1) * maxCrew / rampUpDuration);
-      crewArray[month] = crewSize;
+      if (month >= 0 && month < crewArray.length) {
+        crewArray[month] = crewSize;
+      }
     }
     
     // Apply plateau (full crew)
     for (let month = plateauStart; month <= plateauEnd; month++) {
-      crewArray[month] = maxCrew;
+      if (month >= 0 && month < crewArray.length) {
+        crewArray[month] = maxCrew;
+      }
     }
     
     // Apply ramp down
     for (let i = 0; i < rampDownDuration; i++) {
       const month = plateauEnd + 1 + i;
+      // Ensure crew size is a whole number
       const crewSize = Math.round(maxCrew * (rampDownDuration - i - 1) / rampDownDuration);
-      crewArray[month] = crewSize;
+      if (month >= 0 && month < crewArray.length) {
+        crewArray[month] = crewSize;
+      }
     }
     
     return crewArray;
