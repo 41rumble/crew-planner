@@ -1,6 +1,6 @@
-# Crew Planning Tool
+# Budget Builder
 
-An interactive visualization tool for planning crew staffing across a production timeline.
+An interactive visualization tool for planning budgets and crew staffing across a production timeline.
 
 ## Features
 
@@ -20,10 +20,10 @@ An interactive visualization tool for planning crew staffing across a production
 
 ```bash
 # Clone the repository
-git clone https://github.com/41rumble/crew-planner.git
+git clone https://github.com/41rumble/budget-builder.git
 
 # Navigate to the project directory
-cd crew-planner
+cd budget-builder
 
 # Install dependencies
 npm install

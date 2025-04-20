@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar color="primary">
-      <v-app-bar-title style="font-size: 18px;">Crew Planning Tool</v-app-bar-title>
+      <v-app-bar-title style="font-size: 18px;">Budget Builder</v-app-bar-title>
       
       <v-spacer></v-spacer>
       
