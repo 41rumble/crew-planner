@@ -28,6 +28,8 @@
             max="120"
             step="1"
             class="month-number-input"
+            inputmode="numeric"
+            pattern="[0-9]*"
           />
           <div class="month-buttons">
             <button @click="incrementMonths" class="month-btn up">
@@ -2645,11 +2647,11 @@ async exportExcel() {
   border: 1px solid rgba(255,255,255,0.5);
   overflow: hidden;
   height: 36px;
-  width: 80px;
+  width: 70px;
 }
 
 .month-number-input {
-  width: 60px;
+  width: 50px;
   height: 100%;
   background-color: transparent;
   border: none;
@@ -2668,6 +2670,11 @@ async exportExcel() {
 .month-number-input::-webkit-outer-spin-button { 
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* Firefox */
+.month-number-input {
+  -moz-appearance: textfield;
 }
 
 .month-buttons {
