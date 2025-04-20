@@ -10,7 +10,15 @@ import * as XLSX from 'xlsx';
  */
 export async function exportToColoredExcel(appState) {
   try {
-    console.log('Starting ExcelJS direct export with no background colors for cost rows...');
+    console.log('Starting ExcelJS direct export with app colors...');
+    
+    // Log phase colors for debugging
+    if (appState.phases) {
+      console.log('Phase colors from app state:');
+      appState.phases.forEach(phase => {
+        console.log(`  ${phase.name}: ${phase.color || 'no color'}`);
+      });
+    }
     
     // First, use the original export function to get the exact data
     const { exportToExcel } = await import('./export-excel.js');
@@ -192,7 +200,16 @@ function styleTimelineSheet(worksheet, data, appState) {
     if (value && typeof value === 'string' && value.endsWith(':')) {
       // This is a phase header row
       const phaseName = value.slice(0, -1);
-      currentPhaseColor = getPhaseColor(phaseName);
+      
+      // Find the phase in appState to get its actual color
+      const phase = appState.phases.find(p => p.name === phaseName);
+      if (phase && phase.color) {
+        // Use the color from the app state (remove # if present)
+        currentPhaseColor = phase.color.replace('#', '');
+      } else {
+        // Fallback to generated color if not found
+        currentPhaseColor = getPhaseColor(phaseName);
+      }
       
       // Apply color to the entire row
       row.eachCell((cell) => {
