@@ -232,7 +232,7 @@
                         }"
                         :style="{
                           ...getDepartmentColumnStyle(),
-                          backgroundColor: phases[item.index] && phases[item.index].color ? getDepartmentColor(phases[item.index].color, 0.3) : '#f9f9f9',
+                          backgroundColor: phases[item.index] && phases[item.index].color ? phases[item.index].color + '40' : '#f9f9f9',
                           color: phases[item.index] && phases[item.index].color ? '#000' : 'inherit',
                           fontWeight: 'bold'
                         }"
@@ -248,8 +248,8 @@
                         :style="{
                           ...getCellStyle(),
                           '--phase-color': phases[item.index] && phases[item.index].color ? phases[item.index].color : '#4CAF50',
-                          backgroundColor: phases[item.index] && phases[item.index].color && mIndex >= phases[item.index].startMonth && mIndex <= phases[item.index].endMonth ?
-                            getDepartmentColor(phases[item.index].color, 0.4) : "transparent"
+                          backgroundColor: phases[item.index] && phases[item.index].color && mIndex >= phases[item.index].startMonth && mIndex <= phases[item.index].endMonth ? 
+                            phases[item.index].color + '66' : 'transparent'
                         }"
                         @mousedown="handlePhaseMouseDown($event, item.index, mIndex)">
                       <div class="phase-content">
@@ -898,7 +898,7 @@ export default {
       if (!phase || !phase.color) return {};
       
       return {
-        backgroundColor: getDepartmentColor(phase.color, 0.2)
+        backgroundColor: phase.color + '33' // 20% opacity
       };
     },
     // Get the color for a department based on its phase with opacity
