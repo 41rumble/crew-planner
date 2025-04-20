@@ -75,9 +75,13 @@ export async function exportToColoredExcel(appState) {
         worksheet.addRow(processedRow);
       });
       
+      // Store department colors from Timeline sheet
+      let departmentColorMap = {};
+      
       // Apply styling based on sheet type
       if (sheetName === 'Timeline') {
-        styleTimelineSheet(worksheet, data, appState);
+        // Get department colors from Timeline sheet
+        departmentColorMap = styleTimelineSheet(worksheet, data, appState);
         
         // After all styling, explicitly remove background colors from cost rows
         // Find cost rows by their labels
@@ -110,8 +114,12 @@ export async function exportToColoredExcel(appState) {
             };
           });
         });
+        
+        // Store department colors for use in other sheets
+        workbook.departmentColorMap = departmentColorMap;
       } else if (sheetName === 'Stats') {
-        styleStatsSheet(worksheet, data);
+        // Pass department colors to Stats sheet
+        styleStatsSheet(worksheet, data, workbook.departmentColorMap || {});
       } else if (sheetName.includes('Facilities')) {
         styleFacilitiesSheet(worksheet, data);
       } else if (sheetName.includes('Workstation')) {
@@ -138,6 +146,7 @@ export async function exportToColoredExcel(appState) {
  * @param {Object} worksheet - The ExcelJS worksheet
  * @param {Array} data - The sheet data as array of arrays
  * @param {Object} appState - The application state
+ * @returns {Object} - A map of department names to their colors
  */
 function styleTimelineSheet(worksheet, data, appState) {
   // Set column widths
@@ -172,6 +181,9 @@ function styleTimelineSheet(worksheet, data, appState) {
   // Process each row to identify phases and departments
   let currentPhaseColor = null;
   
+  // Create a map to store department colors for use in the Stats sheet
+  const departmentColorMap = {};
+  
   for (let rowIndex = 3; rowIndex <= worksheet.rowCount; rowIndex++) {
     const row = worksheet.getRow(rowIndex);
     const firstCell = row.getCell(1);
@@ -199,11 +211,15 @@ function styleTimelineSheet(worksheet, data, appState) {
       
       // Apply a lighter version of the phase color to the department name
       if (currentPhaseColor) {
+        const lightColor = lightenColor(currentPhaseColor, 0.7);
         firstCell.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'FF' + lightenColor(currentPhaseColor, 0.7) }
+          fgColor: { argb: 'FF' + lightColor }
         };
+        
+        // Store the department color for use in the Stats sheet
+        departmentColorMap[value] = lightColor;
       }
       
       // Apply color intensity to crew count cells
@@ -292,14 +308,18 @@ function styleTimelineSheet(worksheet, data, appState) {
   worksheet.views = [
     { state: 'frozen', xSplit: 1, ySplit: 2, activeCell: 'B3' }
   ];
+  
+  // Return the department color map for use in other sheets
+  return departmentColorMap;
 }
 
 /**
  * Style the Stats sheet
  * @param {Object} worksheet - The ExcelJS worksheet
  * @param {Array} data - The sheet data as array of arrays
+ * @param {Object} departmentColorMap - Map of department names to their colors
  */
-function styleStatsSheet(worksheet, data) {
+function styleStatsSheet(worksheet, data, departmentColorMap = {}) {
   // Set column widths
   worksheet.columns = [
     { width: 35 },
@@ -343,6 +363,18 @@ function styleStatsSheet(worksheet, data) {
             right: { style: 'thin' }
           };
         });
+      }
+      
+      // Apply department colors from Timeline sheet
+      if (Object.keys(departmentColorMap).includes(value)) {
+        // This is a department name that exists in the Timeline sheet
+        const color = departmentColorMap[value];
+        firstCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF' + color }
+        };
+        firstCell.font = { bold: true };
       }
       
       // Format cost cells
