@@ -633,7 +633,7 @@ export default {
     return {
       draggedPhaseIndex: null, // For phase drag handles
       years: simpleData.years,
-      monthsPerYear: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      monthsPerYear: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
       shortMonthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       singleLetterMonths: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
       months: simpleData.months,
@@ -690,7 +690,7 @@ export default {
           endMonth: 32,
           rampUpDuration: 0,
           rampDownDuration: 0,
-          rate: 15000
+          rate: 16000
         },
         {
           name: 'Character Supervision',
@@ -699,7 +699,7 @@ export default {
           endMonth: 24,
           rampUpDuration: 0,
           rampDownDuration: 0,
-          rate: 14000
+          rate: 12000
         },
         {
           name: 'Modeling Supervision',
@@ -708,7 +708,7 @@ export default {
           endMonth: 20,
           rampUpDuration: 0,
           rampDownDuration: 0,
-          rate: 13000
+          rate: 12000
         },
         {
           name: 'Lighting Supervision',
@@ -717,7 +717,7 @@ export default {
           endMonth: 32,
           rampUpDuration: 0,
           rampDownDuration: 0,
-          rate: 13500
+          rate: 12000
         },
         {
           name: 'VFX Supervision',
@@ -726,7 +726,7 @@ export default {
           endMonth: 32,
           rampUpDuration: 0,
           rampDownDuration: 0,
-          rate: 14500
+          rate: 12000
         },
         {
           name: 'Concept Artists (Character)',
@@ -735,7 +735,7 @@ export default {
           endMonth: 15,
           rampUpDuration: 2,
           rampDownDuration: 2,
-          rate: 8000
+          rate: 6000
         },
         {
           name: 'Concept Artists (Environment)',
@@ -744,7 +744,7 @@ export default {
           endMonth: 15,
           rampUpDuration: 2,
           rampDownDuration: 2,
-          rate: 8000
+          rate: 6000
         },
         {
           name: 'Character Modeller',
@@ -753,7 +753,7 @@ export default {
           endMonth: 11,
           rampUpDuration: 2,
           rampDownDuration: 2,
-          rate: 7500
+          rate: 8000
         },
         {
           name: 'Character Rigger',
@@ -771,7 +771,7 @@ export default {
           endMonth: 32,
           rampUpDuration: 2,
           rampDownDuration: 1,
-          rate: 12000
+          rate: 8000
         },
         {
           name: 'Animators',
@@ -780,7 +780,7 @@ export default {
           endMonth: 42,
           rampUpDuration: 4,
           rampDownDuration: 3,
-          rate: 7000
+          rate: 10000
         },
         {
           name: 'Lighters',
@@ -789,7 +789,7 @@ export default {
           endMonth: 42,
           rampUpDuration: 4,
           rampDownDuration: 3,
-          rate: 7500
+          rate: 9000
         },
         {
           name: 'VFX Artists',
@@ -798,7 +798,7 @@ export default {
           endMonth: 42,
           rampUpDuration: 3,
           rampDownDuration: 3,
-          rate: 8000
+          rate: 9000
         },
         {
           name: 'Composite',
@@ -807,7 +807,7 @@ export default {
           endMonth: 42,
           rampUpDuration: 3,
           rampDownDuration: 3,
-          rate: 7800
+          rate: 9000
         }
       ],
       crewMatrix: [],
