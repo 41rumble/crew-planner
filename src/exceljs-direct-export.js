@@ -20,6 +20,17 @@ export async function exportToColoredExcel(appState) {
       });
     }
     
+    // Ensure all phases have colors
+    if (appState.phases) {
+      const { defaultPhaseColors } = await import('./phaseColors.js');
+      appState.phases.forEach((phase, index) => {
+        if (!phase.color) {
+          phase.color = defaultPhaseColors[index % defaultPhaseColors.length];
+          console.log(`Added default color ${phase.color} to phase ${phase.name}`);
+        }
+      });
+    }
+    
     // First, use the original export function to get the exact data
     const { exportToExcel } = await import('./export-excel.js');
     const xlsxWorkbook = exportToExcel(appState, true);
@@ -206,9 +217,11 @@ function styleTimelineSheet(worksheet, data, appState) {
       if (phase && phase.color) {
         // Use the color from the app state (remove # if present)
         currentPhaseColor = phase.color.replace('#', '');
+        console.log(`Using color ${phase.color} for phase ${phaseName} in Excel`);
       } else {
         // Fallback to generated color if not found
         currentPhaseColor = getPhaseColor(phaseName);
+        console.log(`Using generated color #${currentPhaseColor} for phase ${phaseName} in Excel (not found in app state)`);
       }
       
       // Apply color to the entire row
