@@ -45,6 +45,17 @@
             </div>
           </template>
         </v-text-field>
+        
+        <!-- Reset months button -->
+        <v-btn 
+          icon="mdi-refresh" 
+          @click="resetMonths" 
+          title="Reset to default months (48)" 
+          size="small" 
+          color="white" 
+          variant="text" 
+          class="ml-1"
+        ></v-btn>
       </div>
     </v-app-bar>
     
@@ -2358,6 +2369,12 @@ async exportExcel() {
     },
     resetZoom() {
       this.zoomLevel = 1;
+    },
+    
+    // Reset months to default (48 months = 4 years)
+    resetMonths() {
+      this.numberOfMonths = 48;
+      this.updateTimeScale();
     },
     
     // Month controls
