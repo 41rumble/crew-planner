@@ -998,8 +998,6 @@ export default {
           phase.color = defaultColors[i % defaultColors.length];
           console.log(`Added default color ${phase.color} to phase ${phase.name}`);
         }
-      } to phase ${phase.name}`);
-        }
         
         if (phase.endMonth !== undefined && typeof phase.endMonth === 'string') {
           phase.endMonth = Number(phase.endMonth);
