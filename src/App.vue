@@ -1947,14 +1947,14 @@ async exportExcel() {
       const appState = this.getExportAppState();
 
       try {
-        console.log('Starting enhanced Excel export...');
+        console.log('Starting colored Excel export...');
 
-        // Use the enhanced Excel export with improved formatting and phase coloring
-        const { exportToEnhancedExcel } = await import('./enhanced-format-excel.js');
-        console.log('Successfully imported exportToEnhancedExcel function');
+        // Use the colored Excel export with ExcelJS for better color support
+        const { exportToColoredExcel } = await import('./excel-color-export.js');
+        console.log('Successfully imported exportToColoredExcel function');
 
-        const blob = await exportToEnhancedExcel(appState);
-        console.log('Successfully created enhanced Excel blob');
+        const blob = await exportToColoredExcel(appState);
+        console.log('Successfully created colored Excel blob');
 
         // Create download link
         const url = URL.createObjectURL(blob);
@@ -1967,6 +1967,7 @@ async exportExcel() {
         document.body.removeChild(link);
 
         // Show success message
+        alert('Excel file exported successfully with vibrant colors!');
         alert('Excel file exported successfully with enhanced formatting!');
         alert('Excel file exported successfully with formatting!');
       } catch (error) {
