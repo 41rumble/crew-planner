@@ -133,24 +133,25 @@
                         <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="small" height="32px"></v-btn>
                       </v-btn-group>
                       
-                      <v-select
+                      <v-text-field
                         v-model="numberOfMonths"
                         @update:model-value="updateTimeScale"
-                        :items="[
-                          { title: '6 months', value: '6' },
-                          { title: '12 months (1 year)', value: '12' },
-                          { title: '18 months', value: '18' },
-                          { title: '24 months (2 years)', value: '24' },
-                          { title: '36 months (3 years)', value: '36' },
-                          { title: '48 months (4 years)', value: '48' },
-                          { title: '60 months (5 years)', value: '60' },
-                          { title: '72 months (6 years)', value: '72' }
-                        ]"
                         label="Months"
+                        type="number"
+                        min="1"
+                        max="120"
+                        step="1"
                         variant="outlined"
-                        height="32px"
-                        style="max-width: 150px;"
-                      ></v-select>
+                        density="compact"
+                        style="max-width: 120px;"
+                      >
+                        <template v-slot:append>
+                          <v-btn-group>
+                            <v-btn icon="mdi-minus" @click="decrementMonths" size="small" density="compact"></v-btn>
+                            <v-btn icon="mdi-plus" @click="incrementMonths" size="small" density="compact"></v-btn>
+                          </v-btn-group>
+                        </template>
+                      </v-text-field>
                       
                       <v-btn variant="text" color="primary" href="/sample_crew_plan.csv" download class="ml-2" size="small" height="32px">
                         Sample
@@ -191,16 +192,20 @@
               </div>
               <div class="time-scale-control">
                 <label>Months:</label>
-                <select v-model="numberOfMonths" @change="updateTimeScale">
-                  <option value="6">6 months</option>
-                  <option value="12">12 months (1 year)</option>
-                  <option value="18">18 months</option>
-                  <option value="24">24 months (2 years)</option>
-                  <option value="36">36 months (3 years)</option>
-                  <option value="48">48 months (4 years)</option>
-                  <option value="60">60 months (5 years)</option>
-                  <option value="72">72 months (6 years)</option>
-                </select>
+                <div class="month-input-container">
+                  <input 
+                    type="number" 
+                    v-model="numberOfMonths" 
+                    @change="updateTimeScale" 
+                    min="1" 
+                    max="120" 
+                    step="1"
+                  />
+                  <div class="month-buttons">
+                    <button @click="decrementMonths" class="month-button">-</button>
+                    <button @click="incrementMonths" class="month-button">+</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2358,6 +2363,29 @@ async exportExcel() {
       this.zoomLevel = 1;
     },
     
+    // Month controls
+    incrementMonths() {
+      // Convert to number and increment
+      let months = parseInt(this.numberOfMonths);
+      if (isNaN(months)) months = 48; // Default to 48 if invalid
+      
+      // Increment by 1 month
+      months = Math.min(120, months + 1);
+      this.numberOfMonths = months;
+      this.updateTimeScale();
+    },
+    
+    decrementMonths() {
+      // Convert to number and decrement
+      let months = parseInt(this.numberOfMonths);
+      if (isNaN(months)) months = 48; // Default to 48 if invalid
+      
+      // Decrement by 1 month, minimum 1 month
+      months = Math.max(1, months - 1);
+      this.numberOfMonths = months;
+      this.updateTimeScale();
+    },
+    
     // Time scale controls
     updateTimeScale() {
       // Convert numberOfMonths to number
@@ -2893,28 +2921,70 @@ main {
   color: #475569;
 }
 
-.time-scale-control select {
-  padding: 4px 8px;
-  border-radius: 6px;
+.month-input-container {
+  display: flex;
+  align-items: center;
   border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
   background-color: #f8fafc;
-  font-size: 0.85rem;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  color: #334155;
-  cursor: pointer;
   transition: all 0.2s ease;
   height: 32px;
 }
 
-.time-scale-control select:hover {
+.month-input-container:hover {
   border-color: #94a3b8;
   background-color: #f1f5f9;
 }
 
-.time-scale-control select:focus {
+.month-input-container:focus-within {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.month-input-container input {
+  width: 60px;
+  padding: 4px 8px;
+  border: none;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #334155;
+  background-color: transparent;
+}
+
+.month-input-container input:focus {
+  outline: none;
+}
+
+.month-buttons {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #e2e8f0;
+  height: 100%;
+}
+
+.month-button {
+  border: none;
+  background-color: #f1f5f9;
+  cursor: pointer;
+  width: 24px;
+  height: 16px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.month-button:first-child {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.month-button:hover {
+  background-color: #e2e8f0;
 }
 
 .zoom-button {
