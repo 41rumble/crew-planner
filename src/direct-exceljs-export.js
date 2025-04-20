@@ -2,6 +2,7 @@
  * Direct Excel export using ExcelJS with the exact same data structure
  * as the original export-excel.js
  */
+import * as XLSX from 'xlsx';
 
 /**
  * Export project data to a colored Excel file with the exact same data structure
@@ -9,61 +10,67 @@
  * @returns {Promise<Blob>} - A promise that resolves to a Blob containing the Excel file
  */
 export async function exportToColoredExcel(appState) {
-  // Import ExcelJS
-  const ExcelJS = (await import('exceljs')).default;
-  
-  // Create a new workbook
-  const workbook = new ExcelJS.Workbook();
-  
-  // Set workbook properties
-  workbook.creator = 'Crew Planner';
-  workbook.lastModifiedBy = 'Crew Planner';
-  workbook.created = new Date();
-  workbook.modified = new Date();
-  
-  // Extract data from appState
-  const {
-    years,
-    monthsPerYear,
-    months,
-    sortedItems,
-    phases,
-    departments,
-    crewMatrix,
-    monthlyLaborCosts,
-    monthlyFacilityCosts,
-    monthlyWorkstationCosts,
-    monthlyBackendCosts,
-    monthlyCosts,
-    cumulativeCosts,
-    totalProjectCost,
-    peakMonthlyCost,
-    peakCrewSize,
-    facilitiesData,
-    workstationData
-  } = appState;
-  
-  // Create Timeline sheet
-  await createTimelineSheet(workbook, appState);
-  
-  // Create Stats sheet
-  await createStatsSheet(workbook, appState);
-  
-  // Create Facilities Summary sheet
-  await createFacilitiesSummarySheet(workbook, appState);
-  
-  // Create Workstation Summary sheet
-  await createWorkstationSummarySheet(workbook, appState);
-  
-  // Create Facilities Detail sheet
-  await createFacilitiesDetailSheet(workbook, appState);
-  
-  // Create Workstations Detail sheet
-  await createWorkstationsDetailSheet(workbook, appState);
-  
-  // Generate Excel file as a blob
-  const buffer = await workbook.xlsx.writeBuffer();
-  return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  try {
+    console.log('Starting direct ExcelJS export...');
+    
+    // Import ExcelJS
+    const ExcelJS = (await import('exceljs')).default;
+    
+    // Create a new workbook
+    const workbook = new ExcelJS.Workbook();
+    
+    // Set workbook properties
+    workbook.creator = 'Crew Planner';
+    workbook.lastModifiedBy = 'Crew Planner';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+    
+    console.log('Creating Timeline sheet...');
+    // Create Timeline sheet
+    await createTimelineSheet(workbook, appState);
+    
+    console.log('Creating Stats sheet...');
+    // Create Stats sheet
+    await createStatsSheet(workbook, appState);
+    
+    console.log('Creating Facilities Summary sheet...');
+    // Create Facilities Summary sheet
+    await createFacilitiesSummarySheet(workbook, appState);
+    
+    console.log('Creating Workstation Summary sheet...');
+    // Create Workstation Summary sheet
+    await createWorkstationSummarySheet(workbook, appState);
+    
+    console.log('Creating Facilities Detail sheet...');
+    // Create Facilities Detail sheet
+    await createFacilitiesDetailSheet(workbook, appState);
+    
+    console.log('Creating Workstations Detail sheet...');
+    // Create Workstations Detail sheet
+    await createWorkstationsDetailSheet(workbook, appState);
+    
+    console.log('Generating Excel file...');
+    // Generate Excel file as a blob
+    const buffer = await workbook.xlsx.writeBuffer();
+    return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  } catch (error) {
+    console.error('Error in direct ExcelJS export:', error);
+    
+    // Fall back to the original export function
+    console.log('Falling back to original export function...');
+    const { exportToExcel } = await import('./export-excel.js');
+    const xlsxWorkbook = exportToExcel(appState, true);
+    
+    // Convert to blob
+    const wbout = XLSX.write(xlsxWorkbook, { bookType: 'xlsx', type: 'binary' });
+    const buf = new ArrayBuffer(wbout.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < wbout.length; i++) {
+      view[i] = wbout.charCodeAt(i) & 0xFF;
+    }
+    
+    return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
 }
 
 /**
@@ -73,13 +80,19 @@ export async function exportToColoredExcel(appState) {
  */
 async function createTimelineSheet(workbook, appState) {
   const {
-    years,
-    monthsPerYear,
-    months,
-    sortedItems,
-    phases,
-    departments,
-    crewMatrix
+    years = [],
+    monthsPerYear = [],
+    months = [],
+    sortedItems = [],
+    phases = [],
+    departments = [],
+    crewMatrix = [],
+    monthlyLaborCosts = [],
+    monthlyFacilityCosts = [],
+    monthlyWorkstationCosts = [],
+    monthlyBackendCosts = [],
+    monthlyCosts = [],
+    cumulativeCosts = []
   } = appState;
   
   // Create the Timeline sheet
@@ -380,10 +393,12 @@ async function createStatsSheet(workbook, appState) {
     totalProjectCost,
     peakMonthlyCost,
     peakCrewSize,
-    monthlyLaborCosts,
-    monthlyFacilityCosts,
-    monthlyWorkstationCosts,
-    monthlyBackendCosts
+    monthlyLaborCosts = [],
+    monthlyFacilityCosts = [],
+    monthlyWorkstationCosts = [],
+    monthlyBackendCosts = [],
+    monthlyCosts = [],
+    cumulativeCosts = []
   } = appState;
   
   // Create the Stats sheet
