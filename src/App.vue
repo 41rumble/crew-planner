@@ -1,24 +1,24 @@
 <template>
   <v-app>
-    <v-app-bar color="primary" density="compact">
-      <v-app-bar-title>Crew Planning Tool</v-app-bar-title>
+    <v-app-bar color="primary">
+      <v-app-bar-title style="font-size: 18px;">Crew Planning Tool</v-app-bar-title>
       
       <v-spacer></v-spacer>
       
       <!-- Zoom Controls -->
-      <div class="d-flex align-center mr-3">
-        <span class="text-caption text-white mr-1">Zoom:</span>
+      <div class="d-flex align-center mr-4">
+        <span class="text-white mr-2" style="font-size: 14px;">Zoom:</span>
         <v-btn-group variant="outlined" density="compact" color="white">
-          <v-btn icon="mdi-minus" @click="zoomOut" title="Zoom Out" size="x-small" color="white" variant="text"></v-btn>
-          <v-btn disabled size="x-small" class="zoom-percentage" style="min-width: 48px; font-size: 12px; color: white;">{{ Math.round(zoomLevel * 100) }}%</v-btn>
-          <v-btn icon="mdi-plus" @click="zoomIn" title="Zoom In" size="x-small" color="white" variant="text"></v-btn>
-          <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="x-small" color="white" variant="text"></v-btn>
+          <v-btn icon="mdi-minus" @click="zoomOut" title="Zoom Out" size="small" color="white" variant="text"></v-btn>
+          <v-btn disabled size="small" style="min-width: 60px; font-size: 14px; color: white;">{{ Math.round(zoomLevel * 100) }}%</v-btn>
+          <v-btn icon="mdi-plus" @click="zoomIn" title="Zoom In" size="small" color="white" variant="text"></v-btn>
+          <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="small" color="white" variant="text"></v-btn>
         </v-btn-group>
       </div>
       
       <!-- Month Controls -->
       <div class="d-flex align-center">
-        <span class="text-caption text-white mr-1">Months:</span>
+        <span class="text-white mr-2" style="font-size: 14px;">Months:</span>
         <v-text-field
           v-model="numberOfMonths"
           @update:model-value="updateTimeScale"
@@ -30,14 +30,14 @@
           density="compact"
           hide-details
           class="month-input"
-          style="max-width: 70px; background-color: rgba(255,255,255,0.1); border-radius: 4px;"
+          style="width: 90px; background-color: rgba(255,255,255,0.1); border-radius: 4px; font-size: 14px;"
           bg-color="rgba(255,255,255,0.1)"
           color="white"
         >
           <template v-slot:append>
-            <div class="d-flex flex-column" style="height: 24px;">
-              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="x-small" density="compact" style="margin-bottom: -8px;" color="white" variant="text"></v-btn>
-              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="x-small" density="compact" style="margin-top: -8px;" color="white" variant="text"></v-btn>
+            <div class="d-flex flex-column" style="height: 32px;">
+              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="small" density="compact" style="margin-bottom: -8px;" color="white" variant="text"></v-btn>
+              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="small" density="compact" style="margin-top: -8px;" color="white" variant="text"></v-btn>
             </div>
           </template>
         </v-text-field>
