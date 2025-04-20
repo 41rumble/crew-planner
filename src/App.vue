@@ -2,6 +2,46 @@
   <v-app>
     <v-app-bar color="primary" density="compact">
       <v-app-bar-title>Crew Planning Tool</v-app-bar-title>
+      
+      <v-spacer></v-spacer>
+      
+      <!-- Zoom Controls -->
+      <div class="d-flex align-center mr-3">
+        <span class="text-caption text-white mr-1">Zoom:</span>
+        <v-btn-group variant="outlined" density="compact" color="white">
+          <v-btn icon="mdi-minus" @click="zoomOut" title="Zoom Out" size="x-small" color="white" variant="text"></v-btn>
+          <v-btn disabled size="x-small" class="zoom-percentage" style="min-width: 48px; font-size: 12px; color: white;">{{ Math.round(zoomLevel * 100) }}%</v-btn>
+          <v-btn icon="mdi-plus" @click="zoomIn" title="Zoom In" size="x-small" color="white" variant="text"></v-btn>
+          <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="x-small" color="white" variant="text"></v-btn>
+        </v-btn-group>
+      </div>
+      
+      <!-- Month Controls -->
+      <div class="d-flex align-center">
+        <span class="text-caption text-white mr-1">Months:</span>
+        <v-text-field
+          v-model="numberOfMonths"
+          @update:model-value="updateTimeScale"
+          type="number"
+          min="1"
+          max="120"
+          step="1"
+          variant="outlined"
+          density="compact"
+          hide-details
+          class="month-input"
+          style="max-width: 70px; background-color: rgba(255,255,255,0.1); border-radius: 4px;"
+          bg-color="rgba(255,255,255,0.1)"
+          color="white"
+        >
+          <template v-slot:append>
+            <div class="d-flex flex-column" style="height: 24px;">
+              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="x-small" density="compact" style="margin-bottom: -8px;" color="white" variant="text"></v-btn>
+              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="x-small" density="compact" style="margin-top: -8px;" color="white" variant="text"></v-btn>
+            </div>
+          </template>
+        </v-text-field>
+      </div>
     </v-app-bar>
     
     <!-- Loading overlay -->
@@ -123,45 +163,11 @@
                     </div>
                   </v-col>
                   
-                  <!-- Zoom Controls -->
+                  <!-- Sample CSV download -->
                   <v-col cols="12" md="3" class="py-0">
                     <div class="d-flex align-center">
-                      <div class="d-flex align-center mr-2">
-                        <span class="text-caption mr-1">Zoom:</span>
-                        <v-btn-group variant="outlined" density="compact">
-                          <v-btn icon="mdi-minus" @click="zoomOut" title="Zoom Out" size="x-small"></v-btn>
-                          <v-btn disabled size="x-small" class="zoom-percentage" style="min-width: 48px; font-size: 12px;">{{ Math.round(zoomLevel * 100) }}%</v-btn>
-                          <v-btn icon="mdi-plus" @click="zoomIn" title="Zoom In" size="x-small"></v-btn>
-                          <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="x-small"></v-btn>
-                        </v-btn-group>
-                      </div>
-                      
-                      <div class="d-flex align-center">
-                        <span class="text-caption mr-1">Months:</span>
-                        <v-text-field
-                          v-model="numberOfMonths"
-                          @update:model-value="updateTimeScale"
-                          type="number"
-                          min="1"
-                          max="120"
-                          step="1"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          class="month-input"
-                          style="max-width: 80px;"
-                        >
-                          <template v-slot:append>
-                            <div class="d-flex flex-column" style="height: 24px;">
-                              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="x-small" density="compact" style="margin-bottom: -8px;"></v-btn>
-                              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="x-small" density="compact" style="margin-top: -8px;"></v-btn>
-                            </div>
-                          </template>
-                        </v-text-field>
-                      </div>
-                      
                       <v-btn variant="text" color="primary" href="/sample_crew_plan.csv" download class="ml-2" size="small" height="32px">
-                        Sample
+                        Sample CSV
                       </v-btn>
                     </div>
                   </v-col>
@@ -191,30 +197,9 @@
               </button>
               <FileUploader @file-loaded="loadCSV" />
               <div class="divider"></div>
-              <div class="zoom-controls">
-                <span class="zoom-label">Zoom:</span>
-                <button @click="zoomOut" class="zoom-button" title="Zoom Out">-</button>
-                <span class="zoom-value">{{ Math.round(zoomLevel * 100) }}%</span>
-                <button @click="zoomIn" class="zoom-button" title="Zoom In">+</button>
-                <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">↻</button>
-              </div>
-              <div class="time-scale-control">
-                <label>Months:</label>
-                <div class="month-input-container">
-                  <input 
-                    type="number" 
-                    v-model="numberOfMonths" 
-                    @change="updateTimeScale" 
-                    min="1" 
-                    max="120" 
-                    step="1"
-                  />
-                  <div class="month-buttons">
-                    <button @click="decrementMonths" class="month-button">-</button>
-                    <button @click="incrementMonths" class="month-button">+</button>
-                  </div>
-                </div>
-              </div>
+              <a href="/sample_crew_plan.csv" download class="action-button sample-button" title="Download Sample CSV">
+                <span class="icon">📥</span> Sample
+              </a>
             </div>
           </div>
         </div>
@@ -3054,6 +3039,17 @@ main {
 .excel-button:hover {
   background-color: #d1fae5;
   border-color: #6ee7b7;
+}
+
+.sample-button {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.sample-button:hover {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
 }
 
 .facilities-button {
