@@ -75,8 +75,11 @@ export async function exportToColoredExcel(appState) {
         worksheet.addRow(processedRow);
       });
       
-      // For Timeline sheet, explicitly remove background colors from cost rows
+      // Apply styling based on sheet type
       if (sheetName === 'Timeline') {
+        styleTimelineSheet(worksheet, data, appState);
+        
+        // After all styling, explicitly remove background colors from cost rows
         // Find cost rows by their labels
         const costRowLabels = [
           'Monthly Labor Cost',
@@ -87,22 +90,26 @@ export async function exportToColoredExcel(appState) {
           'Cumulative Cost'
         ];
         
+        // First, find the row numbers of the cost rows
+        const costRowNumbers = [];
         worksheet.eachRow((row, rowNumber) => {
           const firstCell = row.getCell(1);
           if (firstCell.value && costRowLabels.includes(firstCell.value)) {
-            // Remove background color from all cells in this row
-            row.eachCell((cell) => {
-              if (cell.fill) {
-                cell.fill = undefined;
-              }
-            });
+            costRowNumbers.push(rowNumber);
           }
         });
-      }
-      
-      // Apply styling based on sheet type
-      if (sheetName === 'Timeline') {
-        styleTimelineSheet(worksheet, data, appState);
+        
+        // Now, apply a white background to these rows to override any inherited colors
+        costRowNumbers.forEach(rowNumber => {
+          const row = worksheet.getRow(rowNumber);
+          row.eachCell((cell) => {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFFFFFF' } // White background
+            };
+          });
+        });
       } else if (sheetName === 'Stats') {
         styleStatsSheet(worksheet, data);
       } else if (sheetName.includes('Facilities')) {
@@ -245,12 +252,23 @@ function styleTimelineSheet(worksheet, data, appState) {
         // Make the label bold
         firstCell.font = { bold: true };
         
-        // Apply formatting to all cells in the row (without background color)
+        // Ensure the first cell also has a white background
+        firstCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFFFFF' } // White background
+        };
+        
+        // Apply formatting to all cells in the row (with white background)
         for (let colIndex = 2; colIndex <= row.cellCount; colIndex++) {
           const cell = row.getCell(colIndex);
           if (cell.value !== null && cell.value !== undefined) {
-            // Explicitly remove any background fill
-            cell.fill = undefined;
+            // Explicitly set white background
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFFFFFF' } // White background
+            };
             
             cell.numFmt = '$#,##0';
             cell.border = {
