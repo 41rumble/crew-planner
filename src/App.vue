@@ -1966,20 +1966,11 @@ async exportExcel() {
         link.click();
         document.body.removeChild(link);
 
-        // Show success message
-        alert('Excel file exported successfully with colors!');
-        alert('Excel file exported successfully with colors!');
-        alert('Excel file exported successfully with vibrant colors!');
-        alert('Excel file exported successfully with vibrant colors!');
-        alert('Excel file exported successfully with vibrant colors!');
-        alert('Excel file exported successfully with vibrant colors!');
-        alert('Excel file exported successfully with vibrant colors!');
-        alert('Excel file exported successfully with vibrant colors!');
-        alert('Excel file exported successfully with enhanced formatting!');
-        alert('Excel file exported successfully with formatting!');
+        // Show success message in console only
+        console.log('Excel file exported successfully with colors!');
       } catch (error) {
         console.error('Error exporting formatted Excel:', error);
-        alert('Error creating formatted Excel: ' + error.message + '\nFalling back to basic Excel export.');
+        console.warn('Falling back to basic Excel export.');
         
         // Fall back to the original Excel export if the enhanced one fails
         exportToExcel(appState);
