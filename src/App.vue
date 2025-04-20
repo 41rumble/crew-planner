@@ -219,25 +219,37 @@
                 <!-- All rows (phases and departments mixed) -->
                 <template v-for="(item, index) in sortedItems">
                   <!-- Phase row -->
-                  <tr v-if="item.type === 'phase'" :key="`item-${index}`" 
-                      class="phase-row" 
+                  <tr v-if="item.type === 'phase'" :key="`item-${index}`"
+                      class="phase-row"
                       draggable="true"
                       @dragstart="dragStart($event, 'mixed', index)"
                       @dragover.prevent
                       @dragenter.prevent
                       @drop="handleDrop($event, 'mixed', index)">
-                    <td class="fixed-column" :class="{ 
-                          'phase-label': true, 
-                          'selected': selectedPhaseIndex === item.index 
-                        }" 
+                    <td class="fixed-column" :class="{
+                          'phase-label': true,
+                          'selected': selectedPhaseIndex === item.index
+                        }"
                         :style="getDepartmentColumnStyle()"
                         @click="editPhase(item.index)">
                       <span class="drag-handle">:::</span>
                       {{ phases[item.index] ? phases[item.index].name : 'Loading...' }}
                     </td>
-                    <td v-for="(month, mIndex) in months" :key="`phase-${item.index}-${mIndex}`" 
-                        :class="{ 'phase-active': phases[item.index] && isMonthInPhase(phases[item.index], mIndex) }"
-                        :style="getCellStyle()">
+                    <td v-for="(month, mIndex) in months" :key="`phase-${item.index}-${mIndex}`"
+                        :class="{
+                          'phase-cell': true,
+                          'in-range': phases[item.index] && mIndex >= phases[item.index].startMonth && mIndex <= phases[item.index].endMonth
+                        }"
+                        :style="getCellStyle()"
+                        @mousedown="handlePhaseMouseDown($event, item.index, mIndex)">
+                      <div class="phase-content">
+                        <div v-if="phases[item.index] && mIndex === phases[item.index].startMonth"
+                             class="start-drag-handle"
+                             title="Drag to adjust phase start month"></div>
+                        <div v-if="phases[item.index] && mIndex === phases[item.index].endMonth"
+                             class="end-drag-handle"
+                             title="Drag to adjust phase end month"></div>
+                      </div>
                     </td>
                   </tr>
                   
@@ -592,6 +604,7 @@ export default {
   },
   data() {
     return {
+      draggedPhaseIndex: null, // For phase drag handles
       years: simpleData.years,
       monthsPerYear: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       shortMonthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -808,6 +821,10 @@ export default {
     initializeDepartmentAssignments(this.workstationData, this.departments);
     
     // Calculate costs
+    
+    // Ensure all numeric properties in departments and phases are stored as numbers
+    this.ensureNumericProperties();
+    
     this.calculateCosts();
   },
   
@@ -818,6 +835,148 @@ export default {
     }
   },
   methods: {
+    // Ensure all numeric properties in departments and phases are stored as numbers
+    ensureNumericProperties() {
+      console.log('Ensuring all numeric properties in departments and phases are stored as numbers...');
+      
+      // Ensure numeric properties for departments
+      for (let i = 0; i < this.departments.length; i++) {
+        const department = this.departments[i];
+        
+        // Convert string values to numbers for numeric properties
+        if (department.startMonth !== undefined && typeof department.startMonth === 'string') {
+          department.startMonth = Number(department.startMonth);
+          console.log(`Converted startMonth to number for department ${department.name}`);
+        }
+        
+        if (department.endMonth !== undefined && typeof department.endMonth === 'string') {
+          department.endMonth = Number(department.endMonth);
+          console.log(`Converted endMonth to number for department ${department.name}`);
+        }
+        
+        if (department.rampUpDuration !== undefined && typeof department.rampUpDuration === 'string') {
+          department.rampUpDuration = Number(department.rampUpDuration);
+          console.log(`Converted rampUpDuration to number for department ${department.name}`);
+        }
+        
+        if (department.rampDownDuration !== undefined && typeof department.rampDownDuration === 'string') {
+          department.rampDownDuration = Number(department.rampDownDuration);
+          console.log(`Converted rampDownDuration to number for department ${department.name}`);
+        }
+        
+        if (department.maxCrew !== undefined && typeof department.maxCrew === 'string') {
+          department.maxCrew = Number(department.maxCrew);
+          console.log(`Converted maxCrew to number for department ${department.name}`);
+        }
+        
+        if (department.rate !== undefined && typeof department.rate === 'string') {
+          department.rate = Number(department.rate);
+          console.log(`Converted rate to number for department ${department.name}`);
+        }
+      }
+      
+      // Also ensure numeric properties for phases
+      for (let i = 0; i < this.phases.length; i++) {
+        const phase = this.phases[i];
+        
+        // Convert string values to numbers for numeric properties
+        if (phase.startMonth !== undefined && typeof phase.startMonth === 'string') {
+          phase.startMonth = Number(phase.startMonth);
+          console.log(`Converted startMonth to number for phase ${phase.name}`);
+        }
+        
+        if (phase.endMonth !== undefined && typeof phase.endMonth === 'string') {
+          phase.endMonth = Number(phase.endMonth);
+          console.log(`Converted endMonth to number for phase ${phase.name}`);
+        }
+      }
+    },
+    // Handle mouse down on a phase cell
+    handlePhaseMouseDown(event, phaseIndex, monthIndex) {
+      // Check if we're clicking on a drag handle
+      const target = event.target;
+      if (target.classList.contains('start-drag-handle')) {
+        this.isDraggingTimelineHandle = true;
+        this.draggedPhaseIndex = phaseIndex;
+        this.dragHandleType = 'start';
+        
+        // Add event listeners for drag
+        document.addEventListener('mousemove', this.handlePhaseMouseMove);
+        document.addEventListener('mouseup', this.handlePhaseMouseUp);
+        
+        // Prevent default to avoid text selection
+        event.preventDefault();
+      } else if (target.classList.contains('end-drag-handle')) {
+        this.isDraggingTimelineHandle = true;
+        this.draggedPhaseIndex = phaseIndex;
+        this.dragHandleType = 'end';
+        
+        // Add event listeners for drag
+        document.addEventListener('mousemove', this.handlePhaseMouseMove);
+        document.addEventListener('mouseup', this.handlePhaseMouseUp);
+        
+        // Prevent default to avoid text selection
+        event.preventDefault();
+      }
+    },
+    
+    // Handle mouse move during phase drag
+    handlePhaseMouseMove(event) {
+      if (!this.isDraggingTimelineHandle) return;
+      
+      // Get the table element
+      const table = document.querySelector('.crew-table');
+      if (!table) return;
+      
+      // Get the cell under the mouse
+      const cellUnderMouse = document.elementFromPoint(event.clientX, event.clientY);
+      if (!cellUnderMouse) return;
+      
+      // Find the closest td element
+      let tdElement = cellUnderMouse.closest('td');
+      if (!tdElement) return;
+      
+      // Skip if it's a fixed column
+      if (tdElement.classList.contains('fixed-column')) return;
+      
+      // Find the month index from the cell
+      const monthIndex = Array.from(tdElement.parentElement.children).indexOf(tdElement) - 1; // -1 to account for the fixed column
+      if (monthIndex < 0 || monthIndex >= this.months.length) return;
+      
+      console.log(`Dragging phase ${this.dragHandleType} handle to month ${monthIndex} (${this.months[monthIndex]})`);
+      
+      // Get the phase being dragged
+      const phase = this.phases[this.draggedPhaseIndex];
+      console.log(`Phase: ${phase.name}, current startMonth: ${phase.startMonth}, endMonth: ${phase.endMonth}`);
+      
+      if (this.dragHandleType === 'start') {
+        // Don't allow start month to go beyond end month
+        if (monthIndex <= phase.endMonth) {
+          // Update the start month
+          phase.startMonth = monthIndex;
+        }
+      } else if (this.dragHandleType === 'end') {
+        // Don't allow end month to go before start month
+        if (monthIndex >= phase.startMonth) {
+          // Update the end month
+          phase.endMonth = monthIndex;
+        }
+      }
+    },
+    
+    // Handle mouse up to end phase dragging
+    handlePhaseMouseUp() {
+      if (this.isDraggingTimelineHandle) {
+        // Reset drag state
+        this.isDraggingTimelineHandle = false;
+        this.draggedPhaseIndex = null;
+        this.dragHandleType = null;
+        
+        // Remove event listeners
+        document.removeEventListener('mousemove', this.handlePhaseMouseMove);
+        document.removeEventListener('mouseup', this.handlePhaseMouseUp);
+      }
+    },
     // Timeline drag handlers
     ...timelineDragHandlers,
     // Initialize the item order with phases first, then departments
@@ -3224,4 +3383,22 @@ main {
     right: auto;
   }
 }
-</style>
+
+
+.phase-cell {
+  background-color: rgba(200, 200, 200, 0.1);
+  border: 1px solid #ddd;
+  position: relative;
+  padding: 0;
+  height: 40px;
+}
+
+.phase-cell.in-range {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.phase-content {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}</style>
