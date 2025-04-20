@@ -4,6 +4,12 @@
       <v-app-bar-title>Crew Planning Tool</v-app-bar-title>
     </v-app-bar>
     
+    <!-- Loading overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+      <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+      <div class="mt-4">Loading initialization data...</div>
+    </div>
+    
     <v-main :style="{
       '--cell-width': 60 * zoomLevel + 'px',
       '--cell-height': 40 * zoomLevel + 'px',
@@ -593,10 +599,10 @@
 </template>
 
 <script>
-import { simpleData } from './simple-data.js';
 import { parseCSV, generateCSV } from './csv-loader.js';
 import { timelineDragHandlers } from './timeline-drag-handlers.js';
 import { defaultPhaseColors, getPhaseColor, getDepartmentColor } from './phaseColors.js';
+import { loadInitData } from './init-data-loader.js';
 import { 
   facilitiesData, 
   calculateFacilityCostsForMonth, 
@@ -632,13 +638,13 @@ export default {
   data() {
     return {
       draggedPhaseIndex: null, // For phase drag handles
-      years: simpleData.years,
+      years: [],
       monthsPerYear: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
       shortMonthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       singleLetterMonths: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
-      months: simpleData.months,
-      departments: simpleData.departments,
-      phases: simpleData.phases,
+      months: [],
+      departments: [],
+      phases: [],
       crewMatrix: [],
       selectedDepartmentIndex: null,
       selectedPhaseIndex: null,
@@ -656,161 +662,6 @@ export default {
       activeEditor: null,
       // Track the order of phases and departments
       itemOrder: [],
-      phases: [
-        {
-          name: 'Concept Stage',
-          startMonth: 0,
-          endMonth: 15,
-          color: '#1976D2'
-        },
-        {
-          name: 'Previs Stage',
-          startMonth: 6,
-          endMonth: 20,
-          color: defaultPhaseColors[1]
-        },
-        {
-          name: 'Asset Build',
-          startMonth: 11,
-          endMonth: 36,
-          color: defaultPhaseColors[2]
-        },
-        {
-          name: 'Shot Production',
-          startMonth: 20,
-          endMonth: 42,
-          color: defaultPhaseColors[3]
-        }
-      ],
-      departments: [
-        {
-          name: 'Digital Supervision',
-          maxCrew: 1,
-          startMonth: 0,
-          endMonth: 32,
-          rampUpDuration: 0,
-          rampDownDuration: 0,
-          rate: 16000
-        },
-        {
-          name: 'Character Supervision',
-          maxCrew: 1,
-          startMonth: 0,
-          endMonth: 24,
-          rampUpDuration: 0,
-          rampDownDuration: 0,
-          rate: 12000
-        },
-        {
-          name: 'Modeling Supervision',
-          maxCrew: 1,
-          startMonth: 0,
-          endMonth: 20,
-          rampUpDuration: 0,
-          rampDownDuration: 0,
-          rate: 12000
-        },
-        {
-          name: 'Lighting Supervision',
-          maxCrew: 1,
-          startMonth: 3,
-          endMonth: 32,
-          rampUpDuration: 0,
-          rampDownDuration: 0,
-          rate: 12000
-        },
-        {
-          name: 'VFX Supervision',
-          maxCrew: 1,
-          startMonth: 4,
-          endMonth: 32,
-          rampUpDuration: 0,
-          rampDownDuration: 0,
-          rate: 12000
-        },
-        {
-          name: 'Concept Artists (Character)',
-          maxCrew: 4,
-          startMonth: 0,
-          endMonth: 15,
-          rampUpDuration: 2,
-          rampDownDuration: 2,
-          rate: 6000
-        },
-        {
-          name: 'Concept Artists (Environment)',
-          maxCrew: 4,
-          startMonth: 0,
-          endMonth: 15,
-          rampUpDuration: 2,
-          rampDownDuration: 2,
-          rate: 6000
-        },
-        {
-          name: 'Character Modeller',
-          maxCrew: 6,
-          startMonth: 0,
-          endMonth: 11,
-          rampUpDuration: 2,
-          rampDownDuration: 2,
-          rate: 8000
-        },
-        {
-          name: 'Character Rigger',
-          maxCrew: 6,
-          startMonth: 0,
-          endMonth: 15,
-          rampUpDuration: 2,
-          rampDownDuration: 2,
-          rate: 8500
-        },
-        {
-          name: 'Technical Director',
-          maxCrew: 4,
-          startMonth: 6,
-          endMonth: 32,
-          rampUpDuration: 2,
-          rampDownDuration: 1,
-          rate: 8000
-        },
-        {
-          name: 'Animators',
-          maxCrew: 60,
-          startMonth: 11,
-          endMonth: 42,
-          rampUpDuration: 4,
-          rampDownDuration: 3,
-          rate: 10000
-        },
-        {
-          name: 'Lighters',
-          maxCrew: 80,
-          startMonth: 11,
-          endMonth: 42,
-          rampUpDuration: 4,
-          rampDownDuration: 3,
-          rate: 9000
-        },
-        {
-          name: 'VFX Artists',
-          maxCrew: 30,
-          startMonth: 11,
-          endMonth: 42,
-          rampUpDuration: 3,
-          rampDownDuration: 3,
-          rate: 9000
-        },
-        {
-          name: 'Composite',
-          maxCrew: 40,
-          startMonth: 11,
-          endMonth: 42,
-          rampUpDuration: 3,
-          rampDownDuration: 3,
-          rate: 9000
-        }
-      ],
-      crewMatrix: [],
       monthlyCosts: [],
       cumulativeCosts: [],
       totalProjectCost: 0,
@@ -826,14 +677,32 @@ export default {
       monthlyWorkstationCosts: [],
       monthlyBackendCosts: [],
       workstationsIncludedInTotals: true,
-      backendIncludedInTotals: true
+      backendIncludedInTotals: true,
+      isLoading: true // Flag to track loading state
     };
   },
-  created() {
-    console.log("App created, using simple data");
+  async created() {
+    console.log("App created, loading initialization data");
+    this.isLoading = true;
     
-    // Generate months with the current time scale
-    this.generateMonthsWithTimeScale();
+    try {
+      // Load initialization data from JSON file
+      const initData = await loadInitData();
+      
+      // Apply the loaded data
+      this.years = initData.years;
+      this.months = initData.months;
+      this.phases = initData.phases;
+      this.departments = initData.departments;
+      this.crewMatrix = initData.crewMatrix;
+      
+      console.log("Initialization data loaded successfully");
+    } catch (error) {
+      console.error("Error loading initialization data:", error);
+      
+      // Generate months with the current time scale as fallback
+      this.generateMonthsWithTimeScale();
+    }
     
     // Make sure crewMatrix is initialized
     if (!this.crewMatrix || this.crewMatrix.length === 0) {
@@ -851,12 +720,13 @@ export default {
     // Initialize workstation department assignments
     initializeDepartmentAssignments(this.workstationData, this.departments);
     
-    // Calculate costs
-    
     // Ensure all numeric properties in departments and phases are stored as numbers
     this.ensureNumericProperties();
     
+    // Calculate costs
     this.calculateCosts();
+    
+    this.isLoading = false;
   },
   
   computed: {
@@ -2571,6 +2441,23 @@ async exportExcel() {
   --info-color: #2196F3;
   --success-color: #4CAF50;
   --warning-color: #FFC107;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  font-size: 18px;
+  color: var(--primary-color);
 }
 
 body, html {
