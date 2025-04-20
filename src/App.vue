@@ -126,32 +126,39 @@
                   <!-- Zoom Controls -->
                   <v-col cols="12" md="3" class="py-0">
                     <div class="d-flex align-center">
-                      <v-btn-group variant="outlined" class="mr-2">
-                        <v-btn icon="mdi-minus" @click="zoomOut" title="Zoom Out" size="small" height="32px"></v-btn>
-                        <v-btn disabled size="small" height="32px">{{ Math.round(zoomLevel * 100) }}%</v-btn>
-                        <v-btn icon="mdi-plus" @click="zoomIn" title="Zoom In" size="small" height="32px"></v-btn>
-                        <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="small" height="32px"></v-btn>
-                      </v-btn-group>
+                      <div class="d-flex align-center mr-2">
+                        <span class="text-caption mr-1">Zoom:</span>
+                        <v-btn-group variant="outlined" density="compact">
+                          <v-btn icon="mdi-minus" @click="zoomOut" title="Zoom Out" size="x-small"></v-btn>
+                          <v-btn disabled size="x-small" class="zoom-percentage" style="min-width: 48px; font-size: 12px;">{{ Math.round(zoomLevel * 100) }}%</v-btn>
+                          <v-btn icon="mdi-plus" @click="zoomIn" title="Zoom In" size="x-small"></v-btn>
+                          <v-btn icon="mdi-refresh" @click="resetZoom" title="Reset Zoom" size="x-small"></v-btn>
+                        </v-btn-group>
+                      </div>
                       
-                      <v-text-field
-                        v-model="numberOfMonths"
-                        @update:model-value="updateTimeScale"
-                        label="Months"
-                        type="number"
-                        min="1"
-                        max="120"
-                        step="1"
-                        variant="outlined"
-                        density="compact"
-                        style="max-width: 120px;"
-                      >
-                        <template v-slot:append>
-                          <v-btn-group>
-                            <v-btn icon="mdi-minus" @click="decrementMonths" size="small" density="compact"></v-btn>
-                            <v-btn icon="mdi-plus" @click="incrementMonths" size="small" density="compact"></v-btn>
-                          </v-btn-group>
-                        </template>
-                      </v-text-field>
+                      <div class="d-flex align-center">
+                        <span class="text-caption mr-1">Months:</span>
+                        <v-text-field
+                          v-model="numberOfMonths"
+                          @update:model-value="updateTimeScale"
+                          type="number"
+                          min="1"
+                          max="120"
+                          step="1"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          class="month-input"
+                          style="max-width: 80px;"
+                        >
+                          <template v-slot:append>
+                            <div class="d-flex flex-column" style="height: 24px;">
+                              <v-btn icon="mdi-chevron-up" @click="incrementMonths" size="x-small" density="compact" style="margin-bottom: -8px;"></v-btn>
+                              <v-btn icon="mdi-chevron-down" @click="decrementMonths" size="x-small" density="compact" style="margin-top: -8px;"></v-btn>
+                            </div>
+                          </template>
+                        </v-text-field>
+                      </div>
                       
                       <v-btn variant="text" color="primary" href="/sample_crew_plan.csv" download class="ml-2" size="small" height="32px">
                         Sample
@@ -185,10 +192,11 @@
               <FileUploader @file-loaded="loadCSV" />
               <div class="divider"></div>
               <div class="zoom-controls">
+                <span class="zoom-label">Zoom:</span>
                 <button @click="zoomOut" class="zoom-button" title="Zoom Out">-</button>
-                <span>{{ Math.round(zoomLevel * 100) }}%</span>
+                <span class="zoom-value">{{ Math.round(zoomLevel * 100) }}%</span>
                 <button @click="zoomIn" class="zoom-button" title="Zoom In">+</button>
-                <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">Reset</button>
+                <button @click="resetZoom" class="zoom-button reset" title="Reset Zoom">↻</button>
               </div>
               <div class="time-scale-control">
                 <label>Months:</label>
@@ -2899,13 +2907,19 @@ main {
 .zoom-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  margin-right: 12px;
 }
 
-.zoom-controls span {
-  font-size: 0.85rem;
+.zoom-label {
+  font-size: 0.8rem;
   color: #475569;
-  min-width: 40px;
+}
+
+.zoom-value {
+  font-size: 0.8rem;
+  color: #475569;
+  min-width: 36px;
   text-align: center;
 }
 
@@ -2988,14 +3002,14 @@ main {
 }
 
 .zoom-button {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   background-color: #f1f5f9;
   color: #334155;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   border: 1px solid #cbd5e1;
@@ -3016,10 +3030,8 @@ main {
 }
 
 .zoom-button.reset {
-  width: auto;
-  padding: 0 8px;
+  width: 24px;
   font-size: 0.8rem;
-  height: 32px;
 }
 
 .export-button {
