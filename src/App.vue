@@ -240,7 +240,7 @@
                           'phase-cell': true,
                           'in-range': phases[item.index] && mIndex >= phases[item.index].startMonth && mIndex <= phases[item.index].endMonth
                         }"
-                        :style="getCellStyle()"
+                        :style="{ ...getCellStyle(), '--phase-color': phases[item.index] && phases[item.index].color && mIndex >= phases[item.index].startMonth && mIndex <= phases[item.index].endMonth ? phases[item.index].color : 'transparent' }"
                         @mousedown="handlePhaseMouseDown($event, item.index, mIndex)">
                       <div class="phase-content">
                         <div v-if="phases[item.index] && mIndex === phases[item.index].startMonth"
@@ -273,7 +273,7 @@
                           'dept-cell': true,
                           'in-range': departments[item.index] && mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
                         }"
-                        :style="getCellStyle()"
+                        :style="{ ...getCellStyle(), backgroundColor: departments[item.index] && mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth ? getDepartmentPhaseColor(departments[item.index]) : "transparent" }"
                         @mousedown="handleCellMouseDown($event, item.index, mIndex)">
                       <div class="cell-content">
                         {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
@@ -512,6 +512,20 @@
                 :max="months.length - 1"
                 hide-details
               ></v-slider>
+            </div>
+            <div class="mb-4">
+              <label class="text-subtitle-2 mb-1 d-block">Phase Color:</label>
+              <v-color-picker
+                v-model="phases[selectedPhaseIndex].color"
+                hide-inputs
+                hide-canvas
+                show-swatches
+                swatches-max-height="150"
+                :swatches="[
+                  ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50'],
+                  ['#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B', '#9E9E9E', '#000000']
+                ]"
+              ></v-color-picker>
             </div>
           
             <div class="d-flex flex-column">
@@ -835,6 +849,37 @@ export default {
     }
   },
   methods: {
+    // Get the color for a department based on its phase with opacity
+    getDepartmentPhaseColor(department, opacity = 0.2) {
+      if (!department || !department.phase) return 'transparent';
+      
+      // Find the phase for this department
+      const phase = this.phases.find((p, index) => index === department.phase);
+      if (!phase || !phase.color) return 'transparent';
+      
+      // Convert hex color to rgba with opacity
+      let hex = phase.color;
+      if (hex.startsWith('#')) {
+        hex = hex.substring(1);
+      }
+      
+      // Parse the hex color
+      let r, g, b;
+      if (hex.length === 3) {
+        r = parseInt(hex.charAt(0) + hex.charAt(0), 16);
+        g = parseInt(hex.charAt(1) + hex.charAt(1), 16);
+        b = parseInt(hex.charAt(2) + hex.charAt(2), 16);
+      } else if (hex.length === 6) {
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+      } else {
+        return 'transparent';
+      }
+      
+      // Return rgba color with opacity
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    },
     // Ensure all numeric properties in departments and phases are stored as numbers
     ensureNumericProperties() {
       console.log('Ensuring all numeric properties in departments and phases are stored as numbers...');
@@ -882,7 +927,25 @@ export default {
         // Convert string values to numbers for numeric properties
         if (phase.startMonth !== undefined && typeof phase.startMonth === 'string') {
           phase.startMonth = Number(phase.startMonth);
-          console.log(`Converted startMonth to number for phase ${phase.name}`);
+          console.log(`Converted startMonth to number for phase ${phase.name
+        
+        // Ensure phase has a color property
+        if (!phase.color) {
+          // Default colors based on index
+          const defaultColors = [
+            '#1976D2', // Blue
+            '#4CAF50', // Green
+            '#FF9800', // Orange
+            '#9C27B0', // Purple
+            '#F44336', // Red
+            '#00BCD4', // Cyan
+            '#FFEB3B', // Yellow
+            '#795548', // Brown
+            '#607D8B', // Blue Grey
+            '#E91E63'  // Pink
+          ];
+          phase.color = defaultColors[i % defaultColors.length];
+          console.log(`Added default color ${phase.color} to phase ${phase.name}`);
         }
         
         if (phase.endMonth !== undefined && typeof phase.endMonth === 'string') {
@@ -1770,7 +1833,8 @@ export default {
       const newPhase = {
         name: 'New Phase',
         startMonth: 0,
-        endMonth: 12
+        endMonth: 12,
+        color: "#1976D2" // Default blue color
       };
       
       // Add the new phase to the phases array
@@ -3394,7 +3458,9 @@ main {
 }
 
 .phase-cell.in-range {
-  background-color: rgba(76, 175, 80, 0.1);
+  /* The background color will be set dynamically via inline style */
+  border-top: 2px solid var(--phase-color, rgba(76, 175, 80, 0.8));
+  border-bottom: 2px solid var(--phase-color, rgba(76, 175, 80, 0.8));
 }
 
 .phase-content {
