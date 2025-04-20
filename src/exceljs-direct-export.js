@@ -212,33 +212,18 @@ function styleTimelineSheet(worksheet, data, appState) {
         'Cumulative Cost'
       ];
       
-      const costRowColors = [
-        'D8E4BC', // Light green - Labor
-        'E6B8B7', // Light red - Facility
-        'B8CCE4', // Light blue - Workstation
-        'CCC0DA', // Light purple - Backend
-        'FCD5B4', // Light orange - Total
-        'FDE9D9'  // Lighter orange - Cumulative
-      ];
-      
       const colorIndex = costRowLabels.findIndex(label => value === label);
       
       if (colorIndex !== -1) {
-        // This is a cost row, apply appropriate color
-        const color = costRowColors[colorIndex];
+        // This is a cost row
         
         // Make the label bold
         firstCell.font = { bold: true };
         
-        // Apply color to all cells in the row
+        // Apply formatting to all cells in the row (without background color)
         for (let colIndex = 2; colIndex <= row.cellCount; colIndex++) {
           const cell = row.getCell(colIndex);
           if (cell.value !== null && cell.value !== undefined) {
-            cell.fill = {
-              type: 'pattern',
-              pattern: 'solid',
-              fgColor: { argb: 'FF' + color }
-            };
             cell.numFmt = '$#,##0';
             cell.border = {
               top: { style: 'thin' },
@@ -316,45 +301,34 @@ function styleStatsSheet(worksheet, data) {
       
       // Format cost cells
       const lowerValue = value.toLowerCase();
-      let color = null;
+      let isBold = false;
       
-      if (lowerValue.includes('labor')) {
-        color = 'D8E4BC'; // Light green
-      } else if (lowerValue.includes('facilities') || lowerValue.includes('facility')) {
-        color = 'E6B8B7'; // Light red
-      } else if (lowerValue.includes('workstation')) {
-        color = 'B8CCE4'; // Light blue
-      } else if (lowerValue.includes('backend')) {
-        color = 'CCC0DA'; // Light purple
-      } else if (lowerValue.includes('total')) {
-        color = 'FCD5B4'; // Light orange
+      if (lowerValue.includes('total')) {
+        isBold = true;
         row.eachCell((cell) => {
           cell.font = { bold: true };
         });
       } else if (lowerValue.includes('cumulative')) {
-        color = 'FDE9D9'; // Lighter orange
+        isBold = true;
         row.eachCell((cell) => {
           cell.font = { bold: true };
         });
       }
       
-      if (color) {
-        // Apply color to numeric cells in the row
-        for (let colIndex = 2; colIndex <= row.cellCount; colIndex++) {
-          const cell = row.getCell(colIndex);
-          if (cell.value !== null && cell.value !== undefined && typeof cell.value === 'number') {
-            cell.fill = {
-              type: 'pattern',
-              pattern: 'solid',
-              fgColor: { argb: 'FF' + color }
-            };
-            cell.numFmt = '$#,##0';
-            cell.border = {
-              top: { style: 'thin' },
-              bottom: { style: 'thin' },
-              left: { style: 'thin' },
-              right: { style: 'thin' }
-            };
+      // Apply formatting to numeric cells in the row (without background color)
+      for (let colIndex = 2; colIndex <= row.cellCount; colIndex++) {
+        const cell = row.getCell(colIndex);
+        if (cell.value !== null && cell.value !== undefined && typeof cell.value === 'number') {
+          cell.numFmt = '$#,##0';
+          cell.border = {
+            top: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+          
+          if (isBold) {
+            cell.font = { bold: true };
           }
         }
       }
