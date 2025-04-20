@@ -20,10 +20,8 @@ export async function loadInitData() {
     
     const initData = await response.json();
     
-    // If crewMatrix is not provided in the JSON, generate it based on department data
-    if (!initData.crewMatrix || initData.crewMatrix.length === 0) {
-      initData.crewMatrix = generateCrewMatrix(initData.departments, initData.months.length);
-    }
+    // Remove any crewMatrix from the loaded data to ensure it's generated fresh in the app
+    delete initData.crewMatrix;
     
     // Ensure all required properties are present
     ensureRequiredProperties(initData);
@@ -266,9 +264,6 @@ function getFallbackData() {
     }
   ];
   
-  // Generate crew matrix
-  const crewMatrix = generateCrewMatrix(departments, months.length);
-  
   // Generate item order
   const itemOrder = generateDefaultItemOrder(phases, departments);
   
@@ -278,7 +273,6 @@ function getFallbackData() {
     months,
     phases,
     departments,
-    crewMatrix,
     itemOrder,
     facilitiesData: JSON.parse(JSON.stringify(defaultFacilitiesData)),
     workstationData: JSON.parse(JSON.stringify(defaultWorkstationData)),
