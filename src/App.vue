@@ -433,25 +433,55 @@
             </div>
 
             <div class="mb-3">
-              <label class="text-subtitle-2 mb-1 d-block">Ramp Up Duration (months): {{ departments[selectedDepartmentIndex].rampUpDuration }}</label>
-              <v-slider
-                v-model="departments[selectedDepartmentIndex].rampUpDuration"
-                @update:model-value="updateDepartmentRamp(departments[selectedDepartmentIndex])"
-                min="0"
-                :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
-                hide-details
-              ></v-slider>
+              <label class="text-subtitle-2 mb-1 d-block">Ramp Up Duration (months): {{ Math.round(departments[selectedDepartmentIndex].rampUpDuration) }}</label>
+              <div class="d-flex align-center">
+                <v-slider
+                  v-model="departments[selectedDepartmentIndex].rampUpDuration"
+                  @update:model-value="updateDepartmentRamp(departments[selectedDepartmentIndex])"
+                  min="0"
+                  :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
+                  :step="1"
+                  hide-details
+                  class="mr-2"
+                ></v-slider>
+                <v-text-field
+                  v-model.number="departments[selectedDepartmentIndex].rampUpDuration"
+                  type="number"
+                  style="width: 70px"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
+                  step="1"
+                  @input="departments[selectedDepartmentIndex].rampUpDuration = Math.round(Number(departments[selectedDepartmentIndex].rampUpDuration)); updateDepartmentRamp(departments[selectedDepartmentIndex])"
+                ></v-text-field>
+              </div>
             </div>
 
             <div class="mb-3">
-              <label class="text-subtitle-2 mb-1 d-block">Ramp Down Duration (months): {{ departments[selectedDepartmentIndex].rampDownDuration }}</label>
-              <v-slider
-                v-model="departments[selectedDepartmentIndex].rampDownDuration"
-                @update:model-value="updateDepartmentRamp(departments[selectedDepartmentIndex])"
-                min="0"
-                :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
-                hide-details
-              ></v-slider>
+              <label class="text-subtitle-2 mb-1 d-block">Ramp Down Duration (months): {{ Math.round(departments[selectedDepartmentIndex].rampDownDuration) }}</label>
+              <div class="d-flex align-center">
+                <v-slider
+                  v-model="departments[selectedDepartmentIndex].rampDownDuration"
+                  @update:model-value="updateDepartmentRamp(departments[selectedDepartmentIndex])"
+                  min="0"
+                  :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
+                  :step="1"
+                  hide-details
+                  class="mr-2"
+                ></v-slider>
+                <v-text-field
+                  v-model.number="departments[selectedDepartmentIndex].rampDownDuration"
+                  type="number"
+                  style="width: 70px"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  :max="Math.max(1, Math.floor((departments[selectedDepartmentIndex].endMonth - departments[selectedDepartmentIndex].startMonth) / 2))"
+                  step="1"
+                  @input="departments[selectedDepartmentIndex].rampDownDuration = Math.round(Number(departments[selectedDepartmentIndex].rampDownDuration)); updateDepartmentRamp(departments[selectedDepartmentIndex])"
+                ></v-text-field>
+              </div>
             </div>
 
             <div class="mb-4">
@@ -694,7 +724,8 @@ export default {
       this.months = initData.months;
       this.phases = initData.phases;
       this.departments = initData.departments;
-      this.crewMatrix = initData.crewMatrix;
+      // Don't load the crew matrix from the JSON file
+      // this.crewMatrix = initData.crewMatrix;
       this.itemOrder = initData.itemOrder;
       this.facilitiesData = initData.facilitiesData;
       this.workstationData = initData.workstationData;
@@ -709,20 +740,20 @@ export default {
       // Generate months with the current time scale as fallback
       this.generateMonthsWithTimeScale();
       
-      // Make sure crewMatrix is initialized
-      if (!this.crewMatrix || this.crewMatrix.length === 0) {
-        this.initializeCrewMatrix();
-        
-        // Update crew distribution for all departments
-        for (let i = 0; i < this.departments.length; i++) {
-          this.updateDepartmentDistribution(i);
-        }
-      }
-      
       // Initialize item order if needed
       if (!this.itemOrder || this.itemOrder.length === 0) {
         this.initializeItemOrder();
       }
+    }
+    
+    // Always initialize the crew matrix from scratch
+    console.log("Initializing crew matrix...");
+    this.initializeCrewMatrix();
+    
+    // Update crew distribution for all departments
+    console.log("Updating crew distribution for all departments...");
+    for (let i = 0; i < this.departments.length; i++) {
+      this.updateDepartmentDistribution(i);
     }
     
     // Initialize workstation department assignments if they're empty
@@ -1119,6 +1150,10 @@ export default {
     updateDepartmentTimeframe(department) {
       console.log(`Updating timeframe for department: ${department.name}, startMonth: ${department.startMonth}, endMonth: ${department.endMonth}`);
 
+      // Ensure values are whole numbers
+      department.startMonth = Math.round(Number(department.startMonth));
+      department.endMonth = Math.round(Number(department.endMonth));
+
       // Ensure end month is after start month
       if (department.endMonth <= department.startMonth) {
         department.endMonth = department.startMonth + 1;
@@ -1165,6 +1200,60 @@ export default {
         console.log(`Adjusted ramps: up=${department.rampUpDuration}, down=${department.rampDownDuration}`);
       }
 
+      const dIndex = this.departments.indexOf(department);
+      this.updateDepartmentDistribution(dIndex);
+    },
+    
+    updateDepartmentRamp(department) {
+      console.log(`Updating ramp for department: ${department.name}, rampUp: ${department.rampUpDuration}, rampDown: ${department.rampDownDuration}`);
+      
+      // Ensure values are whole numbers
+      department.rampUpDuration = Math.round(Number(department.rampUpDuration));
+      department.rampDownDuration = Math.round(Number(department.rampDownDuration));
+      
+      // Ensure values are non-negative
+      if (department.rampUpDuration < 0) department.rampUpDuration = 0;
+      if (department.rampDownDuration < 0) department.rampDownDuration = 0;
+      
+      // Calculate the total timeframe duration
+      const timeframeDuration = department.endMonth - department.startMonth + 1;
+      
+      // Ensure there's at least 1 month for the plateau
+      const totalRampDuration = department.rampUpDuration + department.rampDownDuration;
+      if (totalRampDuration >= timeframeDuration) {
+        // Calculate the maximum allowed total ramp duration
+        const maxTotalRamp = timeframeDuration - 1;
+        
+        // If both ramps are non-zero, adjust them proportionally
+        if (department.rampUpDuration > 0 && department.rampDownDuration > 0) {
+          // Calculate the proportion of each ramp to the total
+          const upRatio = department.rampUpDuration / totalRampDuration;
+          const downRatio = department.rampDownDuration / totalRampDuration;
+          
+          // Apply the ratios to the maximum allowed total
+          department.rampUpDuration = Math.max(1, Math.floor(maxTotalRamp * upRatio));
+          department.rampDownDuration = Math.max(1, Math.floor(maxTotalRamp * downRatio));
+          
+          // Ensure the sum doesn't exceed the max
+          if (department.rampUpDuration + department.rampDownDuration > maxTotalRamp) {
+            // Reduce the larger one
+            if (department.rampUpDuration > department.rampDownDuration) {
+              department.rampUpDuration = maxTotalRamp - department.rampDownDuration;
+            } else {
+              department.rampDownDuration = maxTotalRamp - department.rampUpDuration;
+            }
+          }
+        } else if (department.rampUpDuration > 0) {
+          // Only ramp up is non-zero
+          department.rampUpDuration = maxTotalRamp;
+        } else if (department.rampDownDuration > 0) {
+          // Only ramp down is non-zero
+          department.rampDownDuration = maxTotalRamp;
+        }
+        
+        console.log(`Adjusted ramps: up=${department.rampUpDuration}, down=${department.rampDownDuration}`);
+      }
+      
       const dIndex = this.departments.indexOf(department);
       this.updateDepartmentDistribution(dIndex);
     },
@@ -1229,6 +1318,13 @@ export default {
         console.error(`Department at index ${dIndex} is undefined`);
         return;
       }
+      
+      // Ensure all values are whole numbers
+      department.startMonth = Math.round(Number(department.startMonth));
+      department.endMonth = Math.round(Number(department.endMonth));
+      department.rampUpDuration = Math.round(Number(department.rampUpDuration));
+      department.rampDownDuration = Math.round(Number(department.rampDownDuration));
+      department.maxCrew = Math.round(Number(department.maxCrew));
       
       // Ensure maxCrew is reasonable
       if (isNaN(department.maxCrew) || department.maxCrew < 0 || department.maxCrew > 1000) {
