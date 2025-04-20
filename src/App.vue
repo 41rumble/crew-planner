@@ -278,7 +278,7 @@
                           'dept-cell': true,
                           'in-range': departments[item.index] && mIndex >= departments[item.index].startMonth && mIndex <= departments[item.index].endMonth
                         }"
-                        :style="{ ...getCellStyle(), ...getDepartmentCellStyle(departments[item.index], mIndex) }"
+                        :style="{ ...getCellStyle(), ...getDepartmentCellStyle(departments[item.index], item.index, mIndex) }"
                         @mousedown="handleCellMouseDown($event, item.index, mIndex)">
                       <div class="cell-content">
                         {{ crewMatrix[item.index][mIndex] > 0 ? crewMatrix[item.index][mIndex] : '' }}
@@ -861,16 +861,37 @@ export default {
     }
   },
   methods: {
+    // Get the phase for a department based on its position in the sortedItems array
+    getDepartmentPhase(departmentIndex) {
+      // Find the department's position in the sortedItems array
+      const departmentPosition = this.sortedItems.findIndex(
+        item => item.type === 'department' && item.index === departmentIndex
+      );
+      
+      if (departmentPosition === -1) return null;
+      
+      // Find the nearest phase above this department
+      let nearestPhaseIndex = null;
+      for (let i = departmentPosition - 1; i >= 0; i--) {
+        if (this.sortedItems[i].type === 'phase') {
+          nearestPhaseIndex = this.sortedItems[i].index;
+          break;
+        }
+      }
+      
+      return nearestPhaseIndex !== null ? this.phases[nearestPhaseIndex] : null;
+    },
+    
     // Get the background color for a department cell based on its phase
-    getDepartmentCellStyle(department, mIndex) {
-      if (!department || department.phase === undefined || 
-          mIndex < department.startMonth || mIndex > department.endMonth) {
+    getDepartmentCellStyle(department, departmentIndex, mIndex) {
+      if (!department || mIndex < department.startMonth || mIndex > department.endMonth) {
         return {};
       }
       
-      // Find the phase for this department
-      const phase = this.phases.find((p, index) => index === department.phase);
+      // Find the phase for this department based on its position
+      const phase = this.getDepartmentPhase(departmentIndex);
       if (!phase || !phase.color) return {};
+      
       return {
         backgroundColor: getDepartmentColor(phase.color, 0.2)
       };
