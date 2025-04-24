@@ -611,7 +611,7 @@ export default {
 
 .component-item {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 0.5fr 1fr 0.5fr;
+  grid-template-columns: 2fr 1fr 1fr 0.5fr 1fr 40px;
   gap: 8px;
   align-items: center;
 }
@@ -630,7 +630,7 @@ export default {
 
 .remove-button {
   background: none;
-  border: none;
+  border: 1px solid #ef4444;
   color: #ef4444;
   font-size: 1.2rem;
   cursor: pointer;
@@ -639,8 +639,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
 }
 
 .remove-button:hover {

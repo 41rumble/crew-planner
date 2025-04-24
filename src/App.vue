@@ -3521,7 +3521,7 @@ main {
 }
 
 .workstation-editor {
-  width: 800px; /* Even wider for hardware editor which has more content */
+  width: 900px; /* Even wider for hardware editor which has more content */
 }
 
 .draggable-card {
@@ -3698,9 +3698,14 @@ main {
     max-width: 500px;
   }
   
-  .facilities-editor, .workstation-editor {
+  .facilities-editor {
     width: 90%;
     max-width: 600px;
+  }
+  
+  .workstation-editor {
+    width: 95%;
+    max-width: 700px;
   }
   
   .position-left, .position-right {
