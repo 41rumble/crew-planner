@@ -5,6 +5,11 @@
       
       <v-spacer></v-spacer>
       
+      <!-- Current Project Display -->
+      <div class="d-flex justify-center align-center" style="position: absolute; left: 0; right: 0; pointer-events: none;">
+        <span class="text-white text-center" style="font-size: 16px; font-weight: 500;">{{ currentProjectName }}</span>
+      </div>
+      
       <!-- Zoom Controls -->
       <div class="d-flex align-center mr-4">
         <span class="text-white mr-2" style="font-size: 14px;">Zoom:</span>
@@ -668,6 +673,7 @@ export default {
   },
   data() {
     return {
+      currentProjectName: "'No Project Loaded'",
       draggedPhaseIndex: null, // For phase drag handles
       years: [],
       monthsPerYear: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
@@ -1815,6 +1821,11 @@ export default {
       const file = event.target.files[0];
       if (!file) return;
       
+      // Extract filename without extension
+      const fileName = file.name.replace(/\.[^/.]+$/, "");
+      // Update the current project name
+      this.currentProjectName = `'${fileName}'`;
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
@@ -2197,9 +2208,14 @@ async exportExcel() {
       document.body.removeChild(workstationsLink);
     },
     
-    loadCSV(csvContent) {
+    loadCSV(csvContent, fileName) {
       try {
         console.log('CSV content length:', csvContent.length);
+        
+        // Update the current project name
+        if (fileName) {
+          this.currentProjectName = `'${fileName}'`;
+        }
         
         // Parse the CSV content
         const parsedData = parseCSV(csvContent);

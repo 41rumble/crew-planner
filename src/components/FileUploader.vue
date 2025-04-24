@@ -28,7 +28,9 @@ export default {
       const reader = new FileReader();
       reader.onload = (e) => {
         const fileContent = e.target.result;
-        this.$emit('file-loaded', fileContent);
+        // Extract filename without extension
+        const fileName = file.name.replace(/\.[^/.]+$/, "");
+        this.$emit('file-loaded', fileContent, fileName);
         
         // Reset the file input so the same file can be selected again
         event.target.value = '';
