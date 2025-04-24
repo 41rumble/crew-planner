@@ -369,7 +369,7 @@ export function parseCSV(csvString) {
     console.log('Departments:', departments.length);
     
     // Generate crew matrix using the original crew counts
-    const crewMatrix = departments.map((dept, index) => {
+    let crewMatrix = departments.map((dept, index) => {
       // If we have original crew counts for this department, use them
       if (index < originalCrewCounts.length) {
         console.log('Using original crew counts for', dept.name);
