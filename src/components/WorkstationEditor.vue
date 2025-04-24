@@ -630,7 +630,7 @@ export default {
 
 .remove-button {
   background: none;
-  border: 1px solid #ef4444;
+  border: none;
   color: #ef4444;
   font-size: 1.2rem;
   cursor: pointer;
@@ -639,9 +639,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  margin-left: auto;
+  width: 28px;
+  height: 28px;
 }
 
 .remove-button:hover {
