@@ -244,7 +244,20 @@ export function exportToMultipleCSV(appState) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", file.name);
+    
+    // Use project name in the file name if available
+    let fileName = file.name;
+    if (appState.projectName) {
+      // Extract the file number and type
+      const fileNameParts = file.name.split('_');
+      if (fileNameParts.length >= 2) {
+        const fileNumber = fileNameParts[0];
+        const fileType = fileNameParts[1].split('.')[0];
+        fileName = `${fileNumber}_${appState.projectName}_${fileType}.csv`;
+      }
+    }
+    
+    link.setAttribute("download", fileName);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();

@@ -1811,7 +1811,15 @@ export default {
       // Create download link
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", "crew_planner_project.json");
+      
+      // Use the current project name for the file name, or a default if none is set
+      let fileName = "crew_planner_project.json";
+      if (this.currentProjectName && this.currentProjectName !== "'No Project Loaded'") {
+        // Remove the quotes from the project name
+        const projectName = this.currentProjectName.replace(/^'|'$/g, '');
+        fileName = `${projectName}.json`;
+      }
+      link.setAttribute("download", fileName);
       link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
@@ -1955,6 +1963,15 @@ export default {
     // Export to CSV files
     exportCSV() {
       const appState = this.getExportAppState();
+      
+      // Add the current project name to the app state
+      let projectName = null;
+      if (this.currentProjectName && this.currentProjectName !== "'No Project Loaded'") {
+        // Remove the quotes from the project name
+        projectName = this.currentProjectName.replace(/^'|'$/g, '');
+      }
+      appState.projectName = projectName;
+      
       exportToMultipleCSV(appState);
       return;
     },
@@ -1977,7 +1994,15 @@ async exportExcel() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", "crew_planning_data.xlsx");
+        
+        // Use the current project name for the file name, or a default if none is set
+        let fileName = "crew_planning_data.xlsx";
+        if (this.currentProjectName && this.currentProjectName !== "'No Project Loaded'") {
+          // Remove the quotes from the project name
+          const projectName = this.currentProjectName.replace(/^'|'$/g, '');
+          fileName = `${projectName}.xlsx`;
+        }
+        link.setAttribute("download", fileName);
         link.style.visibility = "hidden";
         document.body.appendChild(link);
         link.click();
