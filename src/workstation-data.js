@@ -96,26 +96,106 @@ export const workstationData = {
     {
       category: "Rendering",
       items: [
-        { name: "3Delight", cost: 1370, quantity: 80, notes: "Renderer licenses", costType: "one-time", purchaseMonth: 0 },
-        { name: "Maintenance", cost: 6860, quantity: 1, notes: "Annual maintenance (total monthly cost)", costType: "monthly" },
-        { name: "Smedge - Site License", cost: 2000, quantity: 2, notes: "Render farm management", costType: "one-time", purchaseMonth: 0 }
+        { 
+          name: "3Delight", 
+          cost: 1370, 
+          quantity: 80, 
+          notes: "Renderer licenses", 
+          costType: "one-time", 
+          purchaseMonth: 0,
+          paymentSchedule: "single", // single or staged
+          paymentStages: [] // Will be populated with payment stages if paymentSchedule is "staged"
+        },
+        { 
+          name: "Maintenance", 
+          cost: 6860, 
+          quantity: 1, 
+          notes: "Annual maintenance (total monthly cost)", 
+          costType: "monthly" 
+        },
+        { 
+          name: "Smedge - Site License", 
+          cost: 2000, 
+          quantity: 2, 
+          notes: "Render farm management", 
+          costType: "one-time", 
+          purchaseMonth: 0,
+          paymentSchedule: "single",
+          paymentStages: []
+        }
       ]
     },
     {
       category: "Networking",
       items: [
-        { name: "Routers", cost: 900, quantity: 6, costType: "one-time", purchaseMonth: 0 },
-        { name: "Cabling", cost: 2000, quantity: 1, costType: "one-time", purchaseMonth: 0 }
+        { 
+          name: "Routers", 
+          cost: 900, 
+          quantity: 6, 
+          costType: "one-time", 
+          purchaseMonth: 0,
+          paymentSchedule: "single",
+          paymentStages: []
+        },
+        { 
+          name: "Cabling", 
+          cost: 2000, 
+          quantity: 1, 
+          costType: "one-time", 
+          purchaseMonth: 0,
+          paymentSchedule: "single",
+          paymentStages: []
+        }
       ]
     },
     {
       category: "Storage",
       items: [
-        { name: "SYD 36TB Server", cost: 12000, quantity: 1, costType: "one-time", purchaseMonth: 0 },
-        { name: "BKK 36TB Server", cost: 12000, quantity: 1, costType: "one-time", purchaseMonth: 3 },
-        { name: "SYD Backup Tape Library", cost: 14000, quantity: 1, costType: "one-time", purchaseMonth: 0 },
-        { name: "BKK Backup Tape Library", cost: 14000, quantity: 1, costType: "one-time", purchaseMonth: 3 },
-        { name: "LTO5 Tapes", cost: 100, quantity: 100, costType: "one-time", purchaseMonth: 1 }
+        { 
+          name: "SYD 36TB Server", 
+          cost: 12000, 
+          quantity: 1, 
+          costType: "one-time", 
+          purchaseMonth: 0,
+          paymentSchedule: "single",
+          paymentStages: []
+        },
+        { 
+          name: "BKK 36TB Server", 
+          cost: 12000, 
+          quantity: 1, 
+          costType: "one-time", 
+          purchaseMonth: 3,
+          paymentSchedule: "single",
+          paymentStages: []
+        },
+        { 
+          name: "SYD Backup Tape Library", 
+          cost: 14000, 
+          quantity: 1, 
+          costType: "one-time", 
+          purchaseMonth: 0,
+          paymentSchedule: "single",
+          paymentStages: []
+        },
+        { 
+          name: "BKK Backup Tape Library", 
+          cost: 14000, 
+          quantity: 1, 
+          costType: "one-time", 
+          purchaseMonth: 3,
+          paymentSchedule: "single",
+          paymentStages: []
+        },
+        { 
+          name: "LTO5 Tapes", 
+          cost: 100, 
+          quantity: 100, 
+          costType: "one-time", 
+          purchaseMonth: 1,
+          paymentSchedule: "single",
+          paymentStages: []
+        }
       ]
     }
   ],
@@ -174,11 +254,21 @@ export function calculateMonthlyBackendInfrastructureCosts(infrastructure, month
         for (let i = 0; i < costs.length; i++) {
           costs[i] += monthlyCost;
         }
-      } else {
-        // Apply one-time cost to the specified purchase month
-        const purchaseMonth = item.purchaseMonth || 0; // Default to month 0 if not specified
-        if (purchaseMonth >= 0 && purchaseMonth < costs.length) {
-          costs[purchaseMonth] += itemCost;
+      } else if (item.costType === 'one-time') {
+        if (item.paymentSchedule === 'staged' && item.paymentStages && item.paymentStages.length > 0) {
+          // Apply staged payments according to the payment schedule
+          item.paymentStages.forEach(stage => {
+            if (stage.month >= 0 && stage.month < costs.length && stage.percentage > 0) {
+              const stageCost = itemCost * (stage.percentage / 100);
+              costs[stage.month] += stageCost;
+            }
+          });
+        } else {
+          // Apply one-time cost to the specified purchase month (default behavior)
+          const purchaseMonth = item.purchaseMonth || 0; // Default to month 0 if not specified
+          if (purchaseMonth >= 0 && purchaseMonth < costs.length) {
+            costs[purchaseMonth] += itemCost;
+          }
         }
       }
     });
@@ -321,4 +411,15 @@ export function calculateTotalWorkstationCost(workstationData, crewMatrix, depar
   }
   
   return totalCost;
+}
+
+// Helper function to validate payment stages
+export function validatePaymentStages(stages) {
+  if (!stages || !Array.isArray(stages) || stages.length === 0) {
+    return false;
+  }
+  
+  // Check if percentages add up to 100%
+  const totalPercentage = stages.reduce((sum, stage) => sum + (stage.percentage || 0), 0);
+  return Math.abs(totalPercentage - 100) < 0.01; // Allow for small floating point errors
 }
